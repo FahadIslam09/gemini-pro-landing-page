@@ -56,10 +56,19 @@ export default function CheckoutModal({
     };
   }, [isOpen, isSubmitting, onClose]);
 
-  const planDetails: Record<string, { name: string; price: number; duration: string }> = {
-    "1m": { name: "Google AI Pro (১ মাসের প্ল্যান)", price: 149, duration: "১ মাস" },
-    "12m": { name: "Google AI Pro (১২ মাসের প্ল্যান)", price: 399, duration: "১২ মাস" },
-    "18m": { name: "Google AI Pro (১৮ মাসের মেগা অফার)", price: 499, duration: "১৮ মাস" },
+  const planDetails: Record<string, { name: string; price: number; duration: string; type: string }> = {
+    "1m": {
+      name: "Google AI Pro (১ মাস - ফ্যামিলি ইনভাইট)",
+      price: 149,
+      duration: "১ মাস",
+      type: "ফ্যামিলি ইনভাইটেশন",
+    },
+    "18m": {
+      name: "Google AI Pro (১৮ মাস - প্রাইভেট অ্যাকাউন্ট)",
+      price: 499,
+      duration: "১৮ মাস",
+      type: "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
+    },
   };
 
   const merchantNumbers: Record<string, string> = {
@@ -172,12 +181,11 @@ export default function CheckoutModal({
                 </p>
               </div>
 
-              {/* Plan Selector Radio Pill Bar (Clean Consistent Font) */}
-              <div className="grid grid-cols-3 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
+              {/* Plan Selector Radio Pill Bar (2 Plans: 1m & 18m) */}
+              <div className="grid grid-cols-2 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
                 {[
-                  { id: "1m", label: "১ মাস", price: "৳149" },
-                  { id: "12m", label: "১২ মাস", price: "৳399" },
-                  { id: "18m", label: "১৮ মাস (সেরা)", price: "৳499" },
+                  { id: "1m", label: "১ মাস (ফ্যামিলি ইনভাইট)", price: "৳149" },
+                  { id: "18m", label: "১৮ মাস (প্রাইভেট একাউন্ট)", price: "৳499" },
                 ].map((p) => {
                   const isSelected = selectedPlan === p.id;
                   return (
@@ -185,7 +193,7 @@ export default function CheckoutModal({
                       key={p.id}
                       type="button"
                       onClick={() => setSelectedPlan(p.id)}
-                      className={`py-2 px-1 text-center rounded-xl transition-all cursor-pointer ${
+                      className={`py-2 px-2 text-center rounded-xl transition-all cursor-pointer ${
                         isSelected
                           ? "bg-white text-brand-blue font-bold shadow-sm border border-brand-blue/30"
                           : "text-brand-body text-xs font-semibold hover:text-brand-dark hover:bg-white/60"
