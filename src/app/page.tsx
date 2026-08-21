@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import WhyGemini from "@/components/WhyGemini";
-import FeatureDeepDive from "@/components/FeatureDeepDive";
 import GeminiOmniShowcase from "@/components/GeminiOmniShowcase";
 import CreativeGenerativeShowcase from "@/components/CreativeGenerativeShowcase";
+import FeatureDeepDive from "@/components/FeatureDeepDive";
 import ComparisonTable from "@/components/ComparisonTable";
 import PricingSection from "@/components/PricingSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -43,17 +43,17 @@ export default function Home() {
       {/* Hero Section */}
       <Hero onOpenCheckout={handleOpenCheckout} />
 
-      {/* Why Google AI Pro Feature Grid */}
+      {/* Why Google AI Pro Feature Grid (অল-ইন-ওয়ান অফিসিয়াল পাওয়ার হাউস) */}
       <WhyGemini />
-
-      {/* Interactive Deep Dive with Tabs */}
-      <FeatureDeepDive onOpenCheckout={handleOpenCheckout} />
 
       {/* Gemini Omni Video & Multimodal Studio Showcase */}
       <GeminiOmniShowcase onOpenCheckout={handleOpenCheckout} />
 
       {/* Nano Banana 2 & Lyria 3 Creative AI Showcase */}
       <CreativeGenerativeShowcase onOpenCheckout={handleOpenCheckout} />
+
+      {/* Interactive Deep Dive with Tabs */}
+      <FeatureDeepDive onOpenCheckout={handleOpenCheckout} />
 
       {/* Comparison Table */}
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
