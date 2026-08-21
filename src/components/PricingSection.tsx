@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, Lock, Sparkles, ArrowRight, ShieldCheck, Users } from "lucide-react";
+import { Check, Lock, Sparkles, ArrowRight, ShieldCheck, Users, KeyRound } from "lucide-react";
 
 interface PricingSectionProps {
   onOpenCheckout: (plan?: string) => void;
 }
 
 export default function PricingSection({ onOpenCheckout }: PricingSectionProps) {
-  const [selectedPlan, setSelectedPlan] = useState<"1m" | "18m">("18m");
+  const [selectedPlan, setSelectedPlan] = useState<"1m" | "12m" | "18m">("18m");
 
   const sharedPerks = [
     "Gemini 3.1 Pro (1M টোকেন কনটেক্সট উইন্ডো)",
@@ -37,6 +37,23 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
         style: "bg-blue-50/80 border-blue-200/90 text-brand-blue",
       },
       durationPerk: "১ মাসের ফুল অ্যাক্টিভেশন ও সাপোর্ট",
+      popular: false,
+    },
+    {
+      id: "12m",
+      name: "১২ মাসের সাবস্ক্রিপশন",
+      price: 399,
+      monthlyBreakdown: "≈ ৳33 / মাস",
+      badge: "বার্ষিক প্ল্যান",
+      badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+      description: "১ বছরের জন্য নির্ভরযোগ্য ও নিরবচ্ছিন্ন প্রিমিয়াম AI সমাধান।",
+      accountType: {
+        title: "জিমেইল ও পাসওয়ার্ড প্রয়োজন (Gmail & Password Required)",
+        subtitle: "অ্যাক্টিভেশনের জন্য আপনার জিমেইল ও সাময়িক পাসওয়ার্ড প্রদান করতে হবে।",
+        icon: KeyRound,
+        style: "bg-amber-50/90 border-amber-300 text-amber-900",
+      },
+      durationPerk: "১২ মাসের সম্পূর্ণ অ্যাক্টিভেশন ও সাপোর্ট",
       popular: false,
     },
     {
@@ -76,8 +93,8 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
           </p>
         </div>
 
-        {/* 2 Pricing Cards Grid (Balanced 2-Column Layout) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8 items-stretch mb-16">
+        {/* 3 Pricing Cards Grid (All Same Feature Set with Highlighted Account Access Callouts) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mb-16">
           {plans.map((plan) => {
             const AccountIcon = plan.accountType.icon;
             return (
@@ -86,7 +103,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                 onClick={() => setSelectedPlan(plan.id as any)}
                 className={`rounded-[28px] p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative cursor-pointer ${
                   plan.popular
-                    ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 md:-translate-y-2"
+                    ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 lg:-translate-y-2"
                     : "bg-white border border-brand-border hover:border-brand-border/80 shadow-soft hover:shadow-card-hover"
                 }`}
               >
@@ -105,7 +122,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                     </span>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-brand-dark mb-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-brand-dark mb-2">
                     {plan.name}
                   </h3>
                   <p className="text-xs sm:text-sm text-brand-muted mb-6 leading-relaxed">
@@ -125,7 +142,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                     </span>
                   </div>
 
-                  {/* Highlighted Account Type Callout Box */}
+                  {/* Highlighted Account Access Type Callout Box */}
                   <div className={`mb-6 p-3.5 rounded-2xl border ${plan.accountType.style} flex items-start gap-3`}>
                     <AccountIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />
                     <div>
@@ -138,7 +155,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                     </div>
                   </div>
 
-                  {/* Complete Features Checklist (Identical for all cards) */}
+                  {/* Complete Features Checklist (Identical for all 3 cards) */}
                   <div className="space-y-3 mb-8">
                     <span className="text-xs font-bold uppercase tracking-wider text-brand-muted block mb-2 font-outfit">
                       What's included:

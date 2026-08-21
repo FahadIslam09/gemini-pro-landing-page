@@ -63,6 +63,12 @@ export default function CheckoutModal({
       duration: "১ মাস",
       type: "ফ্যামিলি ইনভাইটেশন",
     },
+    "12m": {
+      name: "Google AI Pro (১২ মাস - জিমেইল ও পাসওয়ার্ড)",
+      price: 399,
+      duration: "১২ মাস",
+      type: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
+    },
     "18m": {
       name: "Google AI Pro (১৮ মাস - প্রাইভেট অ্যাকাউন্ট)",
       price: 499,
@@ -181,11 +187,12 @@ export default function CheckoutModal({
                 </p>
               </div>
 
-              {/* Plan Selector Radio Pill Bar (2 Plans: 1m & 18m) */}
-              <div className="grid grid-cols-2 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
+              {/* Plan Selector Radio Pill Bar (3 Plans: 1m, 12m & 18m) */}
+              <div className="grid grid-cols-3 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
                 {[
-                  { id: "1m", label: "১ মাস (ফ্যামিলি ইনভাইট)", price: "৳149" },
-                  { id: "18m", label: "১৮ মাস (প্রাইভেট একাউন্ট)", price: "৳499" },
+                  { id: "1m", label: "১ মাস (ইনভাইট)", price: "৳149" },
+                  { id: "12m", label: "১২ মাস (পাসওয়ার্ড)", price: "৳399" },
+                  { id: "18m", label: "১৮ মাস (প্রাইভেট)", price: "৳499" },
                 ].map((p) => {
                   const isSelected = selectedPlan === p.id;
                   return (
@@ -193,13 +200,13 @@ export default function CheckoutModal({
                       key={p.id}
                       type="button"
                       onClick={() => setSelectedPlan(p.id)}
-                      className={`py-2 px-2 text-center rounded-xl transition-all cursor-pointer ${
+                      className={`py-2 px-1 text-center rounded-xl transition-all cursor-pointer ${
                         isSelected
                           ? "bg-white text-brand-blue font-bold shadow-sm border border-brand-blue/30"
                           : "text-brand-body text-xs font-semibold hover:text-brand-dark hover:bg-white/60"
                       }`}
                     >
-                      <span className="block text-xs font-bangla">{p.label}</span>
+                      <span className="block text-[11px] sm:text-xs font-bangla leading-tight">{p.label}</span>
                       <span className="block font-outfit text-xs font-bold text-brand-dark mt-0.5">
                         {p.price}
                       </span>
