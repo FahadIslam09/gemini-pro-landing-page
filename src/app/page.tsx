@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import WhyGemini from "@/components/WhyGemini";
 import FeatureDeepDive from "@/components/FeatureDeepDive";
+import GeminiOmniShowcase from "@/components/GeminiOmniShowcase";
 import ComparisonTable from "@/components/ComparisonTable";
 import PricingSection from "@/components/PricingSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -46,6 +47,9 @@ export default function Home() {
 
       {/* Interactive Deep Dive with Tabs */}
       <FeatureDeepDive onOpenCheckout={handleOpenCheckout} />
+
+      {/* Gemini Omni Video & Multimodal Studio Showcase */}
+      <GeminiOmniShowcase onOpenCheckout={handleOpenCheckout} />
 
       {/* Comparison Table */}
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
