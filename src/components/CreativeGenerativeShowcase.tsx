@@ -11,38 +11,36 @@ export default function CreativeGenerativeShowcase({
   onOpenCheckout,
 }: CreativeGenerativeShowcaseProps) {
   return (
-    <section className="py-16 lg:py-24 bg-[#080B14] text-white relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-brand-blue/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-brand-purple/15 rounded-full blur-3xl pointer-events-none" />
+    <section className="py-20 lg:py-28 bg-gradient-to-b from-brand-surface via-[#F5F8FE] to-brand-surface relative overflow-hidden border-t border-brand-border/60">
+      
+      {/* Subtle Ambient Glows */}
+      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-brand-blue/8 blur-3xl pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-brand-purple/8 blur-3xl pointer-events-none rounded-full" />
 
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Header */}
+        {/* Section Header (Harmonized with site typography) */}
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 rounded-full px-3.5 py-1 text-xs font-semibold text-blue-300 mb-4 font-outfit shadow-sm">
+          <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Google Next-Gen Creative AI Engines</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-            ক্রিয়েটিভিটির এক নতুন{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
-              দিগন্ত উন্মোচন
-            </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-brand-dark tracking-tight mb-3">
+            ক্রিয়েটিভিটির এক নতুন <span className="gradient-text">দিগন্ত উন্মোচন</span>
           </h2>
-          <p className="text-sm sm:text-base text-gray-400 leading-relaxed">
+          <p className="text-base sm:text-lg text-brand-muted leading-relaxed">
             সর্বাধুনিক ইমেজ সিন্থেসিস ও মিউজিক জেনারেশন মডেল দিয়ে আপনার চিন্তাকে রূপ দিন বাস্তবে।
           </p>
         </div>
 
-        {/* 2 Dark Showcase Cards Grid */}
+        {/* 2 High-Contrast Studio Cards Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
           {/* Card 1: Nano Banana 2 (Image Generation Showcase) */}
-          <div className="bg-[#0D121F] border border-white/10 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-2xl hover:border-white/20 transition-all duration-300 group relative overflow-hidden">
+          <div className="bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
             
-            {/* Top Image Showcase (Provided by User) */}
-            <div className="mb-8 rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center p-2 border border-white/5 shadow-inner">
+            {/* Top Image Showcase */}
+            <div className="mb-8 rounded-2xl overflow-hidden bg-black/50 flex items-center justify-center p-2 border border-white/5 shadow-inner">
               <img
                 src="/nano-top-img.png"
                 alt="Nano Banana 2 Image Generation Showcase"
@@ -84,10 +82,10 @@ export default function CreativeGenerativeShowcase({
           </div>
 
           {/* Card 2: Lyria 3 (Music & Soundtrack Generation Showcase) */}
-          <div className="bg-[#0D121F] border border-white/10 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-2xl hover:border-white/20 transition-all duration-300 group relative overflow-hidden">
+          <div className="bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
             
-            {/* Top Image Showcase (Provided by User) */}
-            <div className="mb-8 rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center p-2 border border-white/5 shadow-inner">
+            {/* Top Image Showcase */}
+            <div className="mb-8 rounded-2xl overflow-hidden bg-black/50 flex items-center justify-center p-2 border border-white/5 shadow-inner">
               <img
                 src="/lyria_3-top-img.png"
                 alt="Lyria 3 Music Generation Showcase"
