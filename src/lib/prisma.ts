@@ -1,5 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  "mongodb+srv://fahadislam905_db_user:fahad21291DB2026@exam-prep-platform.bcpmrae.mongodb.net/google_ai_pro?retryWrites=true&w=majority&appName=Exam-Prep-Platform";
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
@@ -7,6 +11,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
+    datasourceUrl: databaseUrl,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 
