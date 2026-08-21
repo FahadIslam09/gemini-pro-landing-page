@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Outfit } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
+import MetaPixel from "@/components/MetaPixel";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
@@ -47,9 +49,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-import { Suspense } from "react";
-import MetaPixel from "@/components/MetaPixel";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -57,6 +56,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="bn" className={`${hindSiliguri.variable} ${outfit.variable}`}>
+      <head>
+        {/* Unregister old rogue service workers from prior development / ports */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(var reg of registrations) {
+                    reg.unregister();
+                  }
+                }).catch(function(){});
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="font-bangla antialiased selection:bg-brand-purple/20 selection:text-brand-purple">
         <Suspense fallback={null}>
           <MetaPixel />

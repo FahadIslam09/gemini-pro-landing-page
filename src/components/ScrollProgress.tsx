@@ -17,7 +17,7 @@ export default function ScrollProgress() {
           const docHeight = document.documentElement.scrollHeight - window.innerHeight;
           const currentScroll = window.scrollY;
           const progress = docHeight > 0 ? (currentScroll / docHeight) * 100 : 0;
-          
+
           setScrollPercent(Math.min(100, Math.max(0, progress)));
           setShowScrollTop(currentScroll > 450);
           ticking = false;
@@ -27,16 +27,27 @@ export default function ScrollProgress() {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 2. High-Performance IntersectionObserver for Scroll Reveals
+  // 2. High-Performance IntersectionObserver for Scroll Reveals with Universal Fail-safe
   useEffect(() => {
+    const revealAll = () => {
+      document.querySelectorAll(".reveal-init").forEach((el) => {
+        el.classList.add("reveal-visible");
+      });
+    };
+
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      revealAll();
+      return;
+    }
+
     const observerCallback: IntersectionObserverCallback = (entries, observer) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("reveal-visible");
-          // Unobserve once animated for performance
           observer.unobserve(entry.target);
         }
       });
@@ -44,14 +55,28 @@ export default function ScrollProgress() {
 
     const observer = new IntersectionObserver(observerCallback, {
       root: null,
-      rootMargin: "0px 0px -40px 0px",
-      threshold: 0.08,
+      rootMargin: "120px 0px 80px 0px",
+      threshold: 0.01,
     });
 
     const elements = document.querySelectorAll(".reveal-init");
-    elements.forEach((el) => observer.observe(el));
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      // If already in viewport or near top, reveal immediately
+      if (rect.top < window.innerHeight + 200) {
+        el.classList.add("reveal-visible");
+      } else {
+        observer.observe(el);
+      }
+    });
+
+    // Failsafe timer: Ensure all sections are 100% visible even if observer encounters lag/scroll restoration
+    const timer = setTimeout(() => {
+      revealAll();
+    }, 1200);
 
     return () => {
+      clearTimeout(timer);
       observer.disconnect();
     };
   }, []);
