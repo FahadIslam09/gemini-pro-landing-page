@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   X,
   Copy,
@@ -64,12 +65,13 @@ const DEFAULT_PLANS: Record<string, PlanDetail> = {
 
 function BkashIcon({ className = "w-4 h-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 512 512" fill="currentColor">
-      <path
-        d="M272.58 64l172.93 189.65L325.26 312l-52.68-248zm-33.16 0L66.49 253.65l120.25 58.35 52.68-248zm1.09 255.45l-44.59 128.55 120.26-64-75.67-64.55zM64 274.91l157.09 173.09-36.83-114.74L64 274.91zm384 0l-157.09 173.09 36.83-114.74L448 274.91z"
-        fill="#E2136E"
-      />
-    </svg>
+    <Image
+      src="/BKash-Icon2-Logo.wine.svg"
+      alt="bKash"
+      width={20}
+      height={20}
+      className={`object-contain ${className}`}
+    />
   );
 }
 
