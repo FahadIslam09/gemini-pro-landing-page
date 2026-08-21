@@ -83,3 +83,41 @@ export async function PUT(
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const order = await prisma.order.findUnique({ where: { id } });
+
+    if (!order) {
+      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
+    }
+
+    await prisma.order.delete({ where: { id } });
+
+    await prisma.adminLog.create({
+      data: {
+        adminId: session.adminId,
+        action: "DELETE_ORDER",
+        entity: "order",
+        entityId: id,
+        details: `Deleted order ${order.orderNumber}`,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `অর্ডার ${order.orderNumber} মুছে ফেলা হয়েছে`,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}

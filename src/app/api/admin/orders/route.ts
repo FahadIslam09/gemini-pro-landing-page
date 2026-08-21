@@ -73,3 +73,81 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { customerName, targetEmail, customerPhone, planKey = "18m", amount, paymentMethod = "bkash_manual", trxId, orderStatus = "active", notes } = body;
+
+    if (!customerName || !targetEmail) {
+      return NextResponse.json({ success: false, message: "গ্রাহকের নাম ও ইমেইল আবশ্যক" }, { status: 400 });
+    }
+
+    const plan = await prisma.planPricing.findUnique({ where: { planKey } });
+    const finalAmount = amount ? Number(amount) : (plan ? plan.price : 499);
+    const planName = plan ? plan.name : `Google AI Pro (${planKey})`;
+    const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const buyer = await prisma.buyer.upsert({
+      where: { email: targetEmail.trim().toLowerCase() },
+      create: {
+        name: customerName.trim(),
+        email: targetEmail.trim().toLowerCase(),
+        phone: customerPhone?.trim(),
+        totalOrders: 1,
+        totalSpent: finalAmount,
+        currentPlan: planName,
+        status: "active",
+      },
+      update: {
+        name: customerName.trim(),
+        phone: customerPhone?.trim(),
+        totalOrders: { increment: 1 },
+        totalSpent: { increment: finalAmount },
+        currentPlan: planName,
+      },
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        orderNumber,
+        planKey,
+        planName,
+        amount: finalAmount,
+        paymentMethod,
+        paymentStatus: "paid",
+        orderStatus,
+        trxId: trxId ? trxId.trim() : `ADM-${Date.now().toString(36).toUpperCase()}`,
+        payerPhone: customerPhone ? customerPhone.trim() : "Admin Entry",
+        targetEmail: targetEmail.trim().toLowerCase(),
+        customerName: customerName.trim(),
+        customerPhone: customerPhone ? customerPhone.trim() : "01700000000",
+        buyerId: buyer.id,
+        notes: notes ? String(notes) : "Created manually by admin",
+      },
+    });
+
+    await prisma.adminLog.create({
+      data: {
+        adminId: session.adminId,
+        action: "CREATE_ORDER",
+        entity: "order",
+        entityId: order.id,
+        details: `Admin created order ${order.orderNumber} for ${order.customerName}`,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      order,
+      message: "অর্ডারটি সফলভাবে তৈরি হয়েছে",
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
+}

@@ -15,12 +15,39 @@ import {
   AlertCircle,
   X,
   Plus,
+  Trash2,
 } from "lucide-react";
 
 export default function AdminPricingPage() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPlan, setEditingPlan] = useState<any | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newPlan, setNewPlan] = useState({
+    planKey: "",
+    name: "",
+    price: 499,
+    originalPrice: 2499,
+    discountPercent: 80,
+    monthlyBreakdown: "৳499 / মাস",
+    badge: "নতুন প্ল্যান",
+    badgeColor: "bg-blue-50 text-brand-blue border-blue-200",
+    description: "বিশেষ প্যাকেজ",
+    accountTypeTitle: "প্রাইভেট অ্যাকাউন্ট",
+    accountTypeSubtitle: "সম্পূর্ণ নিজস্ব এক্সেস",
+    accountTypeStyle: "bg-blue-50/80 border-blue-200 text-brand-blue",
+    accountTypeIcon: "ShieldCheck",
+    highlights: [
+      "Gemini 3.1 Pro ও Deep Research এক্সেস",
+      "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+      "সক্রিয় মেয়াদ ও সাপোর্ট",
+    ],
+    durationPerk: "সম্পূর্ণ মেয়াদে সাপোর্ট",
+    popular: false,
+    isActive: true,
+  });
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -75,6 +102,46 @@ export default function AdminPricingPage() {
     }
   };
 
+  const handleCreatePlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/admin/pricing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newPlan),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("নতুন সাবস্ক্রিপশন প্ল্যান তৈরি হয়েছে!");
+        setCreateModalOpen(false);
+        fetchPlans();
+      } else {
+        showToast(data.message || "প্ল্যান তৈরি ব্যর্থ", "error");
+      }
+    } catch {
+      showToast("সার্ভার ত্রুটি", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeletePlan = async () => {
+    if (!deletingId) return;
+    try {
+      const res = await fetch(`/api/admin/pricing/${deletingId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        showToast("প্ল্যান মুছে ফেলা হয়েছে");
+        setDeletingId(null);
+        fetchPlans();
+      }
+    } catch {
+      showToast("মুছে ফেলতে ব্যর্থ", "error");
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -106,15 +173,26 @@ export default function AdminPricingPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchPlans}
-          disabled={loading}
-          className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>রিফ্রেশ</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>নতুন প্ল্যান</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={fetchPlans}
+            disabled={loading}
+            className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       {/* Pricing Cards Grid */}
@@ -197,15 +275,26 @@ export default function AdminPricingPage() {
                   </div>
                 </div>
 
-                {/* Edit Button */}
-                <button
-                  type="button"
-                  onClick={() => setEditingPlan({ ...plan })}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-3 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>প্ল্যান এডিট করুন</span>
-                </button>
+                {/* Edit & Delete Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingPlan({ ...plan })}
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>এডিট করুন</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDeletingId(plan.id)}
+                    className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-colors cursor-pointer"
+                    title="Delete Plan"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             );
           })
@@ -216,7 +305,6 @@ export default function AdminPricingPage() {
       {editingPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
           <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95">
-            
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 font-outfit">
@@ -346,7 +434,7 @@ export default function AdminPricingPage() {
                     onChange={(e) => setEditingPlan({ ...editingPlan, isActive: e.target.checked })}
                     className="rounded text-brand-blue"
                   />
-                  <span className="font-semibold text-slate-700">ওয়েবসাইটে সক্রিয় (Active) রাখুন</span>
+                  <span className="font-semibold text-slate-700">সক্রিয় (Active) রাখুন</span>
                 </label>
               </div>
 
@@ -369,6 +457,175 @@ export default function AdminPricingPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Plan Modal Dialog */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 font-bangla">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900 font-outfit">
+                Create New Subscription Plan
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCreateModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePlan} className="p-6 max-h-[75vh] overflow-y-auto space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    প্ল্যান কী (Unique Key e.g. 6m, 24m) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlan.planKey}
+                    onChange={(e) => setNewPlan({ ...newPlan, planKey: e.target.value.toLowerCase().trim() })}
+                    placeholder="যেমন: 6m"
+                    required
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    প্ল্যানের পুরো নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlan.name}
+                    onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                    placeholder="যেমন: ৬ মাসের প্যাকেজ"
+                    required
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    বিক্রয় মূল্য (৳ BDT) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={newPlan.price}
+                    onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })}
+                    required
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Monthly Breakdown Text
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlan.monthlyBreakdown}
+                    onChange={(e) => setNewPlan({ ...newPlan, monthlyBreakdown: e.target.value })}
+                    placeholder="যেমন: ৳৫৯ / মাস"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    অ্যাকাউন্ট টাইপ শিরোনাম
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlan.accountTypeTitle}
+                    onChange={(e) => setNewPlan({ ...newPlan, accountTypeTitle: e.target.value })}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    অ্যাকাউন্ট টাইপ সাবটাইটেল
+                  </label>
+                  <input
+                    type="text"
+                    value={newPlan.accountTypeSubtitle}
+                    onChange={(e) => setNewPlan({ ...newPlan, accountTypeSubtitle: e.target.value })}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  বিবরণ
+                </label>
+                <input
+                  type="text"
+                  value={newPlan.description}
+                  onChange={(e) => setNewPlan({ ...newPlan, description: e.target.value })}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSaving ? "সংরক্ষণ হচ্ছে..." : "প্ল্যান তৈরি করুন"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal Dialog */}
+      {deletingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in font-bangla">
+          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-slate-900 mb-1">
+              প্ল্যান মুছে ফেলতে চান?
+            </h4>
+            <p className="text-xs text-slate-500 mb-6">
+              এটি ডাটাবেজ থেকে মুছে যাবে এবং ওয়েবসাইটের তালিকায় আর থাকবে না।
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingId(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={handleDeletePlan}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs"
+              >
+                মুছে ফেলুন
+              </button>
+            </div>
           </div>
         </div>
       )}

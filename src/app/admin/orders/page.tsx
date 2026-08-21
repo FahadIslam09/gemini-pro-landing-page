@@ -19,6 +19,9 @@ import {
   MessageSquare,
   Mail,
   ShieldCheck,
+  Plus,
+  Download,
+  Trash2,
 } from "lucide-react";
 
 export default function AdminOrdersPage() {
@@ -32,7 +35,22 @@ export default function AdminOrdersPage() {
   const [totalCount, setTotalCount] = useState(0);
 
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newOrder, setNewOrder] = useState({
+    customerName: "",
+    targetEmail: "",
+    customerPhone: "",
+    planKey: "18m",
+    amount: 499,
+    paymentMethod: "bkash_manual",
+    trxId: "",
+    orderStatus: "active",
+    notes: "",
+  });
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -87,6 +105,7 @@ export default function AdminOrdersPage() {
           orderStatus: newStatus,
           notes: selectedOrder.notes,
           trxId: selectedOrder.trxId,
+          paymentStatus: newStatus === "active" ? "paid" : selectedOrder.paymentStatus,
         }),
       });
 
@@ -103,6 +122,90 @@ export default function AdminOrdersPage() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleCreateManualOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const res = await fetch("/api/admin/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrder),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast("নতুন অর্ডার সফলভাবে তৈরি হয়েছে!");
+        setCreateModalOpen(false);
+        setNewOrder({
+          customerName: "",
+          targetEmail: "",
+          customerPhone: "",
+          planKey: "18m",
+          amount: 499,
+          paymentMethod: "bkash_manual",
+          trxId: "",
+          orderStatus: "active",
+          notes: "",
+        });
+        fetchOrders();
+      } else {
+        showToast(data.message || "অর্ডার তৈরি ব্যর্থ", "error");
+      }
+    } catch {
+      showToast("সার্ভার ত্রুটি", "error");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deletingId) return;
+    try {
+      const res = await fetch(`/api/admin/orders/${deletingId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        showToast("অর্ডারটি মুছে ফেলা হয়েছে");
+        setDeletingId(null);
+        fetchOrders();
+      }
+    } catch {
+      showToast("মুছে ফেলতে ব্যর্থ", "error");
+    }
+  };
+
+  const exportToCSV = () => {
+    if (orders.length === 0) {
+      showToast("এক্সপোর্ট করার মতো কোনো ডাটা নেই", "error");
+      return;
+    }
+    const headers = ["OrderNumber,CustomerName,TargetEmail,Phone,Plan,Amount,PaymentMethod,TrxID,PaymentStatus,OrderStatus,CreatedAt"];
+    const rows = orders.map((o) =>
+      [
+        `"${o.orderNumber}"`,
+        `"${o.customerName}"`,
+        `"${o.targetEmail}"`,
+        `"${o.customerPhone || ""}"`,
+        `"${o.planKey}"`,
+        `"${o.amount}"`,
+        `"${o.paymentMethod}"`,
+        `"${o.trxId || ""}"`,
+        `"${o.paymentStatus}"`,
+        `"${o.orderStatus}"`,
+        `"${new Date(o.createdAt).toISOString()}"`,
+      ].join(",")
+    );
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `google_ai_pro_orders_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("CSV সফলভাবে ডাউনলোড হয়েছে!");
   };
 
   return (
@@ -136,15 +239,35 @@ export default function AdminOrdersPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={fetchOrders}
-          disabled={loading}
-          className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>রিফ্রেশ</span>
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={exportToCSV}
+            className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>CSV এক্সপোর্ট</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>ম্যানুয়াল অর্ডার</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={fetchOrders}
+            disabled={loading}
+            className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
@@ -281,7 +404,7 @@ export default function AdminOrdersPage() {
                             <button
                               type="button"
                               onClick={() => handleCopyTrx(order.trxId, order.id)}
-                              className="text-slate-400 hover:text-slate-700"
+                              className="text-slate-400 hover:text-slate-700 cursor-pointer"
                               title="Copy TrxID"
                             >
                               {copiedId === order.id ? (
@@ -329,14 +452,25 @@ export default function AdminOrdersPage() {
 
                     {/* Actions */}
                     <td className="py-4 px-5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrder({ ...order })}
-                        className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>বিস্তারিত</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOrder({ ...order })}
+                          className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>বিস্তারিত</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeletingId(order.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 cursor-pointer"
+                          title="Delete Order"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -370,6 +504,189 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Manual Order Modal Dialog */}
+      {createModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 font-bangla">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900 font-outfit">
+                Create Manual Order
+              </h3>
+              <button
+                type="button"
+                onClick={() => setCreateModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateManualOrder} className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    গ্রাহকের নাম <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newOrder.customerName}
+                    onChange={(e) => setNewOrder({ ...newOrder, customerName: e.target.value })}
+                    required
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    টার্গেট জিমেইল <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={newOrder.targetEmail}
+                    onChange={(e) => setNewOrder({ ...newOrder, targetEmail: e.target.value })}
+                    required
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    ফোন নম্বর
+                  </label>
+                  <input
+                    type="tel"
+                    value={newOrder.customerPhone}
+                    onChange={(e) => setNewOrder({ ...newOrder, customerPhone: e.target.value })}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    প্ল্যান নির্বাচন করুন
+                  </label>
+                  <select
+                    value={newOrder.planKey}
+                    onChange={(e) => {
+                      const pk = e.target.value;
+                      setNewOrder({
+                        ...newOrder,
+                        planKey: pk,
+                        amount: pk === "18m" ? 499 : pk === "12m" ? 399 : 149,
+                      });
+                    }}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  >
+                    <option value="18m">১৮ মাস - মেগা অফার (৳499)</option>
+                    <option value="12m">১২ মাস - বার্ষিক প্ল্যান (৳399)</option>
+                    <option value="1m">১ মাস - ট্রায়াল প্যাক (৳149)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    পেমেন্ট মেথড
+                  </label>
+                  <select
+                    value={newOrder.paymentMethod}
+                    onChange={(e) => setNewOrder({ ...newOrder, paymentMethod: e.target.value })}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                  >
+                    <option value="bkash_manual">bKash (Send Money)</option>
+                    <option value="bkash_gateway">bKash (Gateway)</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="rocket">Rocket</option>
+                    <option value="bank">Bank Transfer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    ট্রানজেকশন আইডি (TrxID)
+                  </label>
+                  <input
+                    type="text"
+                    value={newOrder.trxId}
+                    onChange={(e) => setNewOrder({ ...newOrder, trxId: e.target.value })}
+                    placeholder="ঐচ্ছিক"
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  অর্ডার স্ট্যাটাস
+                </label>
+                <select
+                  value={newOrder.orderStatus}
+                  onChange={(e) => setNewOrder({ ...newOrder, orderStatus: e.target.value })}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
+                >
+                  <option value="active">সক্রিয় (Active)</option>
+                  <option value="pending_activation">পেন্ডিং অ্যাক্টিভেশন (Pending)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="inline-flex items-center gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-6 py-2.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isCreating ? "সংরক্ষণ হচ্ছে..." : "অর্ডার তৈরি করুন"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center animate-in zoom-in-95 font-bangla">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-slate-900 mb-1">
+              অর্ডার মুছে ফেলতে চান?
+            </h4>
+            <p className="text-xs text-slate-500 mb-6">
+              এই অর্ডারটি ডাটাবেজ থেকে স্থায়ীভাবে মুছে যাবে।
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingId(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteOrder}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs"
+              >
+                মুছে ফেলুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Order Detail & Status Update Modal Dialog */}
       {selectedOrder && (
