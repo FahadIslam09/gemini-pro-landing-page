@@ -44,10 +44,9 @@ export default function Hero({ onOpenCheckout }: HeroProps) {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.12] tracking-tight mb-5 text-center lg:text-left">
-              <span className="block">18 মাসের</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.14] tracking-tight mb-5 text-center lg:text-left">
               <span className="block">
-                Google <span className="gradient-text">AI Pro</span>
+                18 মাসের Google <span className="gradient-text">AI Pro</span>
               </span>
               <span className="block text-brand-dark">মাত্র ৳499!</span>
             </h1>
