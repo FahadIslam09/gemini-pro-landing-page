@@ -40,23 +40,14 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
   const cleanPhone = payload.customerPhone.replace(/[^0-9]/g, "");
   const waPhone = cleanPhone.startsWith("88") ? cleanPhone : `88${cleanPhone}`;
 
-  // Formatted 1-Click Copy Summary Block (tapping inside copies the entire text block in Telegram)
-  const copyAllBlock = `নাম: ${payload.customerName}
-জিমেইল: ${payload.customerEmail}
-ফোন: ${payload.customerPhone}
-প্ল্যান: ${payload.planName}
-টাকা: ৳${payload.amount} BDT
-পেমেন্ট: ${payload.paymentMethod}
-TrxID: ${payload.trxId}
-অর্ডার নং: ${payload.orderNumber}`;
-
+  // Clean Telegram notification with 1-click single field copy on tap (Name, Email, Phone, TrxID, Order ID)
   const messageHtml = `
 🚀 <b>নতুন সাবস্ক্রিপশন অর্ডার রিসিভড!</b>
 ━━━━━━━━━━━━━━━━━━
 🆔 <b>অর্ডার নং:</b> <code>${payload.orderNumber}</code>
-👤 <b>গ্রাহক:</b> <code>${payload.customerName}</code>
+👤 <b>গ্রাহকের নাম:</b> <code>${payload.customerName}</code>
 📧 <b>জিমেইল:</b> <code>${payload.customerEmail}</code>
-📱 <b>ফোন:</b> <code>${payload.customerPhone}</code>
+📱 <b>ফোন নম্বর:</b> <code>${payload.customerPhone}</code>
 
 📦 <b>প্ল্যান:</b> ${payload.planName}
 💰 <b>টাকার পরিমাণ:</b> <b>৳${payload.amount} BDT</b>
@@ -66,10 +57,7 @@ TrxID: ${payload.trxId}
 ⏰ <b>সময়:</b> ${nowFormatted}
 ⚡ <b>স্ট্যাটাস:</b> ${payload.status || "পেমেন্ট সম্পন্ন / সক্রিয় অপেক্ষমাণ"}
 ━━━━━━━━━━━━━━━━━━
-📋 <b>সব তথ্য একসাথে কপি করতে নিচে ট্যাপ করুন:</b>
-<pre>${copyAllBlock}</pre>
-━━━━━━━━━━━━━━━━━━
-👉 <i>অ্যাডমিন প্যানেল থেকে দ্রুত অ্যাক্সেস চালু করে দিন।</i>
+💡 <i>যেকোনো তথ্যে (জিমেইল / ফোন / TrxID) ট্যাপ করলেই ১-ক্লিকে কপি হবে।</i>
   `.trim();
 
   // Telegram Inline Keyboard Buttons
