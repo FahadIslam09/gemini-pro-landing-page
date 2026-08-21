@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
+import { sendTelegramOrderNotification } from "@/lib/telegram";
 
 export async function POST(req: NextRequest) {
   try {
@@ -89,6 +90,19 @@ export async function POST(req: NextRequest) {
         order_id: orderNumber,
       },
     }).catch((err) => console.error("Meta CAPI async error:", err));
+
+    // Send Instant Telegram Bot Alert
+    sendTelegramOrderNotification({
+      orderNumber: order.orderNumber,
+      customerName: fullName.trim(),
+      customerEmail: email.trim(),
+      customerPhone: phone.trim(),
+      planName,
+      amount,
+      paymentMethod,
+      trxId: trxId.trim(),
+      status: "ম্যানুয়াল পেমেন্ট ভেরিফিকেশন প্রয়োজন",
+    }).catch((err) => console.error("Telegram async error:", err));
 
     return NextResponse.json({
       success: true,

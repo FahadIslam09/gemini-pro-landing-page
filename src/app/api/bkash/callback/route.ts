@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { executeBKashPayment } from "@/lib/bkash";
 import { prisma } from "@/lib/prisma";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
+import { sendTelegramOrderNotification } from "@/lib/telegram";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -101,9 +102,18 @@ export async function GET(req: NextRequest) {
             content_category: "AI Subscription",
             content_ids: [existingOrder.planKey],
             content_type: "product",
-            order_id: existingOrder.orderNumber,
-          },
-        }).catch((err) => console.error("Meta CAPI bKash error:", err));
+        // Send Instant Telegram Bot Alert
+        sendTelegramOrderNotification({
+          orderNumber: existingOrder.orderNumber,
+          customerName: existingOrder.customerName,
+          customerEmail: existingOrder.targetEmail,
+          customerPhone: existingOrder.customerPhone || payer,
+          planName: existingOrder.planName,
+          amount: Number(amount) || existingOrder.amount,
+          paymentMethod: "bKash (অটো গেটওয়ে)",
+          trxId: trxID,
+          status: "পেমেন্ট সফল ও ভেরিফাইড",
+        }).catch((err) => console.error("Telegram async error:", err));
       }
 
       return NextResponse.redirect(
