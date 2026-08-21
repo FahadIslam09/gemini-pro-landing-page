@@ -33,7 +33,7 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
   };
 
   return (
-    <section className="py-20 lg:py-28 bg-gradient-to-b from-brand-surface via-[#F6F8FD] to-brand-surface relative overflow-hidden border-t border-brand-border/60">
+    <section className="pt-16 lg:pt-24 pb-8 lg:pb-10 bg-gradient-to-b from-brand-surface via-[#F6F8FD] to-brand-surface relative overflow-hidden border-t border-brand-border/60">
       
       {/* Ambient Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-r from-brand-blue/10 via-brand-purple/10 to-brand-indigo/10 blur-3xl pointer-events-none rounded-full" />

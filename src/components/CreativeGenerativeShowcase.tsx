@@ -11,7 +11,7 @@ export default function CreativeGenerativeShowcase({
   onOpenCheckout,
 }: CreativeGenerativeShowcaseProps) {
   return (
-    <section className="py-20 lg:py-28 bg-gradient-to-b from-brand-surface via-[#F5F8FE] to-brand-surface relative overflow-hidden border-t border-brand-border/60">
+    <section className="pt-4 lg:pt-6 pb-20 lg:pb-28 bg-gradient-to-b from-transparent to-brand-surface relative overflow-hidden">
       
       {/* Subtle Ambient Glows */}
       <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-brand-blue/8 blur-3xl pointer-events-none rounded-full" />
