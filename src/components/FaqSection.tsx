@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Minus, HelpCircle } from "lucide-react";
+import { Plus, HelpCircle } from "lucide-react";
 
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -63,38 +63,49 @@ export default function FaqSection() {
           </p>
         </div>
 
-        {/* 2-Column Accordion Grid */}
+        {/* 2-Column Accordion Grid with Smooth Opening and Closing Transitions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {faqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
             return (
               <div
                 key={idx}
-                className={`bg-white border rounded-2xl transition-all duration-200 overflow-hidden ${
+                className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
                   isOpen
-                    ? "border-brand-purple/40 shadow-sm"
-                    : "border-brand-border hover:border-brand-border/80"
+                    ? "border-brand-purple/40 shadow-sm bg-gradient-to-b from-white to-[#FBFBFE]"
+                    : "border-brand-border hover:border-brand-border/90"
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => toggleFaq(idx)}
-                  className="w-full text-left p-5 flex items-center justify-between gap-4 font-semibold text-base text-brand-dark hover:text-brand-blue transition-colors"
+                  className="w-full text-left p-5 flex items-center justify-between gap-4 font-semibold text-base text-brand-dark hover:text-brand-blue transition-colors cursor-pointer"
                   aria-expanded={isOpen}
                 >
-                  <span>{faq.q}</span>
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                    isOpen ? "bg-brand-purple text-white" : "bg-gray-100 text-brand-muted"
-                  }`}>
-                    {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span className="leading-snug">{faq.q}</span>
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                      isOpen
+                        ? "bg-brand-purple text-white rotate-45 shadow-sm"
+                        : "bg-gray-100 text-brand-muted rotate-0"
+                    }`}
+                  >
+                    <Plus className="w-4 h-4 transition-transform duration-300" />
                   </div>
                 </button>
 
-                {isOpen && (
-                  <div className="px-5 pb-5 text-sm text-brand-body leading-relaxed border-t border-dashed border-gray-100 pt-3 animate-in fade-in duration-200">
-                    <p>{faq.a}</p>
+                {/* Animated Collapsible Container (Smooth Height and Opacity) */}
+                <div
+                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-5 text-sm text-brand-body leading-relaxed border-t border-dashed border-gray-100 pt-3">
+                      <p>{faq.a}</p>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })}
