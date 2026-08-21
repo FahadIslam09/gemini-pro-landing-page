@@ -486,7 +486,7 @@ export default function CheckoutModal({
                           : "bg-white border-brand-border text-brand-body hover:border-gray-300"
                       }`}
                     >
-                      bKash (সেন্ড মানি)
+                      bKash (ম্যানুয়াল)
                     </button>
                     <button
                       type="button"
@@ -531,7 +531,7 @@ export default function CheckoutModal({
                     <div className="bg-[#F8F9FD] border border-brand-border rounded-2xl p-4 space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-brand-body font-medium font-bangla">
-                          Send Money নম্বর ({paymentMethod === "bkash_manual" ? "bKash" : paymentMethod.toUpperCase()} Personal):
+                          ম্যানুয়াল পেমেন্ট নম্বর ({paymentMethod === "bkash_manual" ? "bKash" : paymentMethod.toUpperCase()} Personal):
                         </span>
                         <div className="flex items-center gap-1.5">
                           <strong className="font-outfit text-brand-dark font-bold text-sm">
