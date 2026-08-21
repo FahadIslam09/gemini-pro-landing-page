@@ -14,14 +14,28 @@ import {
   RefreshCw,
   ExternalLink,
   ShieldCheck,
+  Plus,
+  Trash2,
+  AlertCircle,
+  Check,
+  CreditCard,
+  Sparkles,
 } from "lucide-react";
 
 export default function AdminOverviewPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const fetchStats = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/admin/stats");
       const json = await res.json();
@@ -31,13 +45,37 @@ export default function AdminOverviewPage() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStats();
+    // Live Auto-Refresh every 10 seconds for real-time order monitoring
+    const interval = setInterval(() => {
+      fetchStats(true);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  const handleResetDemoData = async () => {
+    setIsResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset-demo", { method: "POST" });
+      const json = await res.json();
+      if (json.success) {
+        showToast(json.message);
+        setResetModalOpen(false);
+        fetchStats();
+      } else {
+        showToast(json.message || "রিসেট ব্যর্থ", "error");
+      }
+    } catch {
+      showToast("সার্ভার ত্রুটি", "error");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const stats = data?.stats || {
     totalRevenue: 0,
@@ -50,33 +88,59 @@ export default function AdminOverviewPage() {
   const recentOrders = data?.recentOrders || [];
   const recentBuyers = data?.recentBuyers || [];
   const planDistribution = data?.planDistribution || { "1m": 0, "12m": 0, "18m": 0 };
+  const paymentMethods = data?.paymentMethodDistribution || {};
 
   return (
     <div className="space-y-6">
       
+      {/* Toast Alert */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 ${
+            toast.type === "error"
+              ? "bg-rose-900 text-white border border-rose-700"
+              : "bg-slate-900 text-white"
+          }`}
+        >
+          {toast.type === "error" ? <AlertCircle className="w-4 h-4 text-rose-400" /> : <Check className="w-4 h-4 text-emerald-400" />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* Top Banner / Welcome Action */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div>
-          <div className="inline-flex items-center gap-1.5 bg-brand-purple/10 text-brand-purple px-3 py-1 rounded-full text-xs font-bold font-outfit mb-2">
-            <span>Executive Business Monitor</span>
+          <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold font-outfit mb-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live MongoDB Atlas Data Sync</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-outfit">
             Google AI Pro Overview
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            রিয়েল-টাইম বিক্রয়, সাবস্ক্রিপশন ও গ্রাহক অ্যাক্টিভেশনের সারাংশ
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-bangla">
+            রিয়েল-টাইম বিক্রয়, সাবস্ক্রিপশন ও গ্রাহক ডাটাবেজ সরাসরি পর্যবেক্ষণ করুন।
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
-            onClick={fetchStats}
+            onClick={() => fetchStats()}
             disabled={loading}
             className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>রিফ্রেশ</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setResetModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-rose-200 transition-colors cursor-pointer"
+            title="Clear all demo orders and buyers"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>ক্লিন ডাটাবেজ</span>
           </button>
 
           <Link
@@ -120,7 +184,7 @@ export default function AdminOverviewPage() {
             {stats.totalOrders}
           </div>
           <span className="text-[11px] text-slate-500 font-medium mt-1 block">
-            সর্বমোট সাবমিট হওয়া অর্ডার
+            ডাটাবেজে মোট অর্ডার
           </span>
         </div>
 
@@ -175,13 +239,17 @@ export default function AdminOverviewPage() {
 
       {/* Plan Sales Breakdown Bar */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs">
-        <h3 className="text-sm font-bold text-slate-900 font-outfit uppercase tracking-wider mb-4">
-          Plan Sales Distribution
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-900 font-outfit uppercase tracking-wider">
+            Plan Sales Distribution
+          </h3>
+          <span className="text-xs text-slate-400 font-mono">Live DB Analytics</span>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-slate-600 block">১৮ মাসের মেগা প্ল্যান (৳499)</span>
+              <span className="text-xs font-bold text-slate-600 block">১৮ মাসের মেগা প্ল্যান</span>
               <span className="text-[11px] text-slate-500">প্রাইভেট অ্যাকাউন্ট</span>
             </div>
             <span className="text-xl font-bold font-outfit text-brand-purple">
@@ -191,7 +259,7 @@ export default function AdminOverviewPage() {
 
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-slate-600 block">১২ মাসের প্ল্যান (৳399)</span>
+              <span className="text-xs font-bold text-slate-600 block">১২ মাসের প্ল্যান</span>
               <span className="text-[11px] text-slate-500">বার্ষিক প্যাকেজ</span>
             </div>
             <span className="text-xl font-bold font-outfit text-amber-600">
@@ -201,7 +269,7 @@ export default function AdminOverviewPage() {
 
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-slate-600 block">১ মাসের প্ল্যান (৳149)</span>
+              <span className="text-xs font-bold text-slate-600 block">১ মাসের প্ল্যান</span>
               <span className="text-[11px] text-slate-500">ফ্যামিলি ইনভাইট</span>
             </div>
             <span className="text-xl font-bold font-outfit text-brand-blue">
@@ -215,11 +283,11 @@ export default function AdminOverviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Recent Orders (7 cols) */}
-        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between font-bangla">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 font-outfit">
-                Recent Orders
+                Recent Orders ({recentOrders.length})
               </h3>
               <Link
                 href="/admin/orders"
@@ -244,8 +312,8 @@ export default function AdminOverviewPage() {
                 <tbody className="divide-y divide-slate-100">
                   {recentOrders.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-slate-400">
-                        কোনো অর্ডার রেকর্ড পাওয়া যায়নি
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        এখনো কোনো নতুন অর্ডার আসেনি
                       </td>
                     </tr>
                   ) : (
@@ -274,7 +342,7 @@ export default function AdminOverviewPage() {
                               order.orderStatus === "active"
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                 : order.orderStatus === "pending_activation"
-                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                ? "bg-amber-50 text-amber-700 border border-amber-200 animate-pulse"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
@@ -300,11 +368,11 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Recent Buyers (5 cols) */}
-        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between font-bangla">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-slate-900 font-outfit">
-                Recent Buyers
+                Recent Buyers ({recentBuyers.length})
               </h3>
               <Link
                 href="/admin/buyers"
@@ -317,8 +385,8 @@ export default function AdminOverviewPage() {
 
             <div className="space-y-3">
               {recentBuyers.length === 0 ? (
-                <p className="py-6 text-center text-xs text-slate-400">
-                  কোনো গ্রাহক পাওয়া যায়নি
+                <p className="py-8 text-center text-xs text-slate-400">
+                  কোনো গ্রাহক রেকর্ড পাওয়া যায়নি
                 </p>
               ) : (
                 recentBuyers.map((buyer: any) => (
@@ -364,6 +432,40 @@ export default function AdminOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Clean Demo Data Modal Dialog */}
+      {resetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in font-bangla">
+          <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-bold text-slate-900 mb-1">
+              ডাটাবেজ ক্লিন করতে চান?
+            </h4>
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+              এটি সব ডেমো/টেস্ট অর্ডার এবং গ্রাহক ডাটা মুছে দিয়ে রেভিনিউ ৳০ এবং অর্ডার কাউন্ট ০ করবে। অ্যাডমিন লগিন বা প্ল্যানের কোনো ক্ষতি হবে না।
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setResetModalOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                বাতিল
+              </button>
+              <button
+                type="button"
+                onClick={handleResetDemoData}
+                disabled={isResetting}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs"
+              >
+                {isResetting ? "ক্লিন হচ্ছে..." : "হ্যাঁ, ক্লিন করুন"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
