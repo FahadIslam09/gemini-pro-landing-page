@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, ShieldCheck, Sparkles, ArrowRight, Copy, Check, MessageSquare, Mail } from "lucide-react";
 import confetti from "canvas-confetti";
+import { trackPixelEvent } from "@/lib/pixel-client";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -25,7 +26,20 @@ function SuccessContent() {
       origin: { y: 0.5 },
       colors: ["#3157D5", "#5B55D8", "#7B4FD8", "#2FA36B", "#E11470"],
     });
-  }, []);
+
+    // Track Meta Pixel Purchase Event
+    trackPixelEvent(
+      "Purchase",
+      {
+        currency: "BDT",
+        value: Number(amount) || 499,
+        content_name: "Google AI Pro Subscription",
+        content_category: "AI Subscription",
+        order_id: invoice,
+      },
+      `pur_bkash_client_${trxID}`
+    );
+  }, [amount, invoice, trxID]);
 
   const handleCopyTrx = () => {
     navigator.clipboard.writeText(trxID);

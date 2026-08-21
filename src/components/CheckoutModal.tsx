@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { trackPixelEvent, generateEventId } from "@/lib/pixel-client";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -70,6 +71,16 @@ export default function CheckoutModal({
   useEffect(() => {
     if (initialPlan) {
       setSelectedPlan(initialPlan);
+    }
+    if (isOpen) {
+      const plan = plansMap[initialPlan || selectedPlan] || DEFAULT_PLAN_DETAILS["18m"];
+      trackPixelEvent("InitiateCheckout", {
+        content_name: plan.name,
+        content_category: "AI Subscription",
+        content_ids: [initialPlan || selectedPlan],
+        currency: "BDT",
+        value: plan.price,
+      });
     }
   }, [initialPlan, isOpen]);
 
@@ -173,6 +184,8 @@ export default function CheckoutModal({
     setSubmissionProgress(25);
     setProgressStatusText("ডাটাবেজে অর্ডার এনক্রিপ্ট ও সেভ হচ্ছে...");
 
+    const purchaseEventId = generateEventId();
+
     try {
       const res = await fetch("/api/orders/manual", {
         method: "POST",
@@ -184,6 +197,7 @@ export default function CheckoutModal({
           planId: selectedPlan,
           paymentMethod: paymentMethod === "bkash" ? "bkash_manual" : paymentMethod,
           trxId,
+          eventId: purchaseEventId,
         }),
       });
 
@@ -198,6 +212,20 @@ export default function CheckoutModal({
         setIsSubmitting(false);
         setIsCompleted(true);
         setTrackingId(data.orderNumber || `#GAI-${Math.floor(10000 + Math.random() * 90000)}`);
+
+        // Client-side Meta Pixel Purchase Event (Deduplicated with CAPI via purchaseEventId)
+        trackPixelEvent(
+          "Purchase",
+          {
+            currency: "BDT",
+            value: currentPlan.price,
+            content_name: currentPlan.name,
+            content_ids: [selectedPlan],
+            content_type: "product",
+            order_id: data.orderNumber,
+          },
+          purchaseEventId
+        );
 
         confetti({
           particleCount: 80,

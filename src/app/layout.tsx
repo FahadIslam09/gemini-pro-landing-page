@@ -47,6 +47,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+import { Suspense } from "react";
+import MetaPixel from "@/components/MetaPixel";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,6 +58,9 @@ export default function RootLayout({
   return (
     <html lang="bn" className={`${hindSiliguri.variable} ${outfit.variable}`}>
       <body className="font-bangla antialiased selection:bg-brand-purple/20 selection:text-brand-purple">
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         {children}
       </body>
     </html>

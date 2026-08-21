@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendServerMetaEvent } from "@/lib/meta-pixel";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { fullName, email, phone, planId = "18m", paymentMethod = "bkash_manual", trxId } = body;
+    const { fullName, email, phone, planId = "18m", paymentMethod = "bkash_manual", trxId, eventId } = body;
 
     if (!fullName || !email || !phone || !trxId) {
       return NextResponse.json(
@@ -63,6 +64,31 @@ export async function POST(req: NextRequest) {
         notes: `Manual Send Money via ${paymentMethod}. TrxID: ${trxId.trim()}`,
       },
     });
+
+    // Server-side Meta Conversions API (CAPI) Purchase Event
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined;
+    const clientUserAgent = req.headers.get("user-agent") || undefined;
+
+    sendServerMetaEvent({
+      eventName: "Purchase",
+      eventId: eventId || `pur_${order.id}_${Date.now()}`,
+      userData: {
+        email: email.trim(),
+        phone: phone.trim(),
+        firstName: fullName.trim().split(" ")[0],
+        clientIpAddress: clientIp,
+        clientUserAgent: clientUserAgent,
+      },
+      customData: {
+        currency: "BDT",
+        value: amount,
+        content_name: planName,
+        content_category: "AI Subscription",
+        content_ids: [planId],
+        content_type: "product",
+        order_id: orderNumber,
+      },
+    }).catch((err) => console.error("Meta CAPI async error:", err));
 
     return NextResponse.json({
       success: true,

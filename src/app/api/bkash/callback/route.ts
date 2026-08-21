@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeBKashPayment } from "@/lib/bkash";
 import { prisma } from "@/lib/prisma";
+import { sendServerMetaEvent } from "@/lib/meta-pixel";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -78,6 +79,31 @@ export async function GET(req: NextRequest) {
             buyerId: buyer.id,
           },
         });
+
+        // Server-side Meta Conversions API (CAPI) Purchase Event
+        const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined;
+        const clientUserAgent = req.headers.get("user-agent") || undefined;
+
+        sendServerMetaEvent({
+          eventName: "Purchase",
+          eventId: `pur_bkash_${existingOrder.id}_${trxID}`,
+          userData: {
+            email: existingOrder.targetEmail,
+            phone: existingOrder.customerPhone || payer,
+            firstName: existingOrder.customerName.split(" ")[0],
+            clientIpAddress: clientIp,
+            clientUserAgent: clientUserAgent,
+          },
+          customData: {
+            currency: "BDT",
+            value: Number(amount) || existingOrder.amount,
+            content_name: existingOrder.planName,
+            content_category: "AI Subscription",
+            content_ids: [existingOrder.planKey],
+            content_type: "product",
+            order_id: existingOrder.orderNumber,
+          },
+        }).catch((err) => console.error("Meta CAPI bKash error:", err));
       }
 
       return NextResponse.redirect(
