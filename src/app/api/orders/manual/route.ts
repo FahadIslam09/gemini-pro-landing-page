@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
+import { sendCustomerEmail } from "@/lib/email";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +18,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cleanTrxId = trxId.trim().toUpperCase();
+
     // Look up plan from MongoDB
     const plan = await prisma.planPricing.findUnique({
       where: { planKey: planId },
@@ -22,8 +27,22 @@ export async function POST(req: NextRequest) {
 
     const amount = plan ? plan.price : planId === "18m" ? 499 : planId === "12m" ? 399 : 149;
     const planName = plan ? plan.name : `Google AI Pro (${planId})`;
-
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    // Check if an SMS transaction with this TrxID already exists in DB
+    const existingSms = await prisma.smsTransaction.findFirst({
+      where: {
+        trxId: {
+          equals: cleanTrxId,
+          mode: "insensitive",
+        },
+        isUsed: false,
+      },
+    });
+
+    const isAutoVerified = !!existingSms && existingSms.amount >= amount;
+    const initialPaymentStatus = isAutoVerified ? "paid" : "pending";
+    const initialOrderStatus = isAutoVerified ? "active" : "pending_activation";
 
     // Upsert Buyer in MongoDB
     const buyer = await prisma.buyer.upsert({
@@ -35,7 +54,7 @@ export async function POST(req: NextRequest) {
         totalOrders: 1,
         totalSpent: amount,
         currentPlan: planName,
-        status: "active",
+        status: isAutoVerified ? "active" : "pending",
       },
       update: {
         name: fullName.trim(),
@@ -54,17 +73,39 @@ export async function POST(req: NextRequest) {
         planName,
         amount,
         paymentMethod,
-        paymentStatus: "paid",
-        orderStatus: "pending_activation",
-        trxId: trxId.trim(),
+        paymentStatus: initialPaymentStatus,
+        orderStatus: initialOrderStatus,
+        trxId: cleanTrxId,
         payerPhone: phone.trim(),
         targetEmail: email.trim().toLowerCase(),
         customerName: fullName.trim(),
         customerPhone: phone.trim(),
         buyerId: buyer.id,
-        notes: `Manual Send Money via ${paymentMethod}. TrxID: ${trxId.trim()}`,
+        notes: isAutoVerified
+          ? `Auto-verified instantly against bKash/Nagad SMS (${existingSms?.provider.toUpperCase()}) on order creation`
+          : `Send Money via ${paymentMethod}. TrxID: ${cleanTrxId} (Pending SMS webhook match)`,
       },
     });
+
+    // If auto-verified by existing SMS, mark the SMS record as used
+    if (isAutoVerified && existingSms) {
+      await prisma.smsTransaction.update({
+        where: { id: existingSms.id },
+        data: {
+          isUsed: true,
+          usedInOrderId: orderNumber,
+        },
+      });
+
+      // Send instant confirmation email to customer
+      sendCustomerEmail({
+        to: email.trim().toLowerCase(),
+        customerName: fullName.trim(),
+        orderNumber,
+        planName,
+        messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। ধন্যবাদ!`,
+      }).catch((err) => console.error("Email send error:", err));
+    }
 
     // Server-side Meta Conversions API (CAPI) Purchase Event
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined;
@@ -100,15 +141,20 @@ export async function POST(req: NextRequest) {
       planName,
       amount,
       paymentMethod,
-      trxId: trxId.trim(),
-      status: "ম্যানুয়াল পেমেন্ট ভেরিফিকেশন প্রয়োজন",
+      trxId: cleanTrxId,
+      status: isAutoVerified
+        ? "✅ এসএমএস দিয়ে অটো-ভেরিফাইড ও পেইড (Auto Paid)"
+        : "⏳ এসএমএস ভেরিফিকেশন অপেক্ষমাণ (Pending SMS)",
     }).catch((err) => console.error("Telegram async error:", err));
 
     return NextResponse.json({
       success: true,
       orderNumber: order.orderNumber,
+      isAutoVerified,
       order,
-      message: "অর্ডারটি সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে",
+      message: isAutoVerified
+        ? "পেমেন্ট সফলভাবে স্বয়ংক্রিয়ভাবে ভেরিফাই ও অর্ডার কনফার্ম হয়েছে!"
+        : "অর্ডারটি সফলভাবে ডাটাবেজে সংরক্ষিত হয়েছে",
     });
   } catch (error: any) {
     console.error("Manual order creation error:", error);
