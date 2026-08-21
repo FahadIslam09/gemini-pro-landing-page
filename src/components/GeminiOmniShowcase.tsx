@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Sparkles, Play, Pause, ArrowRight, Layers, Clapperboard, Palette, CheckCircle2 } from "lucide-react";
+import { Sparkles, Play, Pause, ArrowRight, Layers, Clapperboard, Palette, Mic, MicOff } from "lucide-react";
 
 interface GeminiOmniShowcaseProps {
   onOpenCheckout: (plan?: string) => void;
@@ -10,6 +10,7 @@ interface GeminiOmniShowcaseProps {
 export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcaseProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -20,6 +21,14 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
         videoRef.current.play();
         setIsPlaying(true);
       }
+    }
+  };
+
+  const toggleAudio = () => {
+    if (videoRef.current) {
+      const nextMuted = !isMuted;
+      videoRef.current.muted = nextMuted;
+      setIsMuted(nextMuted);
     }
   };
 
@@ -85,18 +94,42 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
                 src="/omni.mp4"
                 autoPlay
                 loop
-                muted
+                muted={isMuted}
                 playsInline
                 className="w-full h-full object-cover"
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
               />
 
+              {/* Sound / Mic Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleAudio}
+                className={`absolute bottom-4 left-4 flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95 z-20 ${
+                  isMuted
+                    ? "bg-black/70 hover:bg-black/90 text-white/90 border border-white/20"
+                    : "bg-brand-blue/90 hover:bg-brand-blue text-white border border-blue-400/40 shadow-blue-500/30"
+                }`}
+                aria-label={isMuted ? "সাউন্ড চালু করুন" : "সাউন্ড মিউট করুন"}
+              >
+                {isMuted ? (
+                  <>
+                    <MicOff className="w-4 h-4 text-red-400" />
+                    <span className="text-xs font-semibold font-bangla">সাউন্ড শুনুন (আনমিউট)</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 text-emerald-300 animate-pulse" />
+                    <span className="text-xs font-semibold font-bangla">সাউন্ড চালু আছে</span>
+                  </>
+                )}
+              </button>
+
               {/* Play/Pause Hover Overlay */}
               <button
                 type="button"
                 onClick={togglePlay}
-                className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95"
+                className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95 z-20"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
