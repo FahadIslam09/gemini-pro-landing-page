@@ -1,0 +1,62 @@
+import type { Metadata, Viewport } from "next";
+import { Hind_Siliguri, Outfit } from "next/font/google";
+import "./globals.css";
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-hind",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-outfit",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Google AI Pro — 18 Months Premium Subscription @ ৳499 BDT",
+  description:
+    "Google AI Pro 18 মাসের প্রিমিয়াম সাবস্ক্রিপশন মাত্র ৳499 টাকায়। Gemini Advanced (Gemini 1.5 Pro), 2 TB Google One Storage, Workspace AI ও YouTube Premium সুবিধা নিন নিরাপদে।",
+  keywords: [
+    "Google AI Pro",
+    "Gemini Advanced",
+    "Google One 2TB",
+    "YouTube Premium",
+    "AI Subscription Bangladesh",
+    "Gemini 1.5 Pro",
+    "bKash AI payment",
+  ],
+  authors: [{ name: "Google AI Pro Subscription Platform" }],
+  openGraph: {
+    title: "Google AI Pro — 18 Months Subscription @ ৳499 BDT",
+    description: "Gemini Advanced, 2 TB Storage, Workspace AI & YouTube Premium in Bangladesh.",
+    type: "website",
+    locale: "bn_BD",
+  },
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%235B55D8' d='M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z'/></svg>",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#5B55D8",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="bn" className={`${hindSiliguri.variable} ${outfit.variable}`}>
+      <body className="font-bangla antialiased selection:bg-brand-purple/20 selection:text-brand-purple">
+        {children}
+      </body>
+    </html>
+  );
+}
