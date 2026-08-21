@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Sparkles, Play, Pause, ArrowRight, Layers, Clapperboard, Palette, Mic, MicOff } from "lucide-react";
+import { Sparkles, Play, Pause, Mic, MicOff } from "lucide-react";
 
 interface GeminiOmniShowcaseProps {
-  onOpenCheckout: (plan?: string) => void;
+  onOpenCheckout?: (plan?: string) => void;
 }
 
 export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcaseProps) {
@@ -62,7 +62,7 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
         </div>
 
         {/* Studio Video Showcase Container */}
-        <div className="relative max-w-4xl mx-auto mb-12">
+        <div className="relative max-w-4xl mx-auto">
           
           {/* Outer Glass Frame */}
           <div className="relative bg-white/80 backdrop-blur-xl border border-brand-border/90 rounded-[28px] sm:rounded-[36px] p-3 sm:p-5 shadow-[0_25px_60px_rgba(49,87,213,0.14)] group">
@@ -136,57 +136,6 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
               </button>
             </div>
           </div>
-        </div>
-
-        {/* 3 Core Capability Highlights Below Video */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto mb-10">
-          <div className="bg-white border border-brand-border/80 rounded-2xl p-5 shadow-soft hover:shadow-card-hover transition-all">
-            <div className="w-10 h-10 rounded-xl bg-brand-blue/10 text-brand-blue flex items-center justify-center mb-3">
-              <Layers className="w-5 h-5" />
-            </div>
-            <h4 className="text-base font-bold text-brand-dark mb-1">
-              মাল্টি-ইমেজ রেফারেন্স
-            </h4>
-            <p className="text-xs text-brand-muted leading-relaxed">
-              একাধিক রেফারেন্স ছবি ইনপুট দিয়ে দৃশ্যের চরিত্র ও ব্যাকগ্রাউন্ড পারফেক্ট রাখুন।
-            </p>
-          </div>
-
-          <div className="bg-white border border-brand-border/80 rounded-2xl p-5 shadow-soft hover:shadow-card-hover transition-all">
-            <div className="w-10 h-10 rounded-xl bg-brand-purple/10 text-brand-purple flex items-center justify-center mb-3">
-              <Palette className="w-5 h-5" />
-            </div>
-            <h4 className="text-base font-bold text-brand-dark mb-1">
-              কনসিস্টেন্ট ক্যারেক্টার স্টাইল
-            </h4>
-            <p className="text-xs text-brand-muted leading-relaxed">
-              প্রতিটি ফ্রেমে অবজেক্ট ও ক্যারেক্টারের ধারাবাহিকতা নিখুঁতভাবে বজায় থাকে।
-            </p>
-          </div>
-
-          <div className="bg-white border border-brand-border/80 rounded-2xl p-5 shadow-soft hover:shadow-card-hover transition-all">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-3">
-              <Clapperboard className="w-5 h-5" />
-            </div>
-            <h4 className="text-base font-bold text-brand-dark mb-1">
-              ডায়নামিক সিনেমাটিক মোশন
-            </h4>
-            <p className="text-xs text-brand-muted leading-relaxed">
-              সিনেমা কোয়ালিটির ক্যামেরা মুভমেন্ট ও রিয়েলিস্টিক ফিজিক্স কন্ট্রোল।
-            </p>
-          </div>
-        </div>
-
-        {/* Section Bottom CTA */}
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => onOpenCheckout("18m")}
-            className="inline-flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-base font-semibold px-8 py-3.5 rounded-xl shadow-glow hover:shadow-lg transition-all cursor-pointer hover:-translate-y-0.5"
-          >
-            <span>Gemini Omni দিয়ে এখনই শুরু করুন</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </section>
