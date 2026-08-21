@@ -76,14 +76,32 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
+    console.log("📥 Raw SMS Webhook payload received:", JSON.stringify(body));
+
     const secret = body.secret || body.Secret || "";
-    const rawMessage = body.message || body.Message || body.sms_body || body.text || "";
-    const rawSender = body.sender || body.Sender || body.sms_number || body.from || "";
+    const rawMessage =
+      body.message ||
+      body.Message ||
+      body.sms_message ||
+      body.sms_body ||
+      body.sms_content ||
+      body.content ||
+      body.text ||
+      body.body ||
+      "";
+    const rawSender =
+      body.sender ||
+      body.Sender ||
+      body.sms_number ||
+      body.from ||
+      body.number ||
+      "";
 
     const expectedSecret = process.env.SMS_WEBHOOK_SECRET || "gai_sms_secret_2026_secure";
 
     // Validate webhook secret token
     if (!secret || secret.trim() !== expectedSecret.trim()) {
+      console.warn("SMS Webhook secret mismatch:", { received: secret, expected: expectedSecret });
       return NextResponse.json(
         { success: false, message: "Unauthorized: Invalid or missing SMS webhook secret" },
         { status: 401 }
@@ -92,7 +110,7 @@ export async function POST(req: NextRequest) {
 
     if (!rawMessage || typeof rawMessage !== "string") {
       return NextResponse.json(
-        { success: false, message: "Invalid payload: 'message' string is required" },
+        { success: false, message: "Invalid payload: 'message' or 'sms_message' string is required" },
         { status: 400 }
       );
     }
