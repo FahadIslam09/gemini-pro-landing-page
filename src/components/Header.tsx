@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Menu, X, Sparkles } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 
 interface HeaderProps {
   onOpenCheckout: (plan?: string) => void;
@@ -19,9 +19,21 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { label: "সুবিধা", href: "#features" },
-    { label: "কেন AI Pro", href: "#why-pro" },
+    { label: "কেন AI Pro", href: "#deep-dive" },
     { label: "ফিচার তুলনা", href: "#comparison" },
     { label: "প্রাইসিং", href: "#pricing" },
     { label: "পদ্ধতি", href: "#how-it-works" },
@@ -99,77 +111,106 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
             <button
               type="button"
               onClick={() => onOpenCheckout()}
-              className="hidden sm:inline-flex items-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-glow hover:shadow-[0_10px_28px_rgba(91,85,216,0.42)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+              className="hidden sm:inline-flex items-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-glow hover:shadow-[0_10px_28px_rgba(91,85,216,0.42)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               <span>এখনই কিনুন</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
-            {/* Mobile Toggle Hamburger */}
+            {/* Smooth Animated Morphing Hamburger Toggle Button */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-brand-dark hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-brand-dark hover:bg-gray-100 transition-colors w-10 h-10 flex items-center justify-center cursor-pointer"
               aria-label="Toggle Navigation"
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <div className="relative w-5 h-4 flex flex-col justify-between items-center">
+                <span
+                  className={`block h-0.5 w-5 bg-brand-dark rounded-full transition-all duration-300 ease-in-out ${
+                    mobileMenuOpen ? "rotate-45 translate-y-[7px]" : "rotate-0 translate-y-0"
+                  }`}
+                />
+                <span
+                  className={`block h-0.5 w-5 bg-brand-dark rounded-full transition-all duration-200 ease-in-out ${
+                    mobileMenuOpen ? "opacity-0 scale-x-0" : "opacity-100 scale-x-100"
+                  }`}
+                />
+                <span
+                  className={`block h-0.5 w-5 bg-brand-dark rounded-full transition-all duration-300 ease-in-out ${
+                    mobileMenuOpen ? "-rotate-45 -translate-y-[7px]" : "rotate-0 translate-y-0"
+                  }`}
+                />
+              </div>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-2xl p-6 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-200">
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-brand-border">
-                <span className="text-lg font-bold text-brand-dark">
-                  Google <span className="gradient-text">AI Pro</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-brand-muted hover:bg-gray-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+      {/* Mobile Drawer Menu with Smooth Slide Opening & Closing Animation */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ${
+          mobileMenuOpen ? "visible" : "invisible pointer-events-none"
+        }`}
+      >
+        {/* Backdrop Fade Animation */}
+        <div
+          className={`fixed inset-0 bg-brand-dark/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+            mobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
-              <div className="flex flex-col gap-2 py-6">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-base font-semibold text-brand-dark hover:text-brand-blue py-2.5 px-3 rounded-lg hover:bg-brand-surface transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-brand-border">
+        {/* Drawer Slide Animation */}
+        <div
+          className={`fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-2xl p-6 flex flex-col justify-between z-10 transition-transform duration-300 ease-in-out transform ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div>
+            <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+              <span className="text-lg font-bold text-brand-dark">
+                Google <span className="gradient-text">AI Pro</span>
+              </span>
               <button
                 type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenCheckout();
-                }}
-                className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-base font-semibold py-3 px-4 rounded-xl shadow-glow"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-lg text-brand-muted hover:bg-gray-100 hover:text-brand-dark transition-colors cursor-pointer"
+                aria-label="Close menu"
               >
-                <span>এখনই কিনুন — ৳499</span>
-                <ArrowRight className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            <div className="flex flex-col gap-1 py-5">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-semibold text-brand-dark hover:text-brand-blue py-2.5 px-3 rounded-xl hover:bg-brand-surface transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-brand-border">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenCheckout();
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-base font-semibold py-3 px-4 rounded-xl shadow-glow hover:shadow-lg transition-all cursor-pointer"
+            >
+              <span>এখনই কিনুন — ৳499</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
