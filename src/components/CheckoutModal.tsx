@@ -62,7 +62,7 @@ const DEFAULT_PLANS: Record<string, PlanDetail> = {
   },
 };
 
-type PaymentMethodType = "bkash_auto" | "bkash_manual" | "nagad" | "rocket";
+type PaymentMethodType = "bkash" | "nagad" | "rocket";
 
 export default function CheckoutModal({
   isOpen,
@@ -72,7 +72,7 @@ export default function CheckoutModal({
 }: CheckoutModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [plansMap, setPlansMap] = useState<Record<string, PlanDetail>>(DEFAULT_PLANS);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("bkash_auto");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("bkash");
 
   // Form State
   const [fullName, setFullName] = useState("");
@@ -147,7 +147,6 @@ export default function CheckoutModal({
   }, [isOpen, isSubmitting, isBkashRedirecting, onClose]);
 
   const merchantNumbers: Record<string, string> = {
-    bkash_manual: "01516556465",
     nagad: "01798765432",
     rocket: "019123456789",
   };
@@ -155,7 +154,7 @@ export default function CheckoutModal({
   const currentPlan = plansMap[selectedPlan] || plansMap["18m"] || DEFAULT_PLANS["18m"];
 
   const handleCopyNumber = () => {
-    const num = merchantNumbers[paymentMethod] || "01516556465";
+    const num = merchantNumbers[paymentMethod] || "01798765432";
     navigator.clipboard.writeText(num).then(() => {
       setCopied(true);
       onToast("পেমেন্ট নম্বর সফলভাবে কপি হয়েছে!");
@@ -201,7 +200,7 @@ export default function CheckoutModal({
     }
   };
 
-  // Manual Send Money Submission Handler
+  // Manual Send Money Submission Handler (Nagad / Rocket)
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !phone.trim() || !trxId.trim()) {
@@ -393,7 +392,7 @@ export default function CheckoutModal({
 
               {/* Form Content */}
               <form
-                onSubmit={paymentMethod === "bkash_auto" ? handleBkashAutoPayment : handleManualSubmit}
+                onSubmit={paymentMethod === "bkash" ? handleBkashAutoPayment : handleManualSubmit}
                 className="space-y-4"
               >
                 {/* Full Name */}
@@ -444,36 +443,25 @@ export default function CheckoutModal({
                   />
                 </div>
 
-                {/* Payment Method Selector Pills (bKash Auto, bKash Manual, Nagad, Rocket) */}
+                {/* Payment Method Selector (bKash Auto, Nagad, Rocket) */}
                 <div>
                   <label className="block text-xs font-bold text-brand-dark mb-1.5 font-bangla">
                     পেমেন্ট মাধ্যম বেছে নিন:
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      onClick={() => setPaymentMethod("bkash_auto")}
-                      className={`h-11 rounded-xl border flex flex-col items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer relative ${
-                        paymentMethod === "bkash_auto"
+                      onClick={() => setPaymentMethod("bkash")}
+                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer relative ${
+                        paymentMethod === "bkash"
                           ? "bg-[#E2136E]/10 border-[#E2136E] text-[#E2136E] ring-2 ring-[#E2136E]/20"
                           : "bg-white border-brand-border text-brand-body hover:border-gray-300"
                       }`}
                     >
                       <span className="flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-[#E2136E] fill-[#E2136E]" />
-                        <span>bKash অটো</span>
+                        <Zap className="w-3.5 h-3.5 text-[#E2136E] fill-[#E2136E]" />
+                        <span>bKash (অটো)</span>
                       </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bkash_manual")}
-                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer ${
-                        paymentMethod === "bkash_manual"
-                          ? "bg-[#E2136E]/10 border-[#E2136E] text-[#E2136E] ring-2 ring-[#E2136E]/20"
-                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
-                      }`}
-                    >
-                      bKash সেন্ড
                     </button>
                     <button
                       type="button"
@@ -500,8 +488,8 @@ export default function CheckoutModal({
                   </div>
                 </div>
 
-                {/* Conditional UI: bKash Auto Gateway vs Manual Send Money */}
-                {paymentMethod === "bkash_auto" ? (
+                {/* Conditional UI: bKash Auto Gateway vs Manual Send Money (Nagad / Rocket) */}
+                {paymentMethod === "bkash" ? (
                   /* bKash Official Gateway Callout */
                   <div className="bg-[#FFF5F8] border border-[#FAD2E1] rounded-2xl p-4 space-y-2 text-xs">
                     <div className="flex items-center gap-2 text-[#E2136E] font-bold font-bangla">
@@ -509,7 +497,7 @@ export default function CheckoutModal({
                       <span>অফিসিয়াল bKash পেমেন্ট গেটওয়ে (১-ক্লিক)</span>
                     </div>
                     <p className="text-[11px] text-brand-body leading-relaxed font-bangla">
-                      নিচের বাটনে চাপ দিলে সরাসরি অফিসিয়াল bKash সিকিউর পেজে নিয়ে যাওয়া হবে। পেমেন্ট সম্পন্ন হলে সাথে সাথে আপনার অর্ডার নিশ্চিত হবে।
+                      নিচের বাটনে চাপ দিলে সরাসরি অফিসিয়াল bKash সিকিউর পেজে নিয়ে যাওয়া হবে। পেমেন্ট সম্পন্ন হলে সাথে সাথে আপনার সাবস্ক্রিপশন নিশ্চিত হবে।
                     </p>
                   </div>
                 ) : (
@@ -518,7 +506,7 @@ export default function CheckoutModal({
                     <div className="bg-[#F8F9FD] border border-brand-border rounded-2xl p-4 space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-brand-body font-medium font-bangla">
-                          Send Money নম্বর ({paymentMethod.replace("_manual", "").toUpperCase()} Personal):
+                          Send Money নম্বর ({paymentMethod.toUpperCase()} Personal):
                         </span>
                         <div className="flex items-center gap-1.5">
                           <strong className="font-outfit text-brand-dark font-bold text-sm">
@@ -574,7 +562,7 @@ export default function CheckoutModal({
                 )}
 
                 {/* Submit Action Button */}
-                {paymentMethod === "bkash_auto" ? (
+                {paymentMethod === "bkash" ? (
                   <button
                     type="submit"
                     disabled={isBkashRedirecting}
