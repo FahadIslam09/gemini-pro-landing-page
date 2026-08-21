@@ -102,6 +102,10 @@ export async function GET(req: NextRequest) {
             content_category: "AI Subscription",
             content_ids: [existingOrder.planKey],
             content_type: "product",
+            order_id: existingOrder.orderNumber,
+          },
+        }).catch((err) => console.error("Meta CAPI bKash error:", err));
+
         // Send Instant Telegram Bot Alert
         sendTelegramOrderNotification({
           orderNumber: existingOrder.orderNumber,
