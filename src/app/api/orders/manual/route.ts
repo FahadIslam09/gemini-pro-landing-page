@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
 
     // 1. Strict Verification: Check if an SMS transaction with this TrxID exists in DB
-    const existingSms = await prisma.smsTransaction.findFirst({
+    const existingSms = await (prisma as any).smsTransaction.findFirst({
       where: {
         trxId: {
           equals: cleanTrxId,
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Mark SMS Transaction as Used
-    await prisma.smsTransaction.update({
+    await (prisma as any).smsTransaction.update({
       where: { id: existingSms.id },
       data: {
         isUsed: true,

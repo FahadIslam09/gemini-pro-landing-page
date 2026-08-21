@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save or update SMS transaction in Database
-    const smsRecord = await prisma.smsTransaction.upsert({
+    const smsRecord = await (prisma as any).smsTransaction.upsert({
       where: { trxId },
       create: {
         provider,
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Mark SMS Transaction as Used
-        await prisma.smsTransaction.update({
+        await (prisma as any).smsTransaction.update({
           where: { id: smsRecord.id },
           data: {
             isUsed: true,
