@@ -24,7 +24,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scrollbar-width: thin;
-    scrollbar-color: #5B55D8 #F1F4F9;
+    scrollbar-color: #5B55D8 #F8FAFC;
   }
 
   body {
@@ -77,11 +77,20 @@
 }
 
 /* ==========================================================================
-   Web Designed Premium Custom Scrollbar (Main Window Only)
+   Universal Scrollbar Arrow Button Removal
+   ========================================================================== */
+*::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* ==========================================================================
+   Main Window Custom Scrollbar
    ========================================================================== */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {
-  width: 9px;
+  width: 8px;
 }
 
 html::-webkit-scrollbar-track,
@@ -113,4 +122,31 @@ body::-webkit-scrollbar-thumb:hover {
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+/* ==========================================================================
+   Modal Inset Custom Scrollbar (Padded, Inset from rounded corners, No arrows)
+   ========================================================================== */
+.modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.modal-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
 }
