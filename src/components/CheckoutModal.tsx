@@ -63,7 +63,7 @@ const DEFAULT_PLANS: Record<string, PlanDetail> = {
   },
 };
 
-type PaymentMethodType = "bkash" | "nagad" | "rocket";
+type PaymentMethodType = "bkash" | "bkash_manual" | "nagad" | "rocket";
 
 export default function CheckoutModal({
   isOpen,
@@ -160,6 +160,7 @@ export default function CheckoutModal({
   }, [isOpen, isSubmitting, isBkashRedirecting, onClose]);
 
   const merchantNumbers: Record<string, string> = {
+    bkash_manual: "01516556465",
     nagad: "01798765432",
     rocket: "019123456789",
   };
@@ -456,12 +457,12 @@ export default function CheckoutModal({
                   />
                 </div>
 
-                {/* Payment Method Selector (bKash Auto, Nagad, Rocket) */}
+                {/* Payment Method Selector (bKash Auto, bKash Send Money, Nagad, Rocket) */}
                 <div>
                   <label className="block text-xs font-bold text-brand-dark mb-1.5 font-bangla">
                     পেমেন্ট মাধ্যম বেছে নিন:
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("bkash")}
@@ -475,6 +476,17 @@ export default function CheckoutModal({
                         <Zap className="w-3.5 h-3.5 text-[#E2136E] fill-[#E2136E]" />
                         <span>bKash (অটো)</span>
                       </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("bkash_manual")}
+                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer ${
+                        paymentMethod === "bkash_manual"
+                          ? "bg-[#E2136E]/10 border-[#E2136E] text-[#E2136E] ring-2 ring-[#E2136E]/20"
+                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
+                      }`}
+                    >
+                      bKash (সেন্ড মানি)
                     </button>
                     <button
                       type="button"
@@ -519,7 +531,7 @@ export default function CheckoutModal({
                     <div className="bg-[#F8F9FD] border border-brand-border rounded-2xl p-4 space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-brand-body font-medium font-bangla">
-                          Send Money নম্বর ({paymentMethod.toUpperCase()} Personal):
+                          Send Money নম্বর ({paymentMethod === "bkash_manual" ? "bKash" : paymentMethod.toUpperCase()} Personal):
                         </span>
                         <div className="flex items-center gap-1.5">
                           <strong className="font-outfit text-brand-dark font-bold text-sm">
