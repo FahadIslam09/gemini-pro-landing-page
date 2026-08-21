@@ -18,7 +18,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
   const chatId = process.env.TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID;
 
   if (!token || !chatId) {
-    console.warn("Telegram Bot Token or Chat ID not configured in .env. Skipping Telegram notification.");
+    console.warn("Telegram Bot Token or Chat ID not configured. Skipping Telegram notification.");
     return { success: false, reason: "Missing Telegram credentials" };
   }
 
@@ -37,11 +37,24 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
     timeStyle: "short",
   });
 
+  const cleanPhone = payload.customerPhone.replace(/[^0-9]/g, "");
+  const waPhone = cleanPhone.startsWith("88") ? cleanPhone : `88${cleanPhone}`;
+
+  // Formatted 1-Click Copy Summary Block (tapping inside copies the entire text block in Telegram)
+  const copyAllBlock = `নাম: ${payload.customerName}
+জিমেইল: ${payload.customerEmail}
+ফোন: ${payload.customerPhone}
+প্ল্যান: ${payload.planName}
+টাকা: ৳${payload.amount} BDT
+পেমেন্ট: ${payload.paymentMethod}
+TrxID: ${payload.trxId}
+অর্ডার নং: ${payload.orderNumber}`;
+
   const messageHtml = `
 🚀 <b>নতুন সাবস্ক্রিপশন অর্ডার রিসিভড!</b>
 ━━━━━━━━━━━━━━━━━━
 🆔 <b>অর্ডার নং:</b> <code>${payload.orderNumber}</code>
-👤 <b>গ্রাহক:</b> ${payload.customerName}
+👤 <b>গ্রাহক:</b> <code>${payload.customerName}</code>
 📧 <b>জিমেইল:</b> <code>${payload.customerEmail}</code>
 📱 <b>ফোন:</b> <code>${payload.customerPhone}</code>
 
@@ -53,8 +66,35 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
 ⏰ <b>সময়:</b> ${nowFormatted}
 ⚡ <b>স্ট্যাটাস:</b> ${payload.status || "পেমেন্ট সম্পন্ন / সক্রিয় অপেক্ষমাণ"}
 ━━━━━━━━━━━━━━━━━━
+📋 <b>সব তথ্য একসাথে কপি করতে নিচে ট্যাপ করুন:</b>
+<pre>${copyAllBlock}</pre>
+━━━━━━━━━━━━━━━━━━
 👉 <i>অ্যাডমিন প্যানেল থেকে দ্রুত অ্যাক্সেস চালু করে দিন।</i>
   `.trim();
+
+  // Telegram Inline Keyboard Buttons
+  const inlineKeyboard = {
+    inline_keyboard: [
+      [
+        {
+          text: "💬 গ্রাহককে WhatsApp মেসেজ দিন",
+          url: `https://wa.me/${waPhone}?text=${encodeURIComponent(
+            `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been received. We are activating your access.`
+          )}`,
+        },
+      ],
+      [
+        {
+          text: "📧 Gmail থেকে মেসেজ পাঠান",
+          url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+            payload.customerEmail
+          )}&su=${encodeURIComponent(
+            `Google AI Pro Subscription Active (${payload.orderNumber})`
+          )}`,
+        },
+      ],
+    ],
+  };
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -64,6 +104,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
         chat_id: chatId,
         text: messageHtml,
         parse_mode: "HTML",
+        reply_markup: inlineKeyboard,
       }),
     });
 
