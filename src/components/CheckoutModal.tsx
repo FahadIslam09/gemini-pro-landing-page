@@ -59,9 +59,19 @@ const DEFAULT_PLANS: Record<string, PlanDetail> = {
     duration: "১২ মাস",
     type: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
     badge: "বার্ষিক প্ল্যান",
-    popular: false,
   },
 };
+
+function BkashIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 512 512" fill="currentColor">
+      <path
+        d="M272.58 64l172.93 189.65L325.26 312l-52.68-248zm-33.16 0L66.49 253.65l120.25 58.35 52.68-248zm1.09 255.45l-44.59 128.55 120.26-64-75.67-64.55zM64 274.91l157.09 173.09-36.83-114.74L64 274.91zm384 0l-157.09 173.09 36.83-114.74L448 274.91z"
+        fill="#E2136E"
+      />
+    </svg>
+  );
+}
 
 type PaymentMethodType = "bkash" | "bkash_manual" | "nagad" | "rocket";
 
@@ -161,8 +171,8 @@ export default function CheckoutModal({
 
   const merchantNumbers: Record<string, string> = {
     bkash_manual: "01516556465",
-    nagad: "01798765432",
-    rocket: "019123456789",
+    // nagad: "01798765432",
+    // rocket: "019123456789",
   };
 
   const currentPlan = plansMap[selectedPlan] || plansMap["18m"] || DEFAULT_PLANS["18m"];
@@ -467,12 +477,12 @@ export default function CheckoutModal({
                   />
                 </div>
 
-                {/* Payment Method Selector (bKash Auto, bKash Send Money, Nagad, Rocket) */}
+                {/* Payment Method Selector (bKash Auto, bKash Manual) */}
                 <div>
                   <label className="block text-xs font-bold text-brand-dark mb-1.5 font-bangla">
                     পেমেন্ট মাধ্যম বেছে নিন:
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("bkash")}
@@ -482,9 +492,10 @@ export default function CheckoutModal({
                           : "bg-white border-brand-border text-brand-body hover:border-gray-300"
                       }`}
                     >
-                      <span className="flex items-center gap-1">
-                        <Zap className="w-3.5 h-3.5 text-[#E2136E] fill-[#E2136E]" />
+                      <span className="flex items-center gap-1.5">
+                        <BkashIcon className="w-4 h-4" />
                         <span>bKash (অটো)</span>
+                        <Zap className="w-3 h-3 text-[#E2136E] fill-[#E2136E]" />
                       </span>
                     </button>
                     <button
@@ -496,8 +507,14 @@ export default function CheckoutModal({
                           : "bg-white border-brand-border text-brand-body hover:border-gray-300"
                       }`}
                     >
-                      bKash (ম্যানুয়াল)
+                      <span className="flex items-center gap-1.5">
+                        <BkashIcon className="w-4 h-4" />
+                        <span>bKash (ম্যানুয়াল)</span>
+                      </span>
                     </button>
+
+                    {/* Nagad and Rocket (commented out) */}
+                    {/*
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("nagad")}
@@ -520,6 +537,7 @@ export default function CheckoutModal({
                     >
                       Rocket
                     </button>
+                    */}
                   </div>
                 </div>
 

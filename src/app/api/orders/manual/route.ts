@@ -20,6 +20,27 @@ export async function POST(req: NextRequest) {
 
     const cleanTrxId = trxId.trim().toUpperCase();
 
+    // 1. Anti-Fraud & Duplicate Prevention: Check if this TrxID is already used in an active/paid order
+    const duplicateOrder = await prisma.order.findFirst({
+      where: {
+        trxId: {
+          equals: cleanTrxId,
+          mode: "insensitive",
+        },
+        paymentStatus: "paid",
+      },
+    });
+
+    if (duplicateOrder) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `❌ এই Transaction ID (${cleanTrxId}) দিয়ে ইতোমধ্যে অর্ডার ${duplicateOrder.orderNumber} সম্পন্ন করা হয়েছে! একই TrxID দিয়ে একাধিক অর্ডার করা যাবে না।`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Look up plan from MongoDB
     const plan = await prisma.planPricing.findUnique({
       where: { planKey: planId },
@@ -29,14 +50,13 @@ export async function POST(req: NextRequest) {
     const planName = plan ? plan.name : `Google AI Pro (${planId})`;
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    // 1. Strict Verification: Check if an SMS transaction with this TrxID exists in DB
+    // 2. Strict SMS Verification: Check if an SMS transaction with this TrxID exists in DB
     const existingSms = await (prisma as any).smsTransaction.findFirst({
       where: {
         trxId: {
           equals: cleanTrxId,
           mode: "insensitive",
         },
-        isUsed: false,
       },
     });
 
@@ -50,7 +70,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Validate Amount (allows ৳1 for testing / sandbox verification)
+    // 3. Prevent reuse of already consumed SMS TrxID
+    if (existingSms.isUsed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `❌ এই Transaction ID (${cleanTrxId}) ইতোমধ্যে ব্যবহৃত হয়েছে (${existingSms.usedInOrderId || "আগের অর্ডারে"})! একই TrxID দ্বিতীয়বার ব্যবহার করা যাবে না।`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Validate Amount (allows ৳1 for testing / sandbox verification)
     if (existingSms.amount < amount && existingSms.amount !== 1 && amount !== 1) {
       return NextResponse.json(
         {
@@ -61,7 +92,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Mark SMS Transaction as Used
+    // 5. Mark SMS Transaction as Used atomically
     await (prisma as any).smsTransaction.update({
       where: { id: existingSms.id },
       data: {
@@ -70,7 +101,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 4. Upsert Buyer in MongoDB
+    // 6. Upsert Buyer in MongoDB
     const buyer = await prisma.buyer.upsert({
       where: { email: email.trim().toLowerCase() },
       create: {
@@ -91,7 +122,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 5. Create Verified Order in MongoDB
+    // 7. Create Verified Order in MongoDB
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -111,7 +142,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Send instant confirmation email to customer (awaited)
+    // 8. Send instant confirmation email to customer (awaited)
     await sendCustomerEmail({
       to: email.trim().toLowerCase(),
       customerName: fullName.trim(),
@@ -120,7 +151,7 @@ export async function POST(req: NextRequest) {
       messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। ধন্যবাদ!`,
     }).catch((err) => console.error("Email send error:", err));
 
-    // 7. Send Instant Telegram Bot Alert (awaited)
+    // 9. Send Instant Telegram Bot Alert (awaited)
     await sendTelegramOrderNotification({
       orderNumber: order.orderNumber,
       customerName: fullName.trim(),
@@ -133,7 +164,7 @@ export async function POST(req: NextRequest) {
       status: `✅ SMS দিয়ে সফলভাবে ভেরিফাইড (${existingSms.provider.toUpperCase()}) - Paid`,
     });
 
-    // 8. Server-side Meta Conversions API (CAPI) Purchase Event
+    // 10. Server-side Meta Conversions API (CAPI) Purchase Event
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined;
     const clientUserAgent = req.headers.get("user-agent") || undefined;
 
