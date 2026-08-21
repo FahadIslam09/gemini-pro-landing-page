@@ -1,5 +1,5 @@
-export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
-export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
+export const TELEGRAM_BOT_TOKEN = "8940650734:AAFiMSebkWXlJO_tUkfB7ZAVPsRyPgmhD20";
+export const TELEGRAM_CHAT_ID = "1433144613";
 
 interface TelegramOrderPayload {
   orderNumber: string;
@@ -14,8 +14,8 @@ interface TelegramOrderPayload {
 }
 
 export async function sendTelegramOrderNotification(payload: TelegramOrderPayload) {
-  const token = process.env.TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID;
+  const token = (process.env.TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN).trim();
+  const chatId = (process.env.TELEGRAM_CHAT_ID || TELEGRAM_CHAT_ID).trim();
 
   if (!token || !chatId) {
     console.warn("Telegram Bot Token or Chat ID not configured. Skipping Telegram notification.");
@@ -42,7 +42,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
 
   // Clean Telegram notification with 1-click single field copy on tap (Name, Email, Phone, TrxID, Order ID)
   const messageHtml = `
-🚀 <b>নতুন সাবস্ক্রিপশন অর্ডার রিসিভড!</b>
+🚀 <b>নতুন সাবস্ক্রিপশন অর্ডার ভেরিফাইড ও কনফার্মড!</b>
 ━━━━━━━━━━━━━━━━━━
 🆔 <b>অর্ডার নং:</b> <code>${payload.orderNumber}</code>
 👤 <b>গ্রাহকের নাম:</b> <code>${payload.customerName}</code>
@@ -55,7 +55,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
 🔢 <b>TrxID:</b> <code>${payload.trxId}</code>
 
 ⏰ <b>সময়:</b> ${nowFormatted}
-⚡ <b>স্ট্যাটাস:</b> ${payload.status || "পেমেন্ট সম্পন্ন / সক্রিয় অপেক্ষমাণ"}
+⚡ <b>স্ট্যাটাস:</b> ${payload.status || "✅ পেমেন্ট ভেরিফাইড (Paid)"}
 ━━━━━━━━━━━━━━━━━━
 💡 <i>যেকোনো তথ্যে (জিমেইল / ফোন / TrxID) ট্যাপ করলেই ১-ক্লিকে কপি হবে।</i>
   `.trim();
@@ -73,7 +73,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
         {
           text: "💬 WhatsApp মেসেজ দিন",
           url: `https://wa.me/${waPhone}?text=${encodeURIComponent(
-            `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been received. We are activating your access.`
+            `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been verified. We are activating your access.`
           )}`,
         },
       ],

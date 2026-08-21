@@ -253,6 +253,14 @@ export default function CheckoutModal({
 
       const data = await res.json();
 
+      if (!res.ok || !data.success) {
+        setIsSubmitting(false);
+        setSubmissionProgress(0);
+        setProgressStatusText("");
+        onToast(data.message || "ভুল Transaction ID! কোনো ভেরিফাইড পেমেন্ট রেকর্ড পাওয়া যায়নি।");
+        return;
+      }
+
       setTimeout(() => {
         setSubmissionProgress(100);
         setProgressStatusText("অর্ডার সফলভাবে সম্পন্ন!");
@@ -280,10 +288,12 @@ export default function CheckoutModal({
           origin: { y: 0.6 },
           colors: ["#3157D5", "#5B55D8", "#7B4FD8", "#2FA36B", "#F59E0B"],
         });
-        onToast("অভিনন্দন! আপনার অর্ডারটি গৃহীত হয়েছে");
+        onToast("অভিনন্দন! আপনার পেমেন্ট ভেরিফাই হয়েছে ও অর্ডার নিশ্চিত হয়েছে");
       }, 400);
     } catch {
       setIsSubmitting(false);
+      setSubmissionProgress(0);
+      setProgressStatusText("");
       onToast("অর্ডার সাবমিট করতে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন");
     }
   };
