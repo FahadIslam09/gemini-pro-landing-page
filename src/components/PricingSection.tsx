@@ -34,7 +34,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       name: "১৮ মাসের মেগা অফার",
       price: 499,
       monthlyBreakdown: "≈ ৳২৮/মাস মাত্র",
-      badge: "🏅 সেরা মূল্য! ৮৫% ছাড়",
+      badge: "সেরা মূল্য • ৮৫% ছাড়",
       badgeColor: "bg-[#FEF6EA] text-[#B45309] border-[#FDE68A]",
       description: "সবচেয়ে বেশি বিক্রি হওয়া এবং সর্বোচ্চ সাশ্রয়ী অফিসিয়াল প্ল্যান।",
       perks: [

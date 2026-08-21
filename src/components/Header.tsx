@@ -50,7 +50,7 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
             সীমিত সময়ের অফার
           </span>
           <span>
-            🔥 18 মাসের Google AI Pro সাবস্ক্রিপশনে পাচ্ছেন <strong>৮৫% পর্যন্ত ছাড়</strong> — মাত্র ৳499!
+            18 মাসের Google AI Pro সাবস্ক্রিপশনে পাচ্ছেন <strong>৮৫% পর্যন্ত ছাড়</strong> — মাত্র ৳499!
           </span>
           <a
             href="#pricing"

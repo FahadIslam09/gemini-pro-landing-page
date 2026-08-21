@@ -114,7 +114,7 @@ export default function CheckoutModal({
         origin: { y: 0.6 },
         colors: ["#3157D5", "#5B55D8", "#7B4FD8", "#2FA36B", "#F59E0B"],
       });
-      onToast("অভিনন্দন! আপনার অর্ডারটি গৃহীত হয়েছে 🎉");
+      onToast("অভিনন্দন! আপনার অর্ডারটি গৃহীত হয়েছে");
     }, 2400);
   };
 
@@ -386,7 +386,7 @@ export default function CheckoutModal({
 
               <div>
                 <h3 className="text-xl font-bold text-brand-dark mb-1">
-                  অর্ডার সফল হয়েছে! 🎉
+                  অর্ডার সফল হয়েছে!
                 </h3>
                 <p className="text-xs text-brand-body leading-relaxed max-w-sm mx-auto">
                   ধন্যবাদ <strong>{fullName}</strong>! আপনার পেমেন্ট ভেরিফিকেশনের কাজ চলছে। আগামী ৫-১৫ মিনিটের মধ্যে আপনার জিমেইল ({email})-এ কনফার্মেশন ও অ্যাক্সেস পৌঁছে যাবে।
