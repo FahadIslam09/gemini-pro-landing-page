@@ -191,8 +191,8 @@ export default function CheckoutModal({
               <div className="grid grid-cols-3 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
                 {[
                   { id: "1m", label: "১ মাস (ইনভাইট)", price: "৳149" },
-                  { id: "12m", label: "১২ মাস (পাসওয়ার্ড)", price: "৳399" },
                   { id: "18m", label: "১৮ মাস (প্রাইভেট)", price: "৳499" },
+                  { id: "12m", label: "১২ মাস (পাসওয়ার্ড)", price: "৳399" },
                 ].map((p) => {
                   const isSelected = selectedPlan === p.id;
                   return (

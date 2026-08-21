@@ -33,27 +33,6 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       popular: false,
     },
     {
-      id: "12m",
-      name: "১২ মাসের সাবস্ক্রিপশন",
-      price: 399,
-      monthlyBreakdown: "≈ ৳33 / মাস",
-      badge: "বার্ষিক প্ল্যান",
-      badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
-      description: "১ বছরের জন্য নির্ভরযোগ্য AI সমাধান।",
-      accountType: {
-        title: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
-        subtitle: "অ্যাক্টিভেশনের জন্য জিমেইল ও পাসওয়ার্ড দিতে হবে",
-        icon: KeyRound,
-        style: "bg-amber-50/90 border-amber-300 text-amber-900",
-      },
-      highlights: [
-        "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
-        "১২ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
-      ],
-      popular: false,
-    },
-    {
       id: "18m",
       name: "১৮ মাসের মেগা অফার",
       price: 499,
@@ -73,6 +52,27 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
         "১৮ মাসের পূর্ণ মেগা প্যাক ও গ্যারান্টি",
       ],
       popular: true,
+    },
+    {
+      id: "12m",
+      name: "১২ মাসের সাবস্ক্রিপশন",
+      price: 399,
+      monthlyBreakdown: "≈ ৳33 / মাস",
+      badge: "বার্ষিক প্ল্যান",
+      badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+      description: "১ বছরের জন্য নির্ভরযোগ্য AI সমাধান।",
+      accountType: {
+        title: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
+        subtitle: "অ্যাক্টিভেশনের জন্য জিমেইল ও পাসওয়ার্ড দিতে হবে",
+        icon: KeyRound,
+        style: "bg-amber-50/90 border-amber-300 text-amber-900",
+      },
+      highlights: [
+        "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
+        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+        "১২ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
+      ],
+      popular: false,
     },
   ];
 
