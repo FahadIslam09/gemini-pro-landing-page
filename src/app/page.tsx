@@ -26,6 +26,19 @@ function HomeContent() {
   const [modalPlan, setModalPlan] = useState("18m");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [dynamicPlansData, setDynamicPlansData] = useState<any[] | null>(null);
+
+  // Fast pre-fetch of live database pricing as soon as the page loads
+  useEffect(() => {
+    fetch("/api/public/pricing", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.plans?.length > 0) {
+          setDynamicPlansData(data.plans);
+        }
+      })
+      .catch((err) => console.error("Error preloading pricing:", err));
+  }, []);
 
   const showToast = (message: string, type: "success" | "error" = "success") => {
     setToastMessage(message);
@@ -61,7 +74,7 @@ function HomeContent() {
       {/* Hero Section */}
       <Hero onOpenCheckout={handleOpenCheckout} />
 
-      {/* Why Google AI Pro Feature Grid (অল-ইন-ওয়ান অফিসিয়াল পাওয়ার হাউস) */}
+      {/* Why Google AI Pro Feature Grid */}
       <WhyGemini />
 
       {/* Gemini Omni Video & Multimodal Studio Showcase */}
@@ -77,7 +90,7 @@ function HomeContent() {
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
 
       {/* Pricing Section */}
-      <PricingSection onOpenCheckout={handleOpenCheckout} />
+      <PricingSection onOpenCheckout={handleOpenCheckout} initialPlans={dynamicPlansData} />
 
       {/* How It Works */}
       <HowItWorks />
@@ -97,11 +110,12 @@ function HomeContent() {
       {/* Sticky Mobile Quick Checkout Bar */}
       <StickyMobileBar onOpenCheckout={handleOpenCheckout} />
 
-      {/* Interactive Checkout Modal with Multi-Stage Loading & bKash Gateway */}
+      {/* Interactive Checkout Modal with Instant Live DB Prices */}
       <CheckoutModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialPlan={modalPlan}
+        initialPlansData={dynamicPlansData}
         onToast={(msg) => showToast(msg, "success")}
       />
 

@@ -5,6 +5,7 @@ import { Check, Lock, Sparkles, ArrowRight, ShieldCheck, Users, KeyRound } from 
 
 interface PricingSectionProps {
   onOpenCheckout: (plan?: string) => void;
+  initialPlans?: any[] | null;
 }
 
 const DEFAULT_PLANS = [
@@ -73,46 +74,48 @@ const DEFAULT_PLANS = [
   },
 ];
 
-export default function PricingSection({ onOpenCheckout }: PricingSectionProps) {
-  const [plans, setPlans] = useState<any[]>(DEFAULT_PLANS);
+const mapPlans = (rawPlans: any[]) => {
+  const mapped = rawPlans.map((p: any) => ({
+    id: p.planKey,
+    name: p.name,
+    price: p.price,
+    monthlyBreakdown: p.monthlyBreakdown,
+    badge: p.badge,
+    badgeColor: p.badgeColor,
+    description: p.description,
+    accountType: {
+      title: p.accountTypeTitle,
+      subtitle: p.accountTypeSubtitle,
+      icon: p.accountTypeIcon === "Users" ? Users : p.accountTypeIcon === "KeyRound" ? KeyRound : ShieldCheck,
+      style: p.accountTypeStyle,
+    },
+    highlights: Array.isArray(p.highlights) ? p.highlights : [],
+    popular: p.popular,
+  }));
+
+  const customOrder = ["1m", "18m", "12m"];
+  mapped.sort((a: any, b: any) => {
+    const indexA = customOrder.indexOf(a.id);
+    const indexB = customOrder.indexOf(b.id);
+    return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
+  });
+  return mapped;
+};
+
+export default function PricingSection({ onOpenCheckout, initialPlans }: PricingSectionProps) {
+  const [plans, setPlans] = useState<any[]>(() => {
+    if (initialPlans && initialPlans.length > 0) {
+      return mapPlans(initialPlans);
+    }
+    return DEFAULT_PLANS;
+  });
   const [selectedPlan, setSelectedPlan] = useState<string>("18m");
 
   useEffect(() => {
-    fetch("/api/public/pricing")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.plans?.length > 0) {
-          const mapped = data.plans.map((p: any) => ({
-            id: p.planKey,
-            name: p.name,
-            price: p.price,
-            monthlyBreakdown: p.monthlyBreakdown,
-            badge: p.badge,
-            badgeColor: p.badgeColor,
-            description: p.description,
-            accountType: {
-              title: p.accountTypeTitle,
-              subtitle: p.accountTypeSubtitle,
-              icon: p.accountTypeIcon === "Users" ? Users : p.accountTypeIcon === "KeyRound" ? KeyRound : ShieldCheck,
-              style: p.accountTypeStyle,
-            },
-            highlights: Array.isArray(p.highlights) ? p.highlights : [],
-            popular: p.popular,
-          }));
-
-          // Strict left-to-right order: 1m Left, 18m Middle/Featured, 12m Right
-          const customOrder = ["1m", "18m", "12m"];
-          mapped.sort((a: any, b: any) => {
-            const indexA = customOrder.indexOf(a.id);
-            const indexB = customOrder.indexOf(b.id);
-            return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
-          });
-
-          setPlans(mapped);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (initialPlans && initialPlans.length > 0) {
+      setPlans(mapPlans(initialPlans));
+    }
+  }, [initialPlans]);
 
   return (
     <section id="pricing" className="py-20 lg:py-28 bg-[#FAFBFD] relative overflow-hidden">
@@ -124,111 +127,111 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16 reveal-init">
-          <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 bg-brand-blue/10 border border-brand-blue/20 rounded-full px-4 py-1.5 text-xs font-semibold text-brand-blue mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>অফিসিয়াল ও সাশ্রয়ী সাবস্ক্রিপশন প্ল্যান</span>
+            <span>স্বচ্ছ ও সাশ্রয়ী প্রাইসিং</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-brand-dark tracking-tight mb-4">
-            আপনার পছন্দের <span className="gradient-text">প্ল্যান বেছে নিন</span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-brand-dark tracking-tight mb-4 font-bangla">
+            আপনার প্রয়োজন অনুযায়ী সেরা প্ল্যান বেছে নিন
           </h2>
-          <p className="text-base sm:text-lg text-brand-muted leading-relaxed">
-            সকল প্ল্যানে Google AI Pro-এর পূর্ণ ফিচার অন্তর্ভুক্ত। bKash, Nagad বা Rocket দিয়ে ৫-১৫ মিনিটে সক্রিয় করুন।
+          <p className="text-base text-brand-body leading-relaxed font-bangla">
+            কোনো লুকানো চার্জ নেই। ১০০% অফিশিয়াল সাবস্ক্রিপশন গ্যারান্টি এবং সার্বক্ষণিক টেকনিক্যাল সাপোর্ট।
           </p>
         </div>
 
-        {/* 3 Standard-Sized Clean Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch mb-14">
-          {plans.map((plan, idx) => {
+        {/* Pricing Cards Grid (Strict Order: 1 Month -> 18 Months Featured -> 12 Months) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-12">
+          {plans.map((plan) => {
+            const isFeatured = plan.popular || plan.id === "18m";
             const AccountIcon = plan.accountType.icon;
+
             return (
               <div
                 key={plan.id}
-                onClick={() => setSelectedPlan(plan.id)}
-                className={`reveal-init stagger-${idx + 1} reveal-scale rounded-[26px] p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 relative cursor-pointer ${
-                  plan.popular
-                    ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 md:-translate-y-2 hover:shadow-[0_25px_60px_rgba(91,85,216,0.25)]"
-                    : "bg-white border border-brand-border hover:border-brand-border/80 shadow-soft hover:shadow-card-hover hover:-translate-y-1"
+                className={`relative rounded-3xl transition-all duration-300 flex flex-col justify-between ${
+                  isFeatured
+                    ? "bg-white border-2 border-brand-purple shadow-xl shadow-brand-purple/10 md:-translate-y-2 z-10"
+                    : "bg-white border border-brand-border hover:border-gray-300 hover:shadow-lg"
                 }`}
               >
-                {/* Popular Pill */}
-                {plan.popular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-gradient text-white text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md font-outfit">
-                    Most Popular Choice
+                {/* Popular / Best Value Ribbon */}
+                {isFeatured && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-brand-gradient text-white text-xs font-bold px-4 py-1 rounded-full shadow-md tracking-wide uppercase">
+                    Most Popular & Recommended
                   </div>
                 )}
 
-                <div>
-                  {/* Top Badge & Duration */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${plan.badgeColor}`}>
+                <div className="p-6 sm:p-8 flex-1 flex flex-col">
+                  {/* Plan Top Meta */}
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border font-bangla ${plan.badgeColor || "bg-gray-100 text-gray-700 border-gray-200"}`}>
                       {plan.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-brand-dark mb-1">
+                  {/* Plan Name */}
+                  <h3 className="text-xl font-bold text-brand-dark mb-2 font-bangla">
                     {plan.name}
                   </h3>
-                  <p className="text-xs text-brand-muted mb-4 leading-relaxed">
+                  <p className="text-xs text-brand-muted mb-6 leading-relaxed font-bangla">
                     {plan.description}
                   </p>
 
-                  {/* Price Block */}
-                  <div className="mb-4 pb-4 border-b border-brand-border">
-                    <div className="flex items-baseline gap-1 font-outfit">
-                      <span className="text-2xl font-bold text-brand-blue">৳</span>
-                      <span className="text-4xl sm:text-[42px] font-extrabold text-brand-dark tracking-tight leading-none">
-                        {plan.price}
+                  {/* Price Tag */}
+                  <div className="mb-6 pb-6 border-b border-gray-100">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl sm:text-5xl font-extrabold text-brand-dark tracking-tight font-outfit">
+                        ৳{plan.price}
+                      </span>
+                      <span className="text-xs text-brand-muted font-medium font-bangla">
+                        / এককালীন
                       </span>
                     </div>
-                    <span className="text-[11px] font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-0.5 rounded-full inline-block mt-2 font-outfit">
+                    <span className="inline-block mt-1 text-xs font-semibold text-brand-blue font-outfit">
                       {plan.monthlyBreakdown}
                     </span>
                   </div>
 
-                  {/* Highlighted Account Requirement Callout Box */}
-                  <div className={`mb-5 p-3 rounded-xl border ${plan.accountType.style} flex items-start gap-2.5`}>
-                    <AccountIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  {/* Account Type Highlight Box */}
+                  <div className={`p-3.5 rounded-2xl border mb-6 flex items-start gap-3 ${plan.accountType.style}`}>
+                    <AccountIcon className="w-5 h-5 flex-shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-xs font-bold leading-snug">
+                      <h4 className="text-xs font-bold leading-tight font-bangla">
                         {plan.accountType.title}
-                      </strong>
-                      <span className="block text-[11px] opacity-90 leading-tight mt-0.5">
+                      </h4>
+                      <p className="text-[11px] opacity-85 mt-0.5 leading-snug font-bangla">
                         {plan.accountType.subtitle}
-                      </span>
+                      </p>
                     </div>
                   </div>
 
-                  {/* Concise 3-Bullet Core Highlights */}
-                  <div className="space-y-2 mb-6">
-                    {plan.highlights.map((highlight: string, i: number) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 stroke-[2.5]" />
+                  {/* Highlights Checklist */}
+                  <div className="space-y-3 mb-8 flex-1">
+                    <span className="text-xs font-bold text-brand-dark block uppercase tracking-wider font-bangla">
+                      প্ল্যানের মূল সুবিধাসমূহ:
+                    </span>
+                    {plan.highlights.map((highlight: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2.5 text-xs text-brand-body leading-snug">
+                        <div className="w-4 h-4 rounded-full bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
                         </div>
-                        <span className="text-xs font-medium text-brand-dark leading-snug">
-                          {highlight}
-                        </span>
+                        <span className="font-bangla">{highlight}</span>
                       </div>
                     ))}
                   </div>
-                </div>
 
-                {/* Bottom CTA Button */}
-                <div className="pt-2">
+                  {/* Action CTA Button */}
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenCheckout(plan.id);
-                    }}
-                    className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm py-3 px-5 rounded-xl transition-all cursor-pointer ${
-                      plan.popular
-                        ? "bg-brand-gradient hover:bg-brand-gradient-hover text-white shadow-glow hover:shadow-lg hover:-translate-y-0.5"
-                        : "bg-brand-surface hover:bg-brand-blue hover:text-white text-brand-dark border border-brand-border"
+                    onClick={() => onOpenCheckout(plan.id)}
+                    className={`w-full py-3.5 px-6 rounded-2xl font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                      isFeatured
+                        ? "bg-brand-gradient hover:bg-brand-gradient-hover text-white shadow-glow hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                        : "bg-[#F4F6FC] hover:bg-brand-blue hover:text-white text-brand-dark"
                     }`}
                   >
-                    <span>এখনই কিনুন</span>
+                    <span className="font-bangla">এখনই সাবস্ক্রাইব করুন</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -237,21 +240,21 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
           })}
         </div>
 
-        {/* Trust Badges Footnote */}
-        <div className="reveal-init max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-brand-muted border-t border-brand-border/60 pt-8">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-brand-purple" />
-            <span>১০০% অফিসিয়াল এক্সেস গ্যারান্টি</span>
+        {/* Bottom Trust Guarantee Badge */}
+        <div className="bg-white border border-brand-border rounded-2xl p-5 max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3 text-center sm:text-left shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center flex-shrink-0">
+            <Lock className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-brand-blue" />
-            <span>নিরাপদ পেমেন্ট গেটওয়ে</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-brand-success" />
-            <span>লাইভ সাপোর্ট ও ইনস্ট্যান্ট রিপ্লেসমেন্ট</span>
+          <div>
+            <h4 className="text-xs font-bold text-brand-dark font-bangla">
+              ১০০% ঝুঁকিমুক্ত রিপ্লেসমেন্ট ও অফিসিয়াল মানিব্যাক নিশ্চয়তা
+            </h4>
+            <p className="text-[11px] text-brand-muted font-bangla">
+              যেকোনো অ্যাকাউন্টিং সমস্যায় সাথে সাথে রিপ্লেসমেন্ট এবং সার্বক্ষণিক হোয়াটসঅ্যাপ সাপোর্ট।
+            </p>
           </div>
         </div>
+
       </div>
     </section>
   );

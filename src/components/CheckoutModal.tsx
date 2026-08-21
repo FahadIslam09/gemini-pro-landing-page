@@ -23,6 +23,7 @@ interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPlan?: string;
+  initialPlansData?: any[] | null;
   onToast: (msg: string) => void;
 }
 
@@ -68,10 +69,27 @@ export default function CheckoutModal({
   isOpen,
   onClose,
   initialPlan = "18m",
+  initialPlansData,
   onToast,
 }: CheckoutModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [plansMap, setPlansMap] = useState<Record<string, PlanDetail>>(DEFAULT_PLANS);
+  const [plansMap, setPlansMap] = useState<Record<string, PlanDetail>>(() => {
+    if (initialPlansData && initialPlansData.length > 0) {
+      const map: Record<string, PlanDetail> = {};
+      initialPlansData.forEach((p: any) => {
+        map[p.planKey] = {
+          name: p.name,
+          price: p.price,
+          duration: p.monthlyBreakdown || `${p.planKey} মেয়াদ`,
+          type: p.accountTypeTitle || "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
+          badge: p.badge || "",
+          popular: p.popular || p.planKey === "18m",
+        };
+      });
+      return { ...DEFAULT_PLANS, ...map };
+    }
+    return DEFAULT_PLANS;
+  });
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("bkash");
 
   // Form State
@@ -89,28 +107,23 @@ export default function CheckoutModal({
   const [trackingId, setTrackingId] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Load dynamic plans from MongoDB
+  // Sync dynamic plans when pre-fetched data updates
   useEffect(() => {
-    fetch("/api/public/pricing")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.plans?.length > 0) {
-          const map: Record<string, PlanDetail> = {};
-          data.plans.forEach((p: any) => {
-            map[p.planKey] = {
-              name: p.name,
-              price: p.price,
-              duration: p.monthlyBreakdown || `${p.planKey} মেয়াদ`,
-              type: p.accountTypeTitle || "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
-              badge: p.badge || "",
-              popular: p.popular || p.planKey === "18m",
-            };
-          });
-          setPlansMap((prev) => ({ ...prev, ...map }));
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (initialPlansData && initialPlansData.length > 0) {
+      const map: Record<string, PlanDetail> = {};
+      initialPlansData.forEach((p: any) => {
+        map[p.planKey] = {
+          name: p.name,
+          price: p.price,
+          duration: p.monthlyBreakdown || `${p.planKey} মেয়াদ`,
+          type: p.accountTypeTitle || "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
+          badge: p.badge || "",
+          popular: p.popular || p.planKey === "18m",
+        };
+      });
+      setPlansMap((prev) => ({ ...prev, ...map }));
+    }
+  }, [initialPlansData]);
 
   useEffect(() => {
     if (initialPlan) {
