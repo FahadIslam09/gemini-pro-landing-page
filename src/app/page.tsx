@@ -6,6 +6,7 @@ import Hero from "@/components/Hero";
 import WhyGemini from "@/components/WhyGemini";
 import FeatureDeepDive from "@/components/FeatureDeepDive";
 import GeminiOmniShowcase from "@/components/GeminiOmniShowcase";
+import CreativeGenerativeShowcase from "@/components/CreativeGenerativeShowcase";
 import ComparisonTable from "@/components/ComparisonTable";
 import PricingSection from "@/components/PricingSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -50,6 +51,9 @@ export default function Home() {
 
       {/* Gemini Omni Video & Multimodal Studio Showcase */}
       <GeminiOmniShowcase onOpenCheckout={handleOpenCheckout} />
+
+      {/* Nano Banana 2 & Lyria 3 Creative AI Showcase */}
+      <CreativeGenerativeShowcase onOpenCheckout={handleOpenCheckout} />
 
       {/* Comparison Table */}
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
