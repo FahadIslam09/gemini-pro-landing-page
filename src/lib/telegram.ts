@@ -65,7 +65,13 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
     inline_keyboard: [
       [
         {
-          text: "💬 গ্রাহককে WhatsApp মেসেজ দিন",
+          text: "✉️ সরাসরি গ্রাহককে অ্যাক্টিভেশন ইমেইল পাঠান",
+          callback_data: `mail:${payload.orderNumber}:${payload.customerEmail}`,
+        },
+      ],
+      [
+        {
+          text: "💬 WhatsApp মেসেজ দিন",
           url: `https://wa.me/${waPhone}?text=${encodeURIComponent(
             `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been received. We are activating your access.`
           )}`,
@@ -73,7 +79,7 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
       ],
       [
         {
-          text: "📧 Gmail থেকে মেসেজ পাঠান",
+          text: "📧 Gmail অ্যাপে ওপেন করুন",
           url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
             payload.customerEmail
           )}&su=${encodeURIComponent(
