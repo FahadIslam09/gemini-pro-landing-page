@@ -81,12 +81,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Validate Amount (allows ৳1 for testing / sandbox verification)
-    if (existingSms.amount < amount && existingSms.amount !== 1 && amount !== 1) {
+    // 4. Strict Amount Verification: Ensure SMS amount matches or exceeds plan price
+    if (existingSms.amount < amount) {
       return NextResponse.json(
         {
           success: false,
-          message: `❌ অপর্যাপ্ত পেমেন্ট! এই প্ল্যানের মূল্য ৳${amount}, কিন্তু ট্রানজেকশনে পাওয়া গেছে ৳${existingSms.amount}।`,
+          message: `❌ অপর্যাপ্ত পেমেন্ট! এই প্ল্যানের মূল্য ৳${amount} BDT, কিন্তু আপনার পেমেন্ট ট্রানজেকশনে পাওয়া গেছে মাত্র ৳${existingSms.amount} BDT। সম্পূর্ণ মূল্য পরিশোধ করে পুনরায় চেষ্টা করুন।`,
         },
         { status: 400 }
       );

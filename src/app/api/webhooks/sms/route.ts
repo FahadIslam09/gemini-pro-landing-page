@@ -160,8 +160,8 @@ export async function POST(req: NextRequest) {
     let matchedOrderNumber: string | null = null;
 
     if (matchingOrder) {
-      // Validate that amount matches or exceeds plan price (or if test payment of Tk 1+)
-      if ((amount || 0) >= matchingOrder.amount || amount === 1) {
+      // Strict Validation: Amount must strictly equal or exceed required order amount
+      if ((amount || 0) >= matchingOrder.amount) {
         // Update Order to PAID
         await prisma.order.update({
           where: { id: matchingOrder.id },

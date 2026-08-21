@@ -26,11 +26,11 @@ export async function POST(req: NextRequest) {
     const invoiceNumber = `GAI-${planId.toUpperCase()}-${timestamp}`;
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
 
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    const proto = req.headers.get("x-forwarded-proto") || "https";
     const origin =
       process.env.NEXT_PUBLIC_BASE_URL ||
-      req.headers.get("origin") ||
-      req.headers.get("referer") ||
-      "http://localhost:3000";
+      (host ? `${proto}://${host}` : "https://googleai.neonweb.xyz");
 
     const callbackURL = `${origin.replace(/\/$/, "")}/api/bkash/callback`;
 
