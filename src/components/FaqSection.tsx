@@ -66,7 +66,7 @@ export default function FaqSection() {
       <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-2xl mx-auto mb-16 reveal-init">
           <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit">
             <HelpCircle className="w-3.5 h-3.5" />
             <span>Frequently Asked Questions</span>
@@ -86,7 +86,7 @@ export default function FaqSection() {
             return (
               <div
                 key={idx}
-                className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
+                className={`reveal-init stagger-${(idx % 4) + 1} reveal-scale bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
                   isOpen
                     ? "border-brand-purple/40 shadow-sm bg-gradient-to-b from-white to-[#FBFBFE]"
                     : "border-brand-border hover:border-brand-border/90"
@@ -100,25 +100,25 @@ export default function FaqSection() {
                 >
                   <span className="leading-snug">{faq.q}</span>
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-300 ${
                       isOpen
-                        ? "bg-brand-purple text-white rotate-45 shadow-sm"
-                        : "bg-gray-100 text-brand-muted rotate-0"
+                        ? "bg-brand-purple/10 text-brand-purple rotate-45"
+                        : "bg-brand-surface text-brand-muted"
                     }`}
                   >
-                    <Plus className="w-4 h-4 transition-transform duration-300" />
+                    <Plus className="w-4 h-4" />
                   </div>
                 </button>
 
-                {/* Animated Collapsible Container */}
+                {/* Smooth Animated Collapsible Container */}
                 <div
-                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                  className={`grid transition-all duration-300 ease-in-out ${
                     isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-5 pb-5 text-sm text-brand-body leading-relaxed border-t border-dashed border-gray-100 pt-3">
-                      <p>{faq.a}</p>
+                    <div className="px-5 pb-5 pt-1 text-sm text-brand-body leading-relaxed border-t border-brand-border/40">
+                      {faq.a}
                     </div>
                   </div>
                 </div>

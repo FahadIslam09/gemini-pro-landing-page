@@ -230,7 +230,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="text-center max-w-2xl mx-auto mb-12 reveal-init">
           <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4">
             <Sparkles className="w-3.5 h-3.5" />
             <span>প্রিমিয়াম ফিচারের গভীর অভিজ্ঞতা</span>
@@ -244,7 +244,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
         </div>
 
         {/* Premium Segmented Pill Tray (Desktop & Mobile Friendly, No Scrollbars, No Clipping) */}
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-10 reveal-init">
           <div className="inline-flex flex-wrap sm:flex-nowrap items-center justify-center p-1.5 bg-[#EEF2F9] border border-brand-border/80 rounded-2xl sm:rounded-full gap-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] max-w-full">
             {tabs.map((tab, idx) => {
               const isActive = activeTab === idx;
@@ -270,7 +270,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
         </div>
 
         {/* Tab Showcase Card */}
-        <div className="bg-white border border-brand-border rounded-[28px] p-6 sm:p-10 shadow-gemini grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="reveal-init reveal-scale bg-white border border-brand-border rounded-[28px] p-6 sm:p-10 shadow-gemini grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left Description Column */}
           <div className="lg:col-span-7 flex flex-col items-start text-left">

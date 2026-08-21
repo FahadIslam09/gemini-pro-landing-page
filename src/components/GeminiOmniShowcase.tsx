@@ -41,7 +41,7 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-12 lg:mb-16 reveal-init">
           <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-4 py-1.5 text-xs font-semibold text-brand-purple mb-5 font-outfit shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Gemini Omni • নেক্সট-জেন মাল্টিমোডাল স্টুডিও</span>
@@ -61,78 +61,55 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
           </p>
         </div>
 
-        {/* Studio Video Showcase Container */}
-        <div className="relative max-w-4xl mx-auto">
-          
-          {/* Outer Glass Frame */}
-          <div className="relative bg-white/80 backdrop-blur-xl border border-brand-border/90 rounded-[28px] sm:rounded-[36px] p-3 sm:p-5 shadow-[0_25px_60px_rgba(49,87,213,0.14)] group">
+        {/* Video Showcase Card */}
+        <div className="reveal-init reveal-scale max-w-5xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-brand-border/80 shadow-2xl group transition-all duration-300">
             
-            {/* Top Bar inside Player Frame */}
-            <div className="flex items-center justify-between px-3 py-2 mb-2">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400/80" />
-                </div>
-                <span className="text-xs font-semibold text-brand-muted font-outfit ml-2">
-                  Gemini Omni Canvas
-                </span>
-              </div>
+            {/* Native Loop Video */}
+            <video
+              ref={videoRef}
+              src="/Gemini%20Omni.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto aspect-video object-cover block"
+            />
 
-              {/* Status Badge */}
-              <div className="flex items-center gap-2 bg-slate-900/90 text-white px-3 py-1 rounded-full text-[11px] font-semibold font-outfit shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Multimodal Studio Preview</span>
-              </div>
-            </div>
+            {/* Video Controls Overlay (Play/Pause Bottom Left, Audio Bottom Right) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-            {/* Video Container */}
-            <div className="relative rounded-2xl sm:rounded-[24px] overflow-hidden bg-slate-950 aspect-video shadow-inner flex items-center justify-center">
-              <video
-                ref={videoRef}
-                src="/omni.mp4"
-                autoPlay
-                loop
-                muted={isMuted}
-                playsInline
-                className="w-full h-full object-cover"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
-
-              {/* Sound / Mic Toggle Button */}
-              <button
-                type="button"
-                onClick={toggleAudio}
-                className={`absolute bottom-4 left-4 flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95 z-20 ${
-                  isMuted
-                    ? "bg-black/70 hover:bg-black/90 text-white/90 border border-white/20"
-                    : "bg-brand-blue/90 hover:bg-brand-blue text-white border border-blue-400/40 shadow-blue-500/30"
-                }`}
-                aria-label={isMuted ? "সাউন্ড চালু করুন" : "সাউন্ড মিউট করুন"}
-              >
-                {isMuted ? (
-                  <>
-                    <MicOff className="w-4 h-4 text-red-400" />
-                    <span className="text-xs font-semibold font-bangla">সাউন্ড শুনুন (আনমিউট)</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="w-4 h-4 text-emerald-300 animate-pulse" />
-                    <span className="text-xs font-semibold font-bangla">সাউন্ড চালু আছে</span>
-                  </>
-                )}
-              </button>
-
-              {/* Play/Pause Hover Overlay */}
+            {/* Control Bar */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
+              {/* Play/Pause Button */}
               <button
                 type="button"
                 onClick={togglePlay}
-                className="absolute bottom-4 right-4 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg cursor-pointer hover:scale-105 active:scale-95 z-20"
                 aria-label={isPlaying ? "Pause video" : "Play video"}
+                className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-brand-dark transition-all cursor-pointer shadow-lg"
               >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-white" />}
+                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+              </button>
+
+              {/* Omni Video Tag */}
+              <div className="hidden sm:inline-flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-xs font-semibold text-white/90">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>Gemini Omni Video Synthesis (Veo 3.1)</span>
+              </div>
+
+              {/* Mic / Audio Mute-Unmute Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleAudio}
+                aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+                className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white hover:text-brand-dark transition-all cursor-pointer shadow-lg"
+                title={isMuted ? "সাউন্ড অন করুন" : "সাউন্ড মিউট করুন"}
+              >
+                {isMuted ? (
+                  <MicOff className="w-4 h-4 text-red-400" />
+                ) : (
+                  <Mic className="w-4 h-4 text-emerald-400 animate-pulse" />
+                )}
               </button>
             </div>
           </div>

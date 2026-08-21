@@ -99,23 +99,35 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             highlights: Array.isArray(p.highlights) ? p.highlights : [],
             popular: p.popular,
           }));
+
+          // Strict left-to-right order: 1m Left, 18m Middle/Featured, 12m Right
+          const customOrder = ["1m", "18m", "12m"];
+          mapped.sort((a: any, b: any) => {
+            const indexA = customOrder.indexOf(a.id);
+            const indexB = customOrder.indexOf(b.id);
+            return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
+          });
+
           setPlans(mapped);
         }
       })
       .catch(() => {});
   }, []);
 
-  const featured18m = plans.find((p) => p.id === "18m") || DEFAULT_PLANS[1];
-
   return (
-    <section id="pricing" className="py-20 lg:py-28 bg-brand-surface relative overflow-hidden">
+    <section id="pricing" className="py-20 lg:py-28 bg-[#FAFBFD] relative overflow-hidden">
+      
+      {/* Background Subtle Gradient Blobs */}
+      <div className="absolute top-1/2 left-0 w-96 h-96 bg-brand-purple/5 rounded-full blur-3xl -ml-40 pointer-events-none" />
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-brand-blue/5 rounded-full blur-3xl -mr-40 pointer-events-none" />
+
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit">
+        <div className="text-center max-w-2xl mx-auto mb-16 reveal-init">
+          <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Transparent Subscription Plans</span>
+            <span>অফিসিয়াল ও সাশ্রয়ী সাবস্ক্রিপশন প্ল্যান</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-brand-dark tracking-tight mb-4">
             আপনার পছন্দের <span className="gradient-text">প্ল্যান বেছে নিন</span>
@@ -127,16 +139,16 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
 
         {/* 3 Standard-Sized Clean Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch mb-14">
-          {plans.map((plan) => {
+          {plans.map((plan, idx) => {
             const AccountIcon = plan.accountType.icon;
             return (
               <div
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
-                className={`rounded-[26px] p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 relative cursor-pointer ${
+                className={`reveal-init stagger-${idx + 1} reveal-scale rounded-[26px] p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 relative cursor-pointer ${
                   plan.popular
-                    ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 md:-translate-y-2"
-                    : "bg-white border border-brand-border hover:border-brand-border/80 shadow-soft hover:shadow-card-hover"
+                    ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 md:-translate-y-2 hover:shadow-[0_25px_60px_rgba(91,85,216,0.25)]"
+                    : "bg-white border border-brand-border hover:border-brand-border/80 shadow-soft hover:shadow-card-hover hover:-translate-y-1"
                 }`}
               >
                 {/* Popular Pill */}
@@ -219,67 +231,25 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                     <span>এখনই কিনুন</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-brand-muted mt-2.5">
-                    <Lock className="w-3 h-3 text-brand-muted" />
-                    <span>১০০% নিরাপদ পেমেন্ট ও সাপোর্ট</span>
-                  </div>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Reference Banner Card */}
-        <div className="bg-gradient-to-r from-[#F0F4FF] via-[#F5F0FF] to-[#FAF5FF] border-1.5 border-[#E2E7F5] rounded-[28px] p-6 sm:p-8 shadow-gemini grid grid-cols-1 lg:grid-cols-12 gap-6 items-center max-w-4xl mx-auto">
-          
-          {/* Left: Big Price */}
-          <div className="lg:col-span-4 flex flex-col items-start text-left border-b lg:border-b-0 lg:border-r border-brand-border/80 pb-4 lg:pb-0 lg:pr-6">
-            <span className="text-xs sm:text-sm font-semibold text-brand-muted mb-1 font-outfit">
-              18 Months Private Account Offer
-            </span>
-            <div className="flex items-baseline gap-1 font-outfit mb-1">
-              <span className="text-2xl font-bold text-brand-blue">৳</span>
-              <span className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">
-                {featured18m.price}
-              </span>
-            </div>
-            <span className="text-xs font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-0.5 rounded-full font-outfit">
-              {featured18m.monthlyBreakdown} ({featured18m.badge})
-            </span>
+        {/* Trust Badges Footnote */}
+        <div className="reveal-init max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs text-brand-muted border-t border-brand-border/60 pt-8">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-brand-purple" />
+            <span>১০০% অফিসিয়াল এক্সেস গ্যারান্টি</span>
           </div>
-
-          {/* Center: Key Highlights */}
-          <div className="lg:col-span-5 space-y-2">
-            {[
-              "১০০% প্রাইভেট অ্যাকাউন্ট (শুধু আপনার একক এক্সেস)",
-              "Gemini 3.1 Pro & Deep Research ফুল অ্যাক্সেস",
-              "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center flex-shrink-0">
-                  <Check className="w-3 h-3 stroke-[2.5]" />
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-brand-dark">
-                  {item}
-                </span>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-brand-blue" />
+            <span>নিরাপদ পেমেন্ট গেটওয়ে</span>
           </div>
-
-          {/* Right: CTA & Trust */}
-          <div className="lg:col-span-3 flex flex-col items-center lg:items-end text-center lg:text-right gap-2.5">
-            <div className="inline-flex items-center gap-1.5 bg-[#FEF6EA] border border-[#FDE68A] text-[#B45309] text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-              <span>সেরা মূল্য • প্রাইভেট অ্যাকাউন্ট</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onOpenCheckout("18m")}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold px-6 py-3 rounded-xl shadow-glow hover:shadow-lg transition-all cursor-pointer"
-            >
-              <span>এখনই কিনুন</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-brand-success" />
+            <span>লাইভ সাপোর্ট ও ইনস্ট্যান্ট রিপ্লেসমেন্ট</span>
           </div>
         </div>
       </div>

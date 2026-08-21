@@ -16,6 +16,7 @@ import FaqSection from "@/components/FaqSection";
 import FinalCta from "@/components/FinalCta";
 import CheckoutModal from "@/components/CheckoutModal";
 import StickyMobileBar from "@/components/StickyMobileBar";
+import ScrollProgress from "@/components/ScrollProgress";
 import Footer from "@/components/Footer";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 
@@ -51,6 +52,9 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-brand-surface text-brand-body relative">
+      {/* Scroll Progress & Scroll-to-Top Indicator */}
+      <ScrollProgress />
+
       {/* Header */}
       <Header onOpenCheckout={handleOpenCheckout} />
 

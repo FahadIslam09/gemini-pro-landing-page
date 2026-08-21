@@ -20,7 +20,7 @@ export default function CreativeGenerativeShowcase({
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header (Harmonized with site typography) */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
+        <div className="text-center max-w-2xl mx-auto mb-14 reveal-init">
           <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Google Next-Gen Creative AI Engines</span>
@@ -37,7 +37,7 @@ export default function CreativeGenerativeShowcase({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
           {/* Card 1: Nano Banana 2 (Image Generation Showcase) */}
-          <div className="bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
+          <div className="reveal-init stagger-1 reveal-scale bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
             
             {/* Top Image Showcase */}
             <div className="mb-8 rounded-2xl overflow-hidden bg-black/50 flex items-center justify-center p-2 border border-white/5 shadow-inner">
@@ -82,7 +82,7 @@ export default function CreativeGenerativeShowcase({
           </div>
 
           {/* Card 2: Lyria 3 (Music & Soundtrack Generation Showcase) */}
-          <div className="bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
+          <div className="reveal-init stagger-2 reveal-scale bg-[#0B0F19] text-white border border-slate-800/80 rounded-[32px] p-6 sm:p-8 flex flex-col justify-between shadow-[0_20px_50px_rgba(15,23,42,0.18)] hover:border-slate-700 transition-all duration-300 group relative overflow-hidden">
             
             {/* Top Image Showcase */}
             <div className="mb-8 rounded-2xl overflow-hidden bg-black/50 flex items-center justify-center p-2 border border-white/5 shadow-inner">
