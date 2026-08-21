@@ -68,13 +68,17 @@ export default function GeminiOmniShowcase({ onOpenCheckout }: GeminiOmniShowcas
             {/* Native Loop Video */}
             <video
               ref={videoRef}
-              src="/Gemini%20Omni.mp4"
+              src="/omni.mp4"
               autoPlay
               loop
               muted
               playsInline
+              preload="auto"
               className="w-full h-auto aspect-video object-cover block"
-            />
+            >
+              <source src="/omni.mp4" type="video/mp4" />
+              আপনার ব্রাউজারে ভিডিও প্লেব্যাক সমর্থিত নয়।
+            </video>
 
             {/* Video Controls Overlay (Play/Pause Bottom Left, Audio Bottom Right) */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
