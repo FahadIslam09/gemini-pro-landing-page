@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Copy, Check, Lock, Sparkles, Loader2, CheckCircle2, MessageCircle } from "lucide-react";
+import {
+  X,
+  Check,
+  ShieldCheck,
+  Sparkles,
+  Lock,
+  Copy,
+  AlertCircle,
+  Loader2,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface CheckoutModalProps {
@@ -19,42 +30,38 @@ export default function CheckoutModal({
 }: CheckoutModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [paymentMethod, setPaymentMethod] = useState<"bkash" | "nagad" | "rocket">("bkash");
-  
-  // Form State
+  const [isManualBkash, setIsManualBkash] = useState(false);
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [trxId, setTrxId] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  // Loading & Submission States
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBkashRedirecting, setIsBkashRedirecting] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [progressStatusText, setProgressStatusText] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [trackingId, setTrackingId] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (initialPlan) setSelectedPlan(initialPlan);
-  }, [initialPlan]);
+    if (initialPlan) {
+      setSelectedPlan(initialPlan);
+    }
+  }, [initialPlan, isOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) {
+      if (e.key === "Escape" && isOpen && !isSubmitting && !isBkashRedirecting) {
         onClose();
       }
     };
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    } else {
-      document.body.style.overflow = "";
-    }
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, isSubmitting, onClose]);
+  }, [isOpen, isSubmitting, isBkashRedirecting, onClose]);
 
   const planDetails: Record<string, { name: string; price: number; duration: string; type: string }> = {
     "1m": {
@@ -78,7 +85,7 @@ export default function CheckoutModal({
   };
 
   const merchantNumbers: Record<string, string> = {
-    bkash: "01812345678",
+    bkash: "01516556465",
     nagad: "01798765432",
     rocket: "019123456789",
   };
@@ -94,7 +101,47 @@ export default function CheckoutModal({
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Direct Official bKash Gateway Payment Handler
+  const handleBkashGatewayPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !email.trim() || !phone.trim()) {
+      onToast("অনুগ্রহ করে আপনার নাম, জিমেইল ও ফোন নম্বর দিন");
+      return;
+    }
+
+    try {
+      setIsBkashRedirecting(true);
+      onToast("bKash নিরাপদ গেটওয়েতে রিডাইরেক্ট করা হচ্ছে...");
+
+      const res = await fetch("/api/bkash/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: selectedPlan,
+          fullName,
+          email,
+          phone,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.bkashURL) {
+        // Redirect directly to official bKash Checkout
+        window.location.href = data.bkashURL;
+      } else {
+        setIsBkashRedirecting(false);
+        onToast(data.message || "bKash গেটওয়ে শুরু করতে সমস্যা হয়েছে");
+      }
+    } catch (err: any) {
+      setIsBkashRedirecting(false);
+      console.error("bKash redirect error:", err);
+      onToast("সার্ভার ত্রুটি: অনুগ্রহ করে পুনরায় চেষ্টা করুন");
+    }
+  };
+
+  // Manual Send Money Submission Handler
+  const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !phone.trim() || !trxId.trim()) {
       onToast("অনুগ্রহ করে সমস্ত প্রয়োজনীয় তথ্য পূরণ করুন");
@@ -136,6 +183,7 @@ export default function CheckoutModal({
   const resetAndClose = () => {
     setIsCompleted(false);
     setIsSubmitting(false);
+    setIsBkashRedirecting(false);
     setSubmissionProgress(0);
     setFullName("");
     setEmail("");
@@ -151,17 +199,17 @@ export default function CheckoutModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-brand-dark/60 backdrop-blur-sm transition-opacity"
-        onClick={() => !isSubmitting && resetAndClose()}
+        onClick={() => !isSubmitting && !isBkashRedirecting && resetAndClose()}
       />
 
-      {/* Modal Outer Shell (Perfect Rounded Frame with No Overflowing Scrollbar) */}
+      {/* Modal Outer Shell */}
       <div className="relative z-10 w-full max-w-lg bg-white rounded-[28px] shadow-2xl border border-brand-border overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Inner Scrollable Container */}
         <div className="max-h-[88vh] overflow-y-auto modal-scroll p-6 sm:p-7">
           
           {/* Close Button */}
-          {!isSubmitting && (
+          {!isSubmitting && !isBkashRedirecting && (
             <button
               type="button"
               onClick={resetAndClose}
@@ -183,11 +231,11 @@ export default function CheckoutModal({
                   </h3>
                 </div>
                 <p className="text-xs sm:text-sm text-brand-muted">
-                  সহজ ৩টি ধাপে আপনার সাবস্ক্রিপশন সম্পন্ন করুন
+                  সহজ ধাপে আপনার অফিসিয়াল সাবস্ক্রিপশন সম্পন্ন করুন
                 </p>
               </div>
 
-              {/* Plan Selector Radio Pill Bar (3 Plans: 1m, 12m & 18m) */}
+              {/* Plan Selector Radio Pill Bar */}
               <div className="grid grid-cols-3 gap-2 mb-4 bg-brand-surface p-1.5 rounded-2xl border border-brand-border">
                 {[
                   { id: "1m", label: "১ মাস (ইনভাইট)", price: "৳149" },
@@ -232,8 +280,15 @@ export default function CheckoutModal({
                 </div>
               </div>
 
-              {/* Checkout Form */}
-              <form onSubmit={handleSubmit} className="space-y-3.5">
+              {/* Form Component */}
+              <form
+                onSubmit={
+                  paymentMethod === "bkash" && !isManualBkash
+                    ? handleBkashGatewayPayment
+                    : handleManualSubmit
+                }
+                className="space-y-3.5"
+              >
                 {/* Full Name */}
                 <div>
                   <label className="block text-xs font-bold text-brand-dark mb-1">
@@ -245,7 +300,7 @@ export default function CheckoutModal({
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="যেমন: তানভীর হাসান"
                     required
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isBkashRedirecting}
                     className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors"
                   />
                 </div>
@@ -261,7 +316,7 @@ export default function CheckoutModal({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your-personal-email@gmail.com"
                     required
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isBkashRedirecting}
                     className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors font-outfit"
                   />
                 </div>
@@ -277,7 +332,7 @@ export default function CheckoutModal({
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="017XXXXXXXX"
                     required
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isBkashRedirecting}
                     className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors font-outfit"
                   />
                 </div>
@@ -289,16 +344,19 @@ export default function CheckoutModal({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "bkash", name: "bKash", color: "text-[#D12053]" },
+                      { id: "bkash", name: "bKash (অটোমেটিক)", color: "text-[#D12053]" },
                       { id: "nagad", name: "Nagad", color: "text-[#F7941D]" },
                       { id: "rocket", name: "Rocket", color: "text-[#8C3494]" },
                     ].map((m) => (
                       <button
                         key={m.id}
                         type="button"
-                        onClick={() => setPaymentMethod(m.id as any)}
-                        disabled={isSubmitting}
-                        className={`h-10 rounded-xl border flex items-center justify-center font-bold text-xs sm:text-sm font-outfit transition-all cursor-pointer ${
+                        onClick={() => {
+                          setPaymentMethod(m.id as any);
+                          if (m.id !== "bkash") setIsManualBkash(false);
+                        }}
+                        disabled={isSubmitting || isBkashRedirecting}
+                        className={`h-10 rounded-xl border flex items-center justify-center font-bold text-xs sm:text-xs font-bangla transition-all cursor-pointer ${
                           paymentMethod === m.id
                             ? "border-brand-blue bg-blue-50/50 shadow-sm ring-2 ring-brand-blue/20"
                             : "border-brand-border bg-white hover:bg-gray-50"
@@ -310,46 +368,79 @@ export default function CheckoutModal({
                   </div>
                 </div>
 
-                {/* Dynamic Payment Instruction Box */}
-                <div className="bg-brand-alt border border-dashed border-brand-border rounded-xl p-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-brand-body font-medium font-bangla">
-                      Send Money নম্বর ({paymentMethod.toUpperCase()} Personal):
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <strong className="font-outfit text-brand-dark font-bold text-sm">
-                        {merchantNumbers[paymentMethod]}
-                      </strong>
-                      <button
-                        type="button"
-                        onClick={handleCopyNumber}
-                        className="bg-white hover:bg-gray-100 text-brand-blue border border-brand-border rounded-md px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                      >
-                        {copied ? <Check className="w-3 h-3 text-brand-success" /> : <Copy className="w-3 h-3" />}
-                        <span>{copied ? "কপি হয়েছে" : "কপি"}</span>
-                      </button>
+                {/* BKASH AUTOMATIC GATEWAY MODE */}
+                {paymentMethod === "bkash" && !isManualBkash && (
+                  <div className="bg-gradient-to-r from-pink-50 via-rose-50 to-pink-50 border border-pink-200 rounded-xl p-3.5 space-y-2">
+                    <div className="flex items-center gap-2 text-[#D12053] font-bold text-xs">
+                      <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                      <span>bKash Official Payment Gateway (ইনস্ট্যান্ট পেমেন্ট)</span>
                     </div>
+                    <p className="text-[11px] text-gray-600 leading-relaxed font-bangla">
+                      নিচের বাটনে ক্লিক করলে bKash-এর অফিশিয়াল পপআপ/পেইজ ওপেন হবে। কোনো জটিলতা ছাড়া সরাসরি পেমেন্ট সম্পন্ন হবে।
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsManualBkash(true)}
+                      className="text-[11px] text-brand-blue hover:underline font-semibold font-bangla block pt-1"
+                    >
+                      ম্যানুয়াল সেন্ড মানি করতে চান? এখানে ক্লিক করুন
+                    </button>
                   </div>
-                  <p className="text-[11px] text-brand-muted leading-relaxed font-bangla">
-                    টাকা পাঠিয়ে নিচের ঘরে আপনার ট্রানজেকশন আইডি (TrxID) দিন:
-                  </p>
-                </div>
+                )}
 
-                {/* TrxID Input */}
-                <div>
-                  <label className="block text-xs font-bold text-brand-dark mb-1">
-                    Transaction ID (TrxID) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={trxId}
-                    onChange={(e) => setTrxId(e.target.value.toUpperCase())}
-                    placeholder="যেমন: 9J87AKL0P1"
-                    required
-                    disabled={isSubmitting}
-                    className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm font-mono text-brand-dark uppercase tracking-wider outline-none transition-colors"
-                  />
-                </div>
+                {/* MANUAL SEND MONEY MODE (For Nagad, Rocket, or Manual bKash) */}
+                {(paymentMethod !== "bkash" || isManualBkash) && (
+                  <>
+                    <div className="bg-brand-alt border border-dashed border-brand-border rounded-xl p-3 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-brand-body font-medium font-bangla">
+                          Send Money নম্বর ({paymentMethod.toUpperCase()} Personal):
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <strong className="font-outfit text-brand-dark font-bold text-sm">
+                            {merchantNumbers[paymentMethod]}
+                          </strong>
+                          <button
+                            type="button"
+                            onClick={handleCopyNumber}
+                            className="bg-white hover:bg-gray-100 text-brand-blue border border-brand-border rounded-md px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            {copied ? <Check className="w-3 h-3 text-brand-success" /> : <Copy className="w-3 h-3" />}
+                            <span>{copied ? "কপি হয়েছে" : "কপি"}</span>
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-brand-muted leading-relaxed font-bangla">
+                        টাকা পাঠিয়ে নিচের ঘরে আপনার ট্রানজেকশন আইডি (TrxID) দিন:
+                      </p>
+                      {paymentMethod === "bkash" && isManualBkash && (
+                        <button
+                          type="button"
+                          onClick={() => setIsManualBkash(false)}
+                          className="text-[11px] text-brand-blue hover:underline font-semibold font-bangla block pt-1"
+                        >
+                          ← অটোমেটিক bKash গেটওয়েতে ফিরে যান
+                        </button>
+                      )}
+                    </div>
+
+                    {/* TrxID Input */}
+                    <div>
+                      <label className="block text-xs font-bold text-brand-dark mb-1">
+                        Transaction ID (TrxID) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={trxId}
+                        onChange={(e) => setTrxId(e.target.value.toUpperCase())}
+                        placeholder="যেমন: 9J87AKL0P1"
+                        required
+                        disabled={isSubmitting}
+                        className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm font-mono text-brand-dark uppercase tracking-wider outline-none transition-colors"
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Submission Progress & Status Feedback */}
                 {isSubmitting && (
@@ -367,87 +458,111 @@ export default function CheckoutModal({
                   </div>
                 )}
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold py-3.5 px-6 rounded-xl shadow-glow transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>অর্ডার প্রসেস করা হচ্ছে...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>অর্ডার নিশ্চিত করুন (৳{currentPlan.price})</span>
-                      <Sparkles className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-brand-muted text-center pt-0.5">
-                  <Lock className="w-3 h-3 text-brand-muted" />
-                  <span>আপনার ডাটা ২৫৬-বিট SSL এনক্রিপশনে সুরক্ষিত</span>
-                </div>
+                {/* Submit Action Button */}
+                {paymentMethod === "bkash" && !isManualBkash ? (
+                  <button
+                    type="submit"
+                    disabled={isBkashRedirecting}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#E11470] hover:bg-[#c90f62] text-white text-sm font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-pink-500/20 transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer font-bangla"
+                  >
+                    {isBkashRedirecting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>bKash গেটওয়ে লোড হচ্ছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>bKash দিয়ে সরাসরি পেমেন্ট করুন (৳{currentPlan.price})</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold py-3.5 px-6 rounded-xl shadow-glow transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>অর্ডার প্রসেস করা হচ্ছে...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>অর্ডার কনফার্ম করুন (৳{currentPlan.price})</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                )}
               </form>
+
+              {/* Security Trust Footnote */}
+              <div className="mt-4 pt-3 border-t border-brand-border flex items-center justify-between text-[11px] text-brand-muted">
+                <div className="flex items-center gap-1">
+                  <Lock className="w-3.5 h-3.5 text-brand-success" />
+                  <span>256-Bit SSL এনক্রিপ্টেড পেমেন্ট</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-brand-blue" />
+                  <span>অফিসিয়াল প্রিমিয়াম গ্যারান্টি</span>
+                </div>
+              </div>
             </>
           ) : (
-            /* Order Success Confirmation Screen */
+            /* Order Success View (Manual Submissions) */
             <div className="text-center py-4 space-y-4 animate-in zoom-in-95 duration-200">
-              <div className="w-14 h-14 rounded-full bg-brand-success/10 text-brand-success flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-full bg-brand-success/10 text-brand-success flex items-center justify-center mx-auto mb-2">
+                <Check className="w-8 h-8 stroke-[3]" />
               </div>
 
-              <div>
-                <h3 className="text-xl font-bold text-brand-dark mb-1">
-                  অর্ডার সফল হয়েছে!
-                </h3>
-                <p className="text-xs text-brand-body leading-relaxed max-w-sm mx-auto">
-                  ধন্যবাদ <strong>{fullName}</strong>! আপনার পেমেন্ট ভেরিফিকেশনের কাজ চলছে। আগামী ৫-১৫ মিনিটের মধ্যে আপনার জিমেইল ({email})-এ কনফার্মেশন ও অ্যাক্সেস পৌঁছে যাবে।
-                </p>
-              </div>
+              <h3 className="text-2xl font-bold text-brand-dark">
+                অর্ডার সফলভাবে সম্পন্ন হয়েছে!
+              </h3>
+              <p className="text-xs sm:text-sm text-brand-muted leading-relaxed max-w-sm mx-auto">
+                ধন্যবাদ, <strong className="text-brand-dark">{fullName}</strong>! আপনার সাবস্ক্রিপশন অর্ডারটি কনফার্ম হয়েছে।
+              </p>
 
-              {/* Receipt Summary Chip */}
-              <div className="bg-brand-surface border border-brand-border rounded-2xl p-3.5 text-left space-y-2 text-xs">
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
+              {/* Receipt Summary Card */}
+              <div className="bg-brand-surface border border-brand-border rounded-2xl p-4 text-left space-y-2.5 my-4">
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-brand-muted">অর্ডার ট্র্যাকিং আইডি:</span>
-                  <strong className="font-outfit text-brand-blue font-bold">{trackingId}</strong>
+                  <span className="font-outfit font-bold text-brand-blue">{trackingId}</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
-                  <span className="text-brand-muted">প্ল্যান:</span>
-                  <span className="font-semibold text-brand-dark">{currentPlan.name}</span>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-brand-muted">নির্বাচিত প্ল্যান:</span>
+                  <span className="font-bold text-brand-dark font-bangla">{currentPlan.name}</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-brand-muted">পেমেন্ট মেথড:</span>
+                  <span className="font-bold text-brand-dark uppercase font-outfit">{paymentMethod}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-brand-muted">পরিশোধিত মূল্য:</span>
-                  <strong className="font-outfit text-brand-dark">৳{currentPlan.price} BDT</strong>
+                  <span className="font-outfit font-extrabold text-brand-dark">৳{currentPlan.price}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-brand-muted">TrxID:</span>
-                  <span className="font-mono font-bold text-brand-dark">{trxId}</span>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-brand-muted">টার্গেট জিমেইল:</span>
+                  <span className="font-mono text-brand-dark font-semibold">{email}</span>
                 </div>
               </div>
 
-              {/* WhatsApp Support Button */}
-              <div className="pt-2 space-y-2">
-                <a
-                  href={`https://wa.me/?text=Hello%2C%20I%20placed%20an%20order%20for%20Google%20AI%20Pro%20with%20Order%20ID%3A%20${trackingId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-3 px-4 rounded-xl shadow-sm transition-colors cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>হোয়াটসঅ্যাপে দ্রুত কনফার্মেশন নিন</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={resetAndClose}
-                  className="w-full text-xs font-semibold text-brand-muted hover:text-brand-dark py-1.5 cursor-pointer"
-                >
-                  উইন্ডো বন্ধ করুন
-                </button>
+              {/* Instructions */}
+              <div className="bg-blue-50/80 border border-blue-200/80 rounded-xl p-3.5 text-left text-xs text-brand-blue leading-relaxed flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  আগামী ৫-১৫ মিনিটের মধ্যে আপনার <strong className="font-mono">{email}</strong> জিমেইলে এক্সেস যুক্ত হবে। কোনো প্রয়োজনে আমাদের সাথে WhatsApp বা লাইভ চ্যাটে যোগাযোগ করুন।
+                </span>
               </div>
+
+              <button
+                type="button"
+                onClick={resetAndClose}
+                className="w-full inline-flex items-center justify-center gap-2 bg-brand-surface hover:bg-brand-blue hover:text-white text-brand-dark font-semibold text-sm py-3 px-6 rounded-xl border border-brand-border transition-colors cursor-pointer"
+              >
+                <span>সম্পন্ন করুন</span>
+              </button>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import WhyGemini from "@/components/WhyGemini";
@@ -16,19 +17,32 @@ import FinalCta from "@/components/FinalCta";
 import CheckoutModal from "@/components/CheckoutModal";
 import StickyMobileBar from "@/components/StickyMobileBar";
 import Footer from "@/components/Footer";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState("18m");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
-  const showToast = (message: string) => {
+  const showToast = (message: string, type: "success" | "error" = "success") => {
     setToastMessage(message);
+    setToastType(type);
     setTimeout(() => {
       setToastMessage((prev) => (prev === message ? null : prev));
-    }, 3500);
+    }, 4500);
   };
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const reason = searchParams.get("reason");
+    if (paymentStatus === "cancelled") {
+      showToast("bKash পেমেন্ট বাতিল করা হয়েছে। আবার চেষ্টা করতে পারেন।", "error");
+    } else if (paymentStatus === "failed") {
+      showToast(reason || "পেমেন্ট ব্যর্থ হয়েছে। দয়া করে আবার চেষ্টা করুন।", "error");
+    }
+  }, [searchParams]);
 
   const handleOpenCheckout = (plan: string = "18m") => {
     setModalPlan(plan);
@@ -79,12 +93,12 @@ export default function Home() {
       {/* Sticky Mobile Quick Checkout Bar */}
       <StickyMobileBar onOpenCheckout={handleOpenCheckout} />
 
-      {/* Interactive Checkout Modal with Multi-Stage Loading */}
+      {/* Interactive Checkout Modal with Multi-Stage Loading & bKash Gateway */}
       <CheckoutModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialPlan={modalPlan}
-        onToast={showToast}
+        onToast={(msg) => showToast(msg, "success")}
       />
 
       {/* Toast Notification Container */}
@@ -92,12 +106,26 @@ export default function Home() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-20 sm:bottom-6 right-6 z-50 bg-slate-900 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200"
+          className={`fixed bottom-20 sm:bottom-6 right-6 z-50 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200 ${
+            toastType === "error" ? "bg-red-900 border border-red-700" : "bg-slate-900"
+          }`}
         >
-          <CheckCircle2 className="w-4 h-4 text-brand-success flex-shrink-0" />
+          {toastType === "error" ? (
+            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          ) : (
+            <CheckCircle2 className="w-4 h-4 text-brand-success flex-shrink-0" />
+          )}
           <span>{toastMessage}</span>
         </div>
       )}
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-surface" />}>
+      <HomeContent />
+    </Suspense>
   );
 }
