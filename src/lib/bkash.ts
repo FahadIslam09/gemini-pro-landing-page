@@ -45,21 +45,23 @@ let cachedToken: {
   expiresAt: number;
 } | null = null;
 
+function getBKashConfig() {
+  const baseUrl = (process.env.BKASH_BASE_URL || "https://tokenized.pay.bka.sh/v1.2.0-beta").trim();
+  const appKey = (process.env.BKASH_APP_KEY || "IwYsld4WmiCEsngyeKnAl6z2tc").trim();
+  const appSecret = (process.env.BKASH_APP_SECRET || "DNbC0lhh58Te1dR3Xhw20404hjfh6Z7x3xXwfjWlmBrFGG83N2rk").trim();
+  const username = (process.env.BKASH_USERNAME || "01516556465").trim();
+  const password = (process.env.BKASH_PASSWORD || "=q:lrY9y^UI").trim();
+
+  return { baseUrl, appKey, appSecret, username, password };
+}
+
 export async function getBKashToken(): Promise<string> {
   const now = Date.now();
   if (cachedToken && cachedToken.expiresAt > now + 60000) {
     return cachedToken.token;
   }
 
-  const baseUrl = process.env.BKASH_BASE_URL || "https://tokenized.pay.bka.sh/v1.2.0-beta";
-  const appKey = process.env.BKASH_APP_KEY;
-  const appSecret = process.env.BKASH_APP_SECRET;
-  const username = process.env.BKASH_USERNAME;
-  const password = process.env.BKASH_PASSWORD;
-
-  if (!appKey || !appSecret || !username || !password) {
-    throw new Error("bKash environment credentials missing");
-  }
+  const { baseUrl, appKey, appSecret, username, password } = getBKashConfig();
 
   const response = await fetch(`${baseUrl}/tokenized/checkout/token/grant`, {
     method: "POST",
@@ -104,8 +106,7 @@ export async function createBKashPayment({
   callbackURL: string;
 }): Promise<BKashCreatePaymentResponse> {
   const token = await getBKashToken();
-  const baseUrl = process.env.BKASH_BASE_URL || "https://tokenized.pay.bka.sh/v1.2.0-beta";
-  const appKey = process.env.BKASH_APP_KEY;
+  const { baseUrl, appKey } = getBKashConfig();
 
   const payload = {
     mode: "0011",
@@ -123,7 +124,7 @@ export async function createBKashPayment({
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: token,
-      "X-APP-Key": appKey || "",
+      "X-APP-Key": appKey,
     },
     body: JSON.stringify(payload),
     cache: "no-store",
@@ -145,8 +146,7 @@ export async function executeBKashPayment({
   paymentID: string;
 }): Promise<BKashExecutePaymentResponse> {
   const token = await getBKashToken();
-  const baseUrl = process.env.BKASH_BASE_URL || "https://tokenized.pay.bka.sh/v1.2.0-beta";
-  const appKey = process.env.BKASH_APP_KEY;
+  const { baseUrl, appKey } = getBKashConfig();
 
   const response = await fetch(`${baseUrl}/tokenized/checkout/execute`, {
     method: "POST",
@@ -154,7 +154,7 @@ export async function executeBKashPayment({
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: token,
-      "X-APP-Key": appKey || "",
+      "X-APP-Key": appKey,
     },
     body: JSON.stringify({ paymentID }),
     cache: "no-store",
@@ -176,8 +176,7 @@ export async function queryBKashPayment({
   paymentID: string;
 }): Promise<any> {
   const token = await getBKashToken();
-  const baseUrl = process.env.BKASH_BASE_URL || "https://tokenized.pay.bka.sh/v1.2.0-beta";
-  const appKey = process.env.BKASH_APP_KEY;
+  const { baseUrl, appKey } = getBKashConfig();
 
   const response = await fetch(`${baseUrl}/tokenized/checkout/payment/status`, {
     method: "POST",
@@ -185,7 +184,7 @@ export async function queryBKashPayment({
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: token,
-      "X-APP-Key": appKey || "",
+      "X-APP-Key": appKey,
     },
     body: JSON.stringify({ paymentID }),
     cache: "no-store",
