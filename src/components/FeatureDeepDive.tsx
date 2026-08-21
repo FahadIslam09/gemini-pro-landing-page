@@ -27,9 +27,9 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
   const tabs = [
     {
       id: "gemini-pro-research",
-      title: "Gemini 3.1 Pro & Deep Research",
+      title: "Gemini 3.1 Pro",
       icon: <Sparkles className="w-4 h-4" />,
-      tagline: "গুগলের সবচেয়ে শক্তিশালী রিজনিং মডেল ও অটোনোমাস রিসার্চ",
+      tagline: "গুগলের ফ্ল্যাগশিপ ৩.১ প্রো মডেল ও অটোনোমাস রিসার্চ",
       headline: "1 Million Token Context এবং রিয়েল-টাইম ডিপ রিসার্চ রিপোর্ট",
       description:
         "Gemini 3.1 Pro মডেলের ১ মিলিয়নের বিশাল কনটেক্সট উইন্ডো দিয়ে একসাথে ১,৫০০ পৃষ্ঠার রিসার্চ পেপার, বড় ভিডিও বা পুরো কোডবেস নির্ভুলভাবে অ্যানালাইজ করুন। আর Deep Research ফিচার স্বয়ংক্রিয়ভাবে শত শত ওয়েবসাইট ব্রাউজ করে কয়েক মিনিটে মাল্টি-পেজ রিসার্চ রিপোর্ট তৈরি করে দেয়।",
@@ -62,7 +62,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
     },
     {
       id: "workspace-ai",
-      title: "Google Workspace AI",
+      title: "Workspace AI",
       icon: <Mail className="w-4 h-4" />,
       tagline: "Gmail, Docs, Sheets ও Google Vids-এ সার্বক্ষণিক AI",
       headline: "ডকুমেন্ট ড্রাফট, স্মার্ট ইমেইল রিপ্লাই এবং ফর্মুলা তৈরি চোখের পলকে",
@@ -98,7 +98,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
     },
     {
       id: "creative-studio",
-      title: "Creative Studio (Veo 3.1 & Lyria 3)",
+      title: "Creative Studio",
       icon: <Video className="w-4 h-4" />,
       tagline: "সিনেম্যাটিক 4K ভিডিও, মিউজিক ও ইমেজ জেনারেশন",
       headline: "Veo 3.1 দিয়ে ভিডিও এবং Lyria 3 দিয়ে কমপ্লিট গান তৈরি",
@@ -139,7 +139,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
     },
     {
       id: "developer-agents",
-      title: "Autonomous Coding (Antigravity & Jules)",
+      title: "Autonomous Coding",
       icon: <Code2 className="w-4 h-4" />,
       tagline: "Google Antigravity ও Jules এজেন্টের সাহায্যে দ্রুত কোডিং",
       headline: "মাল্টি-এজেন্ট টিম পরিচালনা ও গিটহাব পুল রিকোয়েস্ট অটোমেশন",
@@ -171,7 +171,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
     },
     {
       id: "storage-youtube",
-      title: "5 TB Cloud Storage & YouTube Premium",
+      title: "5 TB Storage & Media",
       icon: <HardDrive className="w-4 h-4" />,
       tagline: "৫,০০০ জিবি গুগল ওয়ান ক্লাউড স্পেস ও অ্যাড-ফ্রি ভিডিও",
       headline: "স্মার্টফোন, পিসি ব্যাকআপ এবং বিজ্ঞাপনহীন এন্টারটেইনমেন্ট",
@@ -243,23 +243,30 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
           </p>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex items-center justify-start sm:justify-center gap-2 sm:gap-3 overflow-x-auto pb-4 mb-10 no-scrollbar">
-          {tabs.map((tab, idx) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(idx)}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm whitespace-nowrap transition-all duration-200 border ${
-                activeTab === idx
-                  ? "bg-brand-gradient text-white border-transparent shadow-glow scale-[1.02]"
-                  : "bg-white text-brand-body hover:text-brand-dark border-brand-border hover:bg-gray-50"
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.title}</span>
-            </button>
-          ))}
+        {/* Premium Segmented Pill Tray (Desktop & Mobile Friendly, No Scrollbars, No Clipping) */}
+        <div className="flex justify-center mb-10">
+          <div className="inline-flex flex-wrap sm:flex-nowrap items-center justify-center p-1.5 bg-[#EEF2F9] border border-brand-border/80 rounded-2xl sm:rounded-full gap-1 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)] max-w-full">
+            {tabs.map((tab, idx) => {
+              const isActive = activeTab === idx;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(idx)}
+                  className={`flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-full font-semibold text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-brand-gradient text-white shadow-[0_4px_16px_rgba(91,85,216,0.35)] scale-[1.02]"
+                      : "text-brand-body hover:text-brand-dark hover:bg-white/70"
+                  }`}
+                >
+                  <span className={isActive ? "text-white" : "text-brand-purple"}>
+                    {tab.icon}
+                  </span>
+                  <span>{tab.title}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tab Showcase Card */}
