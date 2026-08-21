@@ -10,7 +10,11 @@ import {
   CheckCircle2,
   ArrowRight,
   Search,
-  Music,
+  Clapperboard,
+  Music2,
+  Terminal,
+  FileSpreadsheet,
+  Layers,
 } from "lucide-react";
 
 interface FeatureDeepDiveProps {
@@ -76,8 +80,11 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
         <div className="space-y-3 font-sans text-xs">
           <div className="border border-brand-border bg-white rounded-xl p-3.5 shadow-sm">
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
-              <span className="font-bold text-brand-dark">Gmail / Docs AI Sidebar</span>
-              <span className="text-[10px] bg-blue-50 text-brand-blue font-bold px-2 py-0.5 rounded-full">Active</span>
+              <span className="font-bold text-brand-dark flex items-center gap-1.5">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-brand-blue" />
+                Workspace AI Sidebar
+              </span>
+              <span className="text-[10px] bg-blue-50 text-brand-blue font-bold px-2 py-0.5 rounded-full font-outfit">Active</span>
             </div>
             <div className="bg-brand-surface p-2.5 rounded-lg text-brand-dark mb-2">
               <span className="text-brand-blue font-bold">Prompt:</span> "Write a formal partnership proposal for enterprise client."
@@ -107,19 +114,19 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
       previewBadge: "Generative AI",
       previewContent: (
         <div className="space-y-3 font-sans text-xs">
-          <div className="bg-white border border-brand-border p-3.5 rounded-xl shadow-sm">
-            <div className="flex items-center gap-3 bg-slate-900 text-white p-3 rounded-lg mb-2">
-              <div className="w-9 h-9 rounded-lg bg-red-600/30 border border-red-500/50 flex items-center justify-center text-red-400 font-bold">
-                🎬
+          <div className="bg-white border border-brand-border p-3.5 rounded-xl shadow-sm space-y-2.5">
+            <div className="flex items-center gap-3 bg-slate-900 text-white p-3 rounded-xl shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-400 flex-shrink-0">
+                <Clapperboard className="w-5 h-5" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-xs">Veo 3.1 Cinematic Render</div>
                 <div className="text-[10px] text-gray-400">4K Ultra HD • 60 FPS Prompt-to-Video</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 bg-purple-950 text-white p-3 rounded-lg">
-              <div className="w-9 h-9 rounded-lg bg-purple-600/30 border border-purple-500/50 flex items-center justify-center text-purple-400 font-bold">
-                🎵
+            <div className="flex items-center gap-3 bg-purple-950 text-white p-3 rounded-xl shadow-sm">
+              <div className="w-9 h-9 rounded-xl bg-purple-600/20 border border-purple-500/40 flex items-center justify-center text-purple-300 flex-shrink-0">
+                <Music2 className="w-5 h-5" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-xs">Lyria 3 Music Synthesis</div>
@@ -150,7 +157,8 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
         <div className="space-y-3 font-mono text-xs">
           <div className="bg-slate-950 text-slate-200 p-3.5 rounded-xl border border-slate-800">
             <div className="text-[11px] text-emerald-400 font-bold mb-1.5 flex items-center gap-1.5">
-              <span>●</span> Antigravity Agent Fleet: 3 Subagents Running
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Antigravity Agent Fleet: 3 Subagents</span>
             </div>
             <div className="text-slate-300 text-[11px] leading-relaxed">
               &gt; Investigator Agent: Found bottleneck in API handler.<br/>
@@ -181,7 +189,10 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
         <div className="space-y-3 font-sans text-xs">
           <div className="bg-white border border-brand-border p-4 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-2">
-              <span className="font-bold text-brand-dark text-sm">স্টোরেজ স্ট্যাটাস</span>
+              <span className="font-bold text-brand-dark text-sm flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-brand-blue" />
+                স্টোরেজ স্ট্যাটাস
+              </span>
               <span className="font-outfit font-bold text-brand-blue text-sm">5,000 GB Total</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-3 mb-3 overflow-hidden flex">
