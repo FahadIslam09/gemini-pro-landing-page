@@ -1,80 +1,111 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Lock, Sparkles, ArrowRight, ShieldCheck, Users, KeyRound } from "lucide-react";
 
 interface PricingSectionProps {
   onOpenCheckout: (plan?: string) => void;
 }
 
-export default function PricingSection({ onOpenCheckout }: PricingSectionProps) {
-  const [selectedPlan, setSelectedPlan] = useState<"1m" | "12m" | "18m">("18m");
+const DEFAULT_PLANS = [
+  {
+    id: "1m",
+    name: "১ মাসের সাবস্ক্রিপশন",
+    price: 149,
+    monthlyBreakdown: "৳149 / মাস",
+    badge: "ট্রায়াল প্যাক",
+    badgeColor: "bg-gray-100 text-gray-700 border-gray-200",
+    description: "স্বল্পমেয়াদী ট্রায়াল ও টেস্ট করার জন্য।",
+    accountType: {
+      title: "ফ্যামিলি ইনভাইটেশন (Google Family)",
+      subtitle: "গুগল ফ্যামিলি গ্রুপ ইনভাইটের মাধ্যমে এক্সেস",
+      icon: Users,
+      style: "bg-blue-50/80 border-blue-200/80 text-brand-blue",
+    },
+    highlights: [
+      "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
+      "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+      "১ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
+    ],
+    popular: false,
+  },
+  {
+    id: "18m",
+    name: "১৮ মাসের মেগা অফার",
+    price: 499,
+    monthlyBreakdown: "≈ ৳28 / মাস মাত্র",
+    badge: "সেরা মূল্য • ৮৫% ছাড়",
+    badgeColor: "bg-[#FEF6EA] text-[#B45309] border-[#FDE68A]",
+    description: "সর্বোচ্চ সাশ্রয়ী অফিসিয়াল মেগা প্ল্যান।",
+    accountType: {
+      title: "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
+      subtitle: "সম্পূর্ণ নিজস্ব অ্যাকাউন্ট (শুধু আপনার একক এক্সেস)",
+      icon: ShieldCheck,
+      style: "bg-purple-50/90 border-brand-purple/30 text-brand-purple",
+    },
+    highlights: [
+      "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
+      "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+      "১৮ মাসের পূর্ণ মেগা প্যাক ও গ্যারান্টি",
+    ],
+    popular: true,
+  },
+  {
+    id: "12m",
+    name: "১২ মাসের সাবস্ক্রিপশন",
+    price: 399,
+    monthlyBreakdown: "≈ ৳33 / মাস",
+    badge: "বার্ষিক প্ল্যান",
+    badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
+    description: "১ বছরের জন্য নির্ভরযোগ্য AI সমাধান।",
+    accountType: {
+      title: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
+      subtitle: "অ্যাক্টিভেশনের জন্য জিমেইল ও পাসওয়ার্ড দিতে হবে",
+      icon: KeyRound,
+      style: "bg-amber-50/90 border-amber-300 text-amber-900",
+    },
+    highlights: [
+      "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
+      "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+      "১২ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
+    ],
+    popular: false,
+  },
+];
 
-  const plans = [
-    {
-      id: "1m",
-      name: "১ মাসের সাবস্ক্রিপশন",
-      price: 149,
-      monthlyBreakdown: "৳149 / মাস",
-      badge: "ট্রায়াল প্যাক",
-      badgeColor: "bg-gray-100 text-gray-700 border-gray-200",
-      description: "স্বল্পমেয়াদী ট্রায়াল ও টেস্ট করার জন্য।",
-      accountType: {
-        title: "ফ্যামিলি ইনভাইটেশন (Google Family)",
-        subtitle: "গুগল ফ্যামিলি গ্রুপ ইনভাইটের মাধ্যমে এক্সেস",
-        icon: Users,
-        style: "bg-blue-50/80 border-blue-200/80 text-brand-blue",
-      },
-      highlights: [
-        "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
-        "১ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
-      ],
-      popular: false,
-    },
-    {
-      id: "18m",
-      name: "১৮ মাসের মেগা অফার",
-      price: 499,
-      monthlyBreakdown: "≈ ৳28 / মাস মাত্র",
-      badge: "সেরা মূল্য • ৮৫% ছাড়",
-      badgeColor: "bg-[#FEF6EA] text-[#B45309] border-[#FDE68A]",
-      description: "সর্বোচ্চ সাশ্রয়ী অফিসিয়াল মেগা প্ল্যান।",
-      accountType: {
-        title: "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
-        subtitle: "সম্পূর্ণ নিজস্ব অ্যাকাউন্ট (শুধু আপনার একক এক্সেস)",
-        icon: ShieldCheck,
-        style: "bg-purple-50/90 border-brand-purple/30 text-brand-purple",
-      },
-      highlights: [
-        "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
-        "১৮ মাসের পূর্ণ মেগা প্যাক ও গ্যারান্টি",
-      ],
-      popular: true,
-    },
-    {
-      id: "12m",
-      name: "১২ মাসের সাবস্ক্রিপশন",
-      price: 399,
-      monthlyBreakdown: "≈ ৳33 / মাস",
-      badge: "বার্ষিক প্ল্যান",
-      badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
-      description: "১ বছরের জন্য নির্ভরযোগ্য AI সমাধান।",
-      accountType: {
-        title: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
-        subtitle: "অ্যাক্টিভেশনের জন্য জিমেইল ও পাসওয়ার্ড দিতে হবে",
-        icon: KeyRound,
-        style: "bg-amber-50/90 border-amber-300 text-amber-900",
-      },
-      highlights: [
-        "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
-        "১২ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
-      ],
-      popular: false,
-    },
-  ];
+export default function PricingSection({ onOpenCheckout }: PricingSectionProps) {
+  const [plans, setPlans] = useState<any[]>(DEFAULT_PLANS);
+  const [selectedPlan, setSelectedPlan] = useState<string>("18m");
+
+  useEffect(() => {
+    fetch("/api/public/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.plans?.length > 0) {
+          const mapped = data.plans.map((p: any) => ({
+            id: p.planKey,
+            name: p.name,
+            price: p.price,
+            monthlyBreakdown: p.monthlyBreakdown,
+            badge: p.badge,
+            badgeColor: p.badgeColor,
+            description: p.description,
+            accountType: {
+              title: p.accountTypeTitle,
+              subtitle: p.accountTypeSubtitle,
+              icon: p.accountTypeIcon === "Users" ? Users : p.accountTypeIcon === "KeyRound" ? KeyRound : ShieldCheck,
+              style: p.accountTypeStyle,
+            },
+            highlights: Array.isArray(p.highlights) ? p.highlights : [],
+            popular: p.popular,
+          }));
+          setPlans(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const featured18m = plans.find((p) => p.id === "18m") || DEFAULT_PLANS[1];
 
   return (
     <section id="pricing" className="py-20 lg:py-28 bg-brand-surface relative overflow-hidden">
@@ -101,7 +132,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             return (
               <div
                 key={plan.id}
-                onClick={() => setSelectedPlan(plan.id as any)}
+                onClick={() => setSelectedPlan(plan.id)}
                 className={`rounded-[26px] p-6 sm:p-7 flex flex-col justify-between h-full transition-all duration-300 relative cursor-pointer ${
                   plan.popular
                     ? "bg-white border-2 border-brand-indigo shadow-[0_20px_50px_rgba(91,85,216,0.18)] ring-4 ring-brand-purple/10 md:-translate-y-2"
@@ -158,7 +189,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
 
                   {/* Concise 3-Bullet Core Highlights */}
                   <div className="space-y-2 mb-6">
-                    {plan.highlights.map((highlight, i) => (
+                    {plan.highlights.map((highlight: string, i: number) => (
                       <div key={i} className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 stroke-[2.5]" />
@@ -210,11 +241,11 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             <div className="flex items-baseline gap-1 font-outfit mb-1">
               <span className="text-2xl font-bold text-brand-blue">৳</span>
               <span className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">
-                499
+                {featured18m.price}
               </span>
             </div>
             <span className="text-xs font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-0.5 rounded-full font-outfit">
-              ≈ ৳28/মাস মাত্র (৮৫% ছাড়)
+              {featured18m.monthlyBreakdown} ({featured18m.badge})
             </span>
           </div>
 

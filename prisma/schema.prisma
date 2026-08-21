@@ -1,0 +1,114 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  username     String     @unique
+  email        String     @unique
+  passwordHash String
+  name         String     @default("Administrator")
+  role         String     @default("super_admin") // super_admin | manager
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  logs         AdminLog[]
+}
+
+model PlanPricing {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  planKey             String   @unique // 1m | 12m | 18m
+  name                String
+  price               Int
+  originalPrice       Int      @default(0)
+  discountPercent     Int      @default(0)
+  monthlyBreakdown    String
+  badge               String
+  badgeColor          String
+  description         String
+  accountTypeTitle    String
+  accountTypeSubtitle String
+  accountTypeStyle    String
+  accountTypeIcon     String   @default("ShieldCheck")
+  highlights          String   // JSON string of array of string highlights
+  durationPerk        String
+  popular             Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  orderIndex          Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Faq {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  question   String
+  answer     String
+  category   String   @default("general")
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Order {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber   String   @unique // #GAI-XXXXX
+  planKey       String   // 1m | 12m | 18m
+  planName      String
+  amount        Int
+  paymentMethod String   // bkash_gateway | bkash_manual | nagad | rocket
+  paymentStatus String   @default("pending") // paid | pending | failed | cancelled
+  orderStatus   String   @default("pending_activation") // pending_activation | active | expired | cancelled
+  trxId         String?
+  payerPhone    String?
+  targetEmail   String
+  customerName  String
+  customerPhone String
+  notes         String?
+  metadata      String?  // JSON string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  buyerId       String?  @db.ObjectId
+  buyer         Buyer?   @relation(fields: [buyerId], references: [id])
+}
+
+model Buyer {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String   @unique
+  phone       String?
+  totalOrders Int      @default(1)
+  totalSpent  Int      @default(0)
+  currentPlan String?
+  status      String   @default("active") // active | inactive | suspended
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model SiteContent {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  sectionKey String   @unique // hero | promo_banner | general
+  title      String
+  subtitle   String?
+  content    String   // JSON payload
+  updatedAt  DateTime @updatedAt
+}
+
+model AdminLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId   String   @db.ObjectId
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  action    String   // LOGIN | UPDATE_PRICE | UPDATE_FAQ | UPDATE_ORDER | UPDATE_SETTINGS
+  entity    String   // plan | faq | order | admin
+  entityId  String?
+  details   String?  // JSON or text details
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

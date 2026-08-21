@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeBKashPayment } from "@/lib/bkash";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -31,6 +32,53 @@ export async function GET(req: NextRequest) {
       const amount = executeResponse.amount || "";
       const invoice = executeResponse.merchantInvoiceNumber || "";
       const payer = executeResponse.customerMsisdn || "";
+
+      // Find matching order in DB
+      const existingOrder = await prisma.order.findFirst({
+        where: {
+          OR: [
+            { notes: { contains: paymentID } },
+            { notes: { contains: invoice } },
+          ],
+        },
+      });
+
+      if (existingOrder) {
+        // Upsert Buyer
+        const buyer = await prisma.buyer.upsert({
+          where: { email: existingOrder.targetEmail },
+          create: {
+            name: existingOrder.customerName,
+            email: existingOrder.targetEmail,
+            phone: existingOrder.customerPhone || payer,
+            totalOrders: 1,
+            totalSpent: Number(amount) || existingOrder.amount,
+            currentPlan: existingOrder.planName,
+            status: "active",
+          },
+          update: {
+            name: existingOrder.customerName,
+            phone: existingOrder.customerPhone || payer,
+            totalOrders: { increment: 1 },
+            totalSpent: { increment: Number(amount) || existingOrder.amount },
+            currentPlan: existingOrder.planName,
+            status: "active",
+          },
+        });
+
+        // Update Order record
+        await prisma.order.update({
+          where: { id: existingOrder.id },
+          data: {
+            trxId: trxID,
+            payerPhone: payer,
+            paymentStatus: "paid",
+            orderStatus: "pending_activation",
+            amount: Number(amount) || existingOrder.amount,
+            buyerId: buyer.id,
+          },
+        });
+      }
 
       return NextResponse.redirect(
         `${origin}/payment-success?trxID=${encodeURIComponent(

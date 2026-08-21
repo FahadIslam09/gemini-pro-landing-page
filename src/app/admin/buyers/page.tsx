@@ -1,0 +1,427 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Users,
+  Search,
+  RefreshCw,
+  Mail,
+  Phone,
+  Calendar,
+  DollarSign,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  X,
+  MessageSquare,
+  AlertCircle,
+  Check,
+  ShoppingBag,
+} from "lucide-react";
+
+export default function AdminBuyersPage() {
+  const [buyers, setBuyers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const [selectedBuyer, setSelectedBuyer] = useState<any | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const fetchBuyers = async () => {
+    setLoading(true);
+    try {
+      const url = new URL("/api/admin/buyers", window.location.origin);
+      url.searchParams.set("page", String(page));
+      url.searchParams.set("limit", "12");
+      if (search.trim()) url.searchParams.set("search", search.trim());
+      if (status && status !== "all") url.searchParams.set("status", status);
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      if (data.success) {
+        setBuyers(data.buyers);
+        setTotalPages(data.pagination.totalPages || 1);
+        setTotalCount(data.pagination.total || 0);
+      }
+    } catch {
+      showToast("গ্রাহক তালিকা লোড করতে ব্যর্থ", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBuyers();
+  }, [page, status]);
+
+  const openBuyerDrawer = async (buyerId: string) => {
+    setLoadingDetails(true);
+    try {
+      const res = await fetch(`/api/admin/buyers/${buyerId}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedBuyer(data.buyer);
+      }
+    } catch {
+      showToast("বিস্তারিত তথ্য লোড করা যায়নি", "error");
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Toast Alert */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 ${
+            toast.type === "error"
+              ? "bg-rose-900 text-white border border-rose-700"
+              : "bg-slate-900 text-white"
+          }`}
+        >
+          {toast.type === "error" ? <AlertCircle className="w-4 h-4 text-rose-400" /> : <Check className="w-4 h-4 text-emerald-400" />}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div>
+          <div className="inline-flex items-center gap-1.5 bg-brand-purple/10 text-brand-purple px-3 py-1 rounded-full text-xs font-bold font-outfit mb-2">
+            <span>Customer Relationship Directory</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-outfit">
+            Buyer Management ({totalCount})
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-bangla">
+            সকল সাবস্ক্রিপশন গ্রাহকের যোগাযোগ, মোট ব্যয় ও অর্ডার হিস্ট্রি পরিচালনা করুন।
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={fetchBuyers}
+          disabled={loading}
+          className="inline-flex items-center gap-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 transition-colors cursor-pointer"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          <span>রিফ্রেশ</span>
+        </button>
+      </div>
+
+      {/* Search & Filter Bar */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs font-bangla">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setPage(1);
+                fetchBuyers();
+              }
+            }}
+            placeholder="নাম, জিমেইল বা ফোন নম্বর..."
+            className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-brand-blue"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {["all", "active", "inactive", "suspended"].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setStatus(s);
+                setPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors cursor-pointer ${
+                status === s
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              {s === "all" ? "সকল গ্রাহক" : s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Buyers Table */}
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-bangla">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-outfit uppercase">
+                <th className="py-3 px-5 font-bold">Buyer</th>
+                <th className="py-3 px-5 font-bold">Contact</th>
+                <th className="py-3 px-5 font-bold">Current Plan</th>
+                <th className="py-3 px-5 font-bold">Total Spent</th>
+                <th className="py-3 px-5 font-bold text-center">Status</th>
+                <th className="py-3 px-5 font-bold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    লোড হচ্ছে...
+                  </td>
+                </tr>
+              ) : buyers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    কোনো গ্রাহক পাওয়া যায়নি
+                  </td>
+                </tr>
+              ) : (
+                buyers.map((buyer) => (
+                  <tr key={buyer.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-brand-blue/10 text-brand-blue flex items-center justify-center font-bold text-xs font-outfit shrink-0">
+                          {buyer.name.charAt(0)}
+                        </div>
+                        <div>
+                          <strong className="text-sm font-bold text-slate-900 block">
+                            {buyer.name}
+                          </strong>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            Joined {new Date(buyer.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-5">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5 text-slate-700 font-mono text-[11px]">
+                          <Mail className="w-3 h-3 text-slate-400" />
+                          <span>{buyer.email}</span>
+                        </div>
+                        {buyer.phone && (
+                          <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
+                            <Phone className="w-3 h-3 text-slate-400" />
+                            <span>{buyer.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-5 font-medium text-slate-800">
+                      {buyer.currentPlan || "Google AI Pro"}
+                    </td>
+
+                    <td className="py-4 px-5 font-outfit font-extrabold text-slate-900 text-sm">
+                      ৳{buyer.totalSpent}
+                    </td>
+
+                    <td className="py-4 px-5 text-center">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-outfit capitalize ${
+                          buyer.status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : buyer.status === "suspended"
+                            ? "bg-rose-50 text-rose-700 border border-rose-200"
+                            : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {buyer.status}
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openBuyerDrawer(buyer.id)}
+                        className="inline-flex items-center gap-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>প্রোফাইল</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between font-outfit text-xs text-slate-500">
+          <span>
+            Page {page} of {totalPages} ({totalCount} total buyers)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Detail Drawer Modal */}
+      {selectedBuyer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md bg-white h-screen shadow-2xl flex flex-col justify-between p-6 sm:p-7 overflow-y-auto animate-in slide-in-from-right duration-300 font-bangla">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 font-outfit">
+                    Customer Profile
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    ID: {selectedBuyer.id}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedBuyer(null)}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Profile Card */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-gradient text-white flex items-center justify-center font-extrabold text-base font-outfit shadow-sm">
+                    {selectedBuyer.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className="text-base font-bold text-slate-900">
+                      {selectedBuyer.name}
+                    </h4>
+                    <span className="text-xs text-slate-500 font-mono">
+                      {selectedBuyer.email}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200/80 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-outfit uppercase font-bold block">
+                      Total Orders
+                    </span>
+                    <span className="font-outfit font-bold text-slate-900 text-sm">
+                      {selectedBuyer.totalOrders || selectedBuyer.orders?.length || 1}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-outfit uppercase font-bold block">
+                      Lifetime Spend
+                    </span>
+                    <span className="font-outfit font-bold text-brand-blue text-sm">
+                      ৳{selectedBuyer.totalSpent}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mb-6">
+                {selectedBuyer.phone && (
+                  <a
+                    href={`https://wa.me/88${selectedBuyer.phone.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2 px-3 rounded-xl text-xs font-bold font-outfit shadow-xs"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+                <a
+                  href={`mailto:${selectedBuyer.email}`}
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white py-2 px-3 rounded-xl text-xs font-semibold font-outfit"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Send Email</span>
+                </a>
+              </div>
+
+              {/* Orders History List */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-500 font-outfit uppercase tracking-wider mb-3">
+                  Transaction History
+                </h4>
+                <div className="space-y-2.5">
+                  {selectedBuyer.orders?.map((ord: any) => (
+                    <div
+                      key={ord.id}
+                      className="p-3 bg-white border border-slate-200 rounded-2xl flex items-center justify-between text-xs"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-900">
+                            {ord.orderNumber}
+                          </span>
+                          <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-mono">
+                            {ord.planKey.toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 block font-mono mt-0.5">
+                          {new Date(ord.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-outfit font-extrabold text-slate-900 block">
+                          ৳{ord.amount}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold font-outfit ${
+                            ord.orderStatus === "active" ? "text-emerald-600" : "text-amber-600"
+                          }`}
+                        >
+                          {ord.orderStatus}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setSelectedBuyer(null)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
