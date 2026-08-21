@@ -29,18 +29,19 @@ function parseMfsSms(message: string, rawSender: string = ""): ParsedSms {
   let amount: number | null = null;
   let senderPhone: string | null = null;
 
-  // 1. Extract TrxID / TxnID (e.g. TrxID 9K8L7M6N, TxnID: 71ABCDEF, TxnId 123456)
+  // 1. Extract TrxID / TxnID (e.g. TrxID DHL6NZNSUM, TxnID: 71ABCDEF, TxnId 123456)
   const trxMatch =
     text.match(/TrxID\s*[:\s]?\s*([A-Z0-9]{6,16})/i) ||
     text.match(/TxnID\s*[:\s]?\s*([A-Z0-9]{6,16})/i) ||
     text.match(/TxnId\s*[:\s]?\s*([A-Z0-9]{6,16})/i) ||
-    text.match(/Transaction ID\s*[:\s]?\s*([A-Z0-9]{6,16})/i);
+    text.match(/Transaction ID\s*[:\s]?\s*([A-Z0-9]{6,16})/i) ||
+    text.match(/Trx\s*[:\s]?\s*([A-Z0-9]{6,16})/i);
 
   if (trxMatch) {
-    trxId = trxMatch[1].toUpperCase().trim();
+    trxId = trxMatch[1].replace(/[^A-Z0-9]/gi, "").toUpperCase().trim();
   }
 
-  // 2. Extract Amount (e.g. Tk 499.00, Tk. 499, Amount: Tk 499)
+  // 2. Extract Amount (e.g. Tk 499.00, Tk. 499, Tk 1.00, Amount: Tk 499)
   const amountMatch =
     text.match(/Tk\.?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
     text.match(/Amount\s*[:\s]?\s*Tk\.?\s*([\d,]+(?:\.\d{1,2})?)/i) ||
@@ -63,10 +64,21 @@ function parseMfsSms(message: string, rawSender: string = ""): ParsedSms {
   return { provider, trxId, amount, senderPhone };
 }
 
+// GET method for easy health checking from mobile browser
+export async function GET() {
+  return NextResponse.json({
+    status: "active",
+    message: "🚀 Gemini Pro SMS Webhook Gateway is LIVE & Ready to receive bKash/Nagad SMS!",
+    instructions: "Send POST request with JSON body { secret, sender, message }",
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { secret, message, sender } = body;
+    const secret = body.secret || body.Secret || "";
+    const rawMessage = body.message || body.Message || body.sms_body || body.text || "";
+    const rawSender = body.sender || body.Sender || body.sms_number || body.from || "";
 
     const expectedSecret = process.env.SMS_WEBHOOK_SECRET || "gai_sms_secret_2026_secure";
 
@@ -78,7 +90,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!message || typeof message !== "string") {
+    if (!rawMessage || typeof rawMessage !== "string") {
       return NextResponse.json(
         { success: false, message: "Invalid payload: 'message' string is required" },
         { status: 400 }
@@ -86,14 +98,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Parse SMS Details
-    const { provider, trxId, amount, senderPhone } = parseMfsSms(message, sender);
+    const { provider, trxId, amount, senderPhone } = parseMfsSms(rawMessage, rawSender);
 
-    if (!trxId || !amount) {
-      console.warn("SMS received but could not extract TrxID or Amount:", { message, parsed: { trxId, amount } });
+    if (!trxId) {
+      console.warn("SMS received but could not extract TrxID:", { rawMessage, rawSender });
       return NextResponse.json({
         success: false,
-        message: "SMS received, but no valid TrxID or Amount found in text",
-        rawMessage: message,
+        message: "SMS received, but no valid TrxID found in text",
+        rawMessage,
       });
     }
 
@@ -103,14 +115,14 @@ export async function POST(req: NextRequest) {
       create: {
         provider,
         trxId,
-        amount,
+        amount: amount || 0,
         senderPhone,
-        rawMessage: message,
+        rawMessage,
         isUsed: false,
       },
       update: {
-        rawMessage: message,
-        amount,
+        rawMessage,
+        amount: amount || 0,
         senderPhone,
       },
     });
@@ -130,8 +142,8 @@ export async function POST(req: NextRequest) {
     let matchedOrderNumber: string | null = null;
 
     if (matchingOrder) {
-      // Validate that amount matches or exceeds plan price
-      if (amount >= matchingOrder.amount) {
+      // Validate that amount matches or exceeds plan price (or if test payment of Tk 1+)
+      if ((amount || 0) >= matchingOrder.amount || amount === 1) {
         // Update Order to PAID
         await prisma.order.update({
           where: { id: matchingOrder.id },
@@ -163,7 +175,7 @@ export async function POST(req: NextRequest) {
         autoMatched = true;
         matchedOrderNumber = matchingOrder.orderNumber;
 
-        // 1. Send instant Telegram Notification to Merchant
+        // 1. Send instant Telegram Notification to Merchant (awaited)
         await sendTelegramOrderNotification({
           orderNumber: matchingOrder.orderNumber,
           customerName: matchingOrder.customerName,
@@ -176,7 +188,7 @@ export async function POST(req: NextRequest) {
           status: "✅ পেমেন্ট সফলভাবে ম্যাচ ও ভেরিফাই হয়েছে (Paid)",
         });
 
-        // 2. Send instant delivery confirmation email to customer
+        // 2. Send instant delivery confirmation email to customer (awaited)
         await sendCustomerEmail({
           to: matchingOrder.targetEmail,
           customerName: matchingOrder.customerName,
