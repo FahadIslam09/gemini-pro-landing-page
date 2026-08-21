@@ -136,14 +136,14 @@ export default function Hero({ onOpenCheckout }: HeroProps) {
                 </svg>
               </div>
 
-              {/* Floating App Badge: Gmail (Top Left) */}
+              {/* Floating App Badge: Official Google Gmail (Top Left) */}
               <div className="absolute -top-3 left-4 sm:left-8 z-20 bg-white border border-brand-border p-2.5 rounded-2xl shadow-card animate-float">
                 <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 48 48">
-                  <path fill="#4285F4" d="M45,16.2l-5,2.7V40c0,2.2-1.8,4-4,4H12c-2.2,0-4-1.8-4-4V18.9l-5-2.7c-1.8-1-2.4-3.2-1.4-5 c0.6-1.1,1.7-1.8,3-1.8l18.4,10l18.4-10c1.3,0,2.4,0.7,3,1.8C47.4,13,46.8,15.2,45,16.2z"/>
-                  <path fill="#34A853" d="M8,40V18.9l16,8.7l16-8.7V40c0,2.2-1.8,4-4,4H12C9.8,44,8,42.2,8,40z"/>
-                  <path fill="#EA4335" d="M44.6,11.2C44,10.1,42.9,9.4,41.6,9.4L24,19.4L6.4,9.4C5.1,9.4,4,10.1,3.4,11.2 c-1,1.8-0.4,4,1.4,5L8,18.9l16,8.7l16-8.7l3.2-2.7C45,15.2,45.6,13,44.6,11.2z"/>
-                  <path fill="#FBBC05" d="M8,18.9V40c0,0.5,0.1,1,0.3,1.4l14.3-12.7L8,18.9z"/>
-                  <path fill="#C5221F" d="M40,18.9l-14.6,9.8l14.3,12.7c0.2-0.4,0.3-0.9,0.3-1.4V18.9z"/>
+                  <path fill="#4285F4" d="M4.5 13.5v21C4.5 36.5 6 38 8 38h4V19.5L4.5 13.5z"/>
+                  <path fill="#34A853" d="M43.5 13.5v21c0 2-1.5 3.5-3.5 3.5h-4V19.5l7.5-6z"/>
+                  <path fill="#EA4335" d="M36 10H12l12 9 12-9z"/>
+                  <path fill="#FBBC05" d="M4.5 13.5L12 19.5V10H8c-2 0-3.5 1.5-3.5 3.5z"/>
+                  <path fill="#C5221F" d="M43.5 13.5L36 19.5V10h4c2 0 3.5 1.5 3.5 3.5z"/>
                 </svg>
               </div>
 
