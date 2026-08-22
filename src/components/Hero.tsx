@@ -45,10 +45,9 @@ export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.12] tracking-tight mb-5">
-              <span className="block">18 মাসের</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.15] tracking-tight mb-5">
               <span className="block">
-                Google <span className="gradient-text">AI Pro</span>
+                18 মাসের Google <span className="gradient-text">AI Pro</span>
               </span>
               <span className="block text-brand-dark">মাত্র ৳{price18m}!</span>
             </h1>
