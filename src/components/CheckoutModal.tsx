@@ -18,6 +18,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { trackPixelEvent, generateEventId } from "@/lib/pixel-client";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -123,6 +124,19 @@ export default function CheckoutModal({
     });
   };
 
+  // Track InitiateCheckout on modal open
+  useEffect(() => {
+    if (isOpen) {
+      trackPixelEvent("InitiateCheckout", {
+        content_name: currentPlan.name,
+        content_ids: [selectedPlan],
+        content_type: "product",
+        value: currentPlan.price,
+        currency: "BDT",
+      });
+    }
+  }, [isOpen]);
+
   // Handle Manual Payment Submission
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +154,8 @@ export default function CheckoutModal({
       setProgressStatusText("TrxID ও ব্যাংক রেকর্ড যাচাই হচ্ছে...");
     }, 400);
 
+    const purchaseEventId = generateEventId();
+
     try {
       const response = await fetch("/api/orders/manual", {
         method: "POST",
@@ -151,6 +167,7 @@ export default function CheckoutModal({
           planId: selectedPlan,
           paymentMethod: "bkash_manual",
           trxId: trxId.trim().toUpperCase(),
+          eventId: purchaseEventId,
         }),
       });
 
@@ -164,6 +181,21 @@ export default function CheckoutModal({
         onToast(data.message || "ভেরিফিকেশন ব্যর্থ হয়েছে। সঠিক TrxID দিন।");
         return;
       }
+
+      // Track Meta Pixel Purchase Event on Browser
+      trackPixelEvent(
+        "Purchase",
+        {
+          currency: "BDT",
+          value: currentPlan.price,
+          content_name: currentPlan.name,
+          content_category: "AI Subscription",
+          content_ids: [selectedPlan],
+          content_type: "product",
+          order_id: data.orderNumber || data.order?.orderNumber,
+        },
+        purchaseEventId
+      );
 
       setSubmissionProgress(100);
       setProgressStatusText("পেমেন্ট সফলভাবে ভেরিফাইড!");
@@ -409,6 +441,19 @@ export default function CheckoutModal({
                   )}
                 </button>
 
+                {/* WhatsApp Support Button */}
+                <a
+                  href={`https://wa.me/8801516556465?text=${encodeURIComponent(
+                    `হ্যালো, আমি Google AI Pro (${currentPlan.name}) নিতে আগ্রহী। পেমেন্ট বা অর্ডার সংক্রান্ত সহায়তা প্রয়োজন।`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-9 inline-flex items-center justify-center gap-1.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-700 border border-emerald-200/70 rounded-xl text-xs font-bold font-bangla transition-colors cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>পেমেন্টে সমস্যা? WhatsApp-এ হেল্প নিন</span>
+                </a>
+
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 text-center font-bangla pt-0.5">
                   <Lock className="w-2.5 h-2.5" />
                   <span>২৫৬-বিট এনক্রিপশনে শতভাগ সুরক্ষিত</span>
@@ -456,7 +501,9 @@ export default function CheckoutModal({
               {/* Action Buttons */}
               <div className="pt-1 space-y-2">
                 <a
-                  href={`https://wa.me/?text=Hello%2C%20I%20placed%20an%20order%20for%20Google%20AI%20Pro%20with%20Order%20ID%3A%20${trackingId}`}
+                  href={`https://wa.me/8801516556465?text=${encodeURIComponent(
+                    `হ্যালো, আমি Google AI Pro অর্ডার সম্পন্ন করেছি।\nঅর্ডার আইডি: ${trackingId}\nপ্ল্যান: ${currentPlan.name}\nTrxID: ${trxId || "N/A"}\nঅনুগ্রহ করে দ্রুত অ্যাকাউন্ট সক্রিয় করে দিন।`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
