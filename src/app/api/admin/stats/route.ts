@@ -22,8 +22,8 @@ export async function GET() {
     ] = await Promise.all([
       supabase.from("orders").select("*", { count: "exact", head: true }),
       supabase.from("orders").select("amount, payment_method, plan_key, created_at").eq("payment_status", "paid"),
-      supabase.from("orders").select("*", { count: "exact", head: true }).eq("order_status", "active"),
-      supabase.from("orders").select("*", { count: "exact", head: true }).eq("order_status", "pending_activation"),
+      supabase.from("orders").select("*", { count: "exact", head: true }).in("order_status", ["completed", "active"]),
+      supabase.from("orders").select("*", { count: "exact", head: true }).in("order_status", ["processing", "pending_activation", "pending"]),
       supabase.from("buyers").select("*", { count: "exact", head: true }),
       supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(6),
       supabase.from("buyers").select("*, orders(*)").order("created_at", { ascending: false }).limit(5),
