@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function GET() {
@@ -10,56 +10,35 @@ export async function GET() {
     }
 
     const [
-      totalOrders,
-      paidOrders,
-      activeOrders,
-      pendingOrders,
-      totalBuyers,
-      recentOrders,
-      recentBuyers,
-      plans,
-      allOrders,
+      { count: totalOrders },
+      { data: paidOrders },
+      { count: activeOrders },
+      { count: pendingOrders },
+      { count: totalBuyers },
+      { data: recentOrders },
+      { data: recentBuyers },
+      { data: plans },
+      { data: allOrders },
     ] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.findMany({
-        where: { paymentStatus: "paid" },
-        select: { amount: true, paymentMethod: true, planKey: true, createdAt: true },
-      }),
-      prisma.order.count({ where: { orderStatus: "active" } }),
-      prisma.order.count({ where: { orderStatus: "pending_activation" } }),
-      prisma.buyer.count(),
-      prisma.order.findMany({
-        take: 6,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.buyer.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          orders: {
-            take: 1,
-            orderBy: { createdAt: "desc" },
-          },
-        },
-      }),
-      prisma.planPricing.findMany({
-        where: { isActive: true },
-        select: { planKey: true, name: true, price: true },
-      }),
-      prisma.order.findMany({
-        take: 100,
-        orderBy: { createdAt: "desc" },
-        select: { planKey: true, paymentMethod: true, amount: true, paymentStatus: true },
-      }),
+      supabase.from("orders").select("*", { count: "exact", head: true }),
+      supabase.from("orders").select("amount, payment_method, plan_key, created_at").eq("payment_status", "paid"),
+      supabase.from("orders").select("*", { count: "exact", head: true }).eq("order_status", "active"),
+      supabase.from("orders").select("*", { count: "exact", head: true }).eq("order_status", "pending_activation"),
+      supabase.from("buyers").select("*", { count: "exact", head: true }),
+      supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(6),
+      supabase.from("buyers").select("*, orders(*)").order("created_at", { ascending: false }).limit(5),
+      supabase.from("plan_pricing").select("plan_key, name, price").eq("is_active", true),
+      supabase.from("orders").select("plan_key, payment_method, amount, payment_status").order("created_at", { ascending: false }).limit(100),
     ]);
 
-    const totalRevenue = paidOrders.reduce((sum, order) => sum + order.amount, 0);
+    const totalRevenue = (paidOrders || []).reduce((sum, order) => sum + Number(order.amount || 0), 0);
 
     // Plan distribution
     const planCounts: Record<string, number> = { "1m": 0, "12m": 0, "18m": 0 };
-    allOrders.forEach((o) => {
-      if (planCounts[o.planKey] !== undefined) {
-        planCounts[o.planKey] += 1;
+    (allOrders || []).forEach((o: any) => {
+      const key = o.plan_key || "18m";
+      if (planCounts[key] !== undefined) {
+        planCounts[key] += 1;
       }
     });
 
@@ -70,28 +49,63 @@ export async function GET() {
       nagad: 0,
       rocket: 0,
     };
-    allOrders.forEach((o) => {
-      if (methodCounts[o.paymentMethod] !== undefined) {
-        methodCounts[o.paymentMethod] += 1;
+    (allOrders || []).forEach((o: any) => {
+      const method = o.payment_method || "bkash_manual";
+      if (methodCounts[method] !== undefined) {
+        methodCounts[method] += 1;
       } else {
-        methodCounts[o.paymentMethod] = 1;
+        methodCounts[method] = 1;
       }
     });
+
+    const formattedRecentOrders = (recentOrders || []).map((o: any) => ({
+      id: o.id,
+      orderNumber: o.order_number,
+      planKey: o.plan_key,
+      planName: o.plan_name,
+      amount: Number(o.amount),
+      paymentMethod: o.payment_method,
+      paymentStatus: o.payment_status,
+      orderStatus: o.order_status,
+      trxId: o.trx_id,
+      targetEmail: o.target_email,
+      customerName: o.customer_name,
+      createdAt: o.created_at,
+    }));
+
+    const formattedRecentBuyers = (recentBuyers || []).map((b: any) => ({
+      id: b.id,
+      name: b.name,
+      email: b.email,
+      phone: b.phone,
+      totalOrders: b.total_orders,
+      totalSpent: Number(b.total_spent),
+      currentPlan: b.current_plan,
+      status: b.status,
+      createdAt: b.created_at,
+      orders: b.orders || [],
+    }));
+
+    const formattedPlans = (plans || []).map((p: any) => ({
+      planKey: p.plan_key,
+      name: p.name,
+      price: Number(p.price),
+    }));
 
     return NextResponse.json({
       success: true,
       stats: {
         totalRevenue,
-        totalOrders,
-        activeSubscriptions: activeOrders,
-        pendingActivations: pendingOrders,
-        totalBuyers,
+        totalOrders: totalOrders || 0,
+        activeSubscriptions: activeOrders || 0,
+        pendingActivations: pendingOrders || 0,
+        totalBuyers: totalBuyers || 0,
       },
       planDistribution: planCounts,
       paymentMethodDistribution: methodCounts,
-      recentOrders,
-      recentBuyers,
-      plans,
+      recentOrders: formattedRecentOrders,
+      recentBuyers: formattedRecentBuyers,
+      plans: formattedPlans,
     });
   } catch (error: any) {
     console.error("Admin stats error:", error);

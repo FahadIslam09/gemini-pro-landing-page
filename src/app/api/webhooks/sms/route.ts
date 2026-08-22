@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
 import { sendCustomerEmail } from "@/lib/email";
 
@@ -127,80 +127,85 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Save or update SMS transaction in Database
-    const smsRecord = await (prisma as any).smsTransaction.upsert({
-      where: { trxId },
-      create: {
-        provider,
-        trxId,
-        amount: amount || 0,
-        senderPhone,
-        rawMessage,
-        isUsed: false,
-      },
-      update: {
-        rawMessage,
-        amount: amount || 0,
-        senderPhone,
-      },
-    });
+    // Save or update SMS transaction in Supabase
+    const { data: smsRecord, error: smsError } = await supabase
+      .from("sms_transactions")
+      .upsert(
+        {
+          provider,
+          trx_id: trxId,
+          amount: amount || 0,
+          sender_phone: senderPhone || "",
+          raw_message: rawMessage,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "trx_id" }
+      )
+      .select()
+      .single();
+
+    if (smsError) {
+      console.error("SMS upsert error in Supabase:", smsError);
+    }
 
     // Check if there is an existing pending Order waiting for this TrxID
-    const matchingOrder = await prisma.order.findFirst({
-      where: {
-        trxId: {
-          equals: trxId,
-          mode: "insensitive",
-        },
-        paymentStatus: "pending",
-      },
-    });
+    const { data: matchingOrder } = await supabase
+      .from("orders")
+      .select("*")
+      .ilike("trx_id", trxId)
+      .eq("payment_status", "pending")
+      .maybeSingle();
 
     let autoMatched = false;
     let matchedOrderNumber: string | null = null;
 
     if (matchingOrder) {
       // Strict Validation: Amount must strictly equal or exceed required order amount
-      if ((amount || 0) >= matchingOrder.amount) {
-        // Update Order to PAID
-        await prisma.order.update({
-          where: { id: matchingOrder.id },
-          data: {
-            paymentStatus: "paid",
-            orderStatus: "active",
+      if ((amount || 0) >= Number(matchingOrder.amount || 0)) {
+        // Update Order to PAID in Supabase
+        await supabase
+          .from("orders")
+          .update({
+            payment_status: "paid",
+            order_status: "active",
             notes: `Auto-verified via SMS Webhook (${provider.toUpperCase()}) on ${new Date().toISOString()}`,
-          },
-        });
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", matchingOrder.id);
 
-        // Mark SMS Transaction as Used
-        await (prisma as any).smsTransaction.update({
-          where: { id: smsRecord.id },
-          data: {
-            isUsed: true,
-            usedInOrderId: matchingOrder.orderNumber,
-          },
-        });
+        // Mark SMS Transaction as Used in Supabase
+        if (smsRecord?.id) {
+          await supabase
+            .from("sms_transactions")
+            .update({
+              is_used: true,
+              used_in_order_id: matchingOrder.order_number,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", smsRecord.id);
+        }
 
         // Update Buyer CRM
-        await prisma.buyer.updateMany({
-          where: { email: matchingOrder.targetEmail },
-          data: {
+        await supabase
+          .from("buyers")
+          .update({
             status: "active",
-            currentPlan: matchingOrder.planName,
-          },
-        });
+            current_plan: matchingOrder.plan_name,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("email", matchingOrder.target_email);
 
         autoMatched = true;
-        matchedOrderNumber = matchingOrder.orderNumber;
+        matchedOrderNumber = matchingOrder.order_number;
 
         // 1. Send instant Telegram Notification to Merchant (awaited)
         await sendTelegramOrderNotification({
-          orderNumber: matchingOrder.orderNumber,
-          customerName: matchingOrder.customerName,
-          customerEmail: matchingOrder.targetEmail,
-          customerPhone: matchingOrder.customerPhone,
-          planName: matchingOrder.planName,
-          amount: matchingOrder.amount,
+          orderNumber: matchingOrder.order_number,
+          customerName: matchingOrder.customer_name,
+          customerEmail: matchingOrder.target_email,
+          customerPhone: matchingOrder.customer_phone,
+          planName: matchingOrder.plan_name,
+          amount: Number(matchingOrder.amount),
           paymentMethod: `${provider.toUpperCase()} (অটো SMS ভেরিফাইড)`,
           trxId: trxId,
           status: "✅ পেমেন্ট সফলভাবে ম্যাচ ও ভেরিফাই হয়েছে (Paid)",
@@ -208,33 +213,31 @@ export async function POST(req: NextRequest) {
 
         // 2. Send instant delivery confirmation email to customer (awaited)
         await sendCustomerEmail({
-          to: matchingOrder.targetEmail,
-          customerName: matchingOrder.customerName,
-          orderNumber: matchingOrder.orderNumber,
-          planName: matchingOrder.planName,
-          messageText: `আপনার ${matchingOrder.planName} সাবস্ক্রিপশন সফলভাবে সক্রিয় করা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
+          to: matchingOrder.target_email,
+          customerName: matchingOrder.customer_name,
+          orderNumber: matchingOrder.order_number,
+          planName: matchingOrder.plan_name,
+          messageText: `আপনার ${matchingOrder.plan_name} সাবস্ক্রিপশন সফলভাবে সক্রিয় করা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
         }).catch((err) => console.error("Auto email delivery error:", err));
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: autoMatched
-        ? `SMS successfully matched and verified with order ${matchedOrderNumber}!`
-        : "SMS received and stored in database. Ready for customer match.",
-      transaction: {
+      message: `SMS received and saved successfully! Extracted TrxID: ${trxId} (${provider.toUpperCase()})`,
+      parsed: {
         provider,
         trxId,
         amount,
         senderPhone,
-        autoMatched,
-        matchedOrderNumber,
       },
+      autoMatched,
+      matchedOrderNumber,
     });
   } catch (error: any) {
     console.error("SMS Webhook error:", error);
     return NextResponse.json(
-      { success: false, message: error.message || "Internal server error" },
+      { success: false, message: error.message || "Failed to process SMS webhook" },
       { status: 500 }
     );
   }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendCustomerEmail } from "@/lib/email";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 
-// In-memory or fallback session state for pending custom email drafting
+// In-memory session state for pending custom email drafting
 const pendingEmailSessions: Record<string, { email: string; orderNumber: string; customerName?: string }> = {};
 
 async function sendTelegramMessage(chatId: string | number, text: string, replyMarkup?: any) {
@@ -60,13 +60,15 @@ export async function POST(req: NextRequest) {
         const orderNumber = parts[1] || "";
         const email = parts[2] || "";
 
-        // Find customer name from order if available
+        // Find customer name from order if available in Supabase
         let customerName = "Customer";
         try {
-          const order = await prisma.order.findFirst({
-            where: { orderNumber },
-          });
-          if (order) customerName = order.customerName;
+          const { data: order } = await supabase
+            .from("orders")
+            .select("customer_name")
+            .eq("order_number", orderNumber)
+            .maybeSingle();
+          if (order?.customer_name) customerName = order.customer_name;
         } catch {}
 
         pendingEmailSessions[String(chatId)] = { email, orderNumber, customerName };
@@ -115,10 +117,14 @@ export async function POST(req: NextRequest) {
         let planName = "Google AI Pro (১৮ মাস প্রাইভেট)";
 
         try {
-          const order = await prisma.order.findFirst({ where: { orderNumber } });
+          const { data: order } = await supabase
+            .from("orders")
+            .select("customer_name, plan_name")
+            .eq("order_number", orderNumber)
+            .maybeSingle();
           if (order) {
-            customerName = order.customerName;
-            planName = order.planName;
+            customerName = order.customer_name || customerName;
+            planName = order.plan_name || planName;
           }
         } catch {}
 
@@ -152,10 +158,14 @@ export async function POST(req: NextRequest) {
         let planName = "Google AI Pro (ফ্যামিলি প্ল্যান)";
 
         try {
-          const order = await prisma.order.findFirst({ where: { orderNumber } });
+          const { data: order } = await supabase
+            .from("orders")
+            .select("customer_name, plan_name")
+            .eq("order_number", orderNumber)
+            .maybeSingle();
           if (order) {
-            customerName = order.customerName;
-            planName = order.planName;
+            customerName = order.customer_name || customerName;
+            planName = order.plan_name || planName;
           }
         } catch {}
 

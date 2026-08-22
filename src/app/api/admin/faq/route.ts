@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
@@ -13,23 +13,31 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
 
-    const where: any = {};
-    if (search.trim()) {
-      where.OR = [
-        { question: { contains: search.trim() } },
-        { answer: { contains: search.trim() } },
-      ];
-    }
+    let query = supabase.from("faqs").select("*").order("order_index", { ascending: true });
+
     if (category.trim() && category !== "all") {
-      where.category = category.trim();
+      query = query.eq("category", category.trim());
     }
 
-    const faqs = await prisma.faq.findMany({
-      where,
-      orderBy: { orderIndex: "asc" },
-    });
+    if (search.trim()) {
+      query = query.or(`question.ilike.%${search.trim()}%,answer.ilike.%${search.trim()}%`);
+    }
 
-    return NextResponse.json({ success: true, faqs });
+    const { data: faqs, error } = await query;
+    if (error) throw error;
+
+    const formatted = (faqs || []).map((f: any) => ({
+      id: f.id,
+      question: f.question,
+      answer: f.answer,
+      category: f.category,
+      orderIndex: f.order_index,
+      isActive: f.is_active,
+      createdAt: f.created_at,
+      updatedAt: f.updated_at,
+    }));
+
+    return NextResponse.json({ success: true, faqs: formatted });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -52,25 +60,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const count = await prisma.faq.count();
-    const faq = await prisma.faq.create({
-      data: {
-        question: question.trim(),
-        answer: answer.trim(),
-        category: category.trim(),
-        orderIndex: orderIndex !== undefined ? Number(orderIndex) : count,
-        isActive: Boolean(isActive),
-      },
-    });
+    const { count } = await supabase.from("faqs").select("*", { count: "exact", head: true });
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "CREATE_FAQ",
-        entity: "faq",
-        entityId: faq.id,
-        details: `Added new FAQ: "${faq.question.substring(0, 40)}..."`,
-      },
+    const payload = {
+      question: question.trim(),
+      answer: answer.trim(),
+      category: category.trim(),
+      order_index: orderIndex !== undefined ? Number(orderIndex) : (count || 0),
+      is_active: Boolean(isActive),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: faq, error } = await supabase
+      .from("faqs")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "CREATE_FAQ",
+      entity: "faq",
+      entity_id: faq.id,
+      details: `Added new FAQ: "${faq.question.substring(0, 40)}..."`,
     });
 
     return NextResponse.json({

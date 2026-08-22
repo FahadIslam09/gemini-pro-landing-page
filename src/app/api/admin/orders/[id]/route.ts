@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function GET(
@@ -13,18 +13,39 @@ export async function GET(
     }
 
     const { id } = await params;
-    const order = await prisma.order.findUnique({
-      where: { id },
-      include: {
-        buyer: true,
-      },
-    });
+    const { data: order, error } = await supabase
+      .from("orders")
+      .select("*, buyer:buyers(*)")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!order) {
+    if (error || !order) {
       return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, order });
+    const formatted = {
+      id: order.id,
+      orderNumber: order.order_number,
+      planKey: order.plan_key,
+      planName: order.plan_name,
+      amount: Number(order.amount),
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
+      orderStatus: order.order_status,
+      trxId: order.trx_id,
+      payerPhone: order.payer_phone,
+      targetEmail: order.target_email,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      notes: order.notes,
+      metadata: order.metadata,
+      createdAt: order.created_at,
+      updatedAt: order.updated_at,
+      buyerId: order.buyer_id,
+      buyer: order.buyer,
+    };
+
+    return NextResponse.json({ success: true, order: formatted });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -43,41 +64,64 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
-    const order = await prisma.order.findUnique({
-      where: { id },
-    });
+    const { data: order, error: findError } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!order) {
+    if (findError || !order) {
       return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
     }
 
-    const updated = await prisma.order.update({
-      where: { id },
-      data: {
-        orderStatus: body.orderStatus !== undefined ? String(body.orderStatus) : order.orderStatus,
-        paymentStatus: body.paymentStatus !== undefined ? String(body.paymentStatus) : order.paymentStatus,
-        notes: body.notes !== undefined ? String(body.notes) : order.notes,
-        trxId: body.trxId !== undefined ? String(body.trxId).trim() : order.trxId,
-      },
-      include: {
-        buyer: true,
-      },
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (body.orderStatus !== undefined) updatePayload.order_status = String(body.orderStatus);
+    if (body.paymentStatus !== undefined) updatePayload.payment_status = String(body.paymentStatus);
+    if (body.notes !== undefined) updatePayload.notes = String(body.notes);
+    if (body.trxId !== undefined) updatePayload.trx_id = String(body.trxId).trim();
+
+    const { data: updated, error: updateError } = await supabase
+      .from("orders")
+      .update(updatePayload)
+      .eq("id", id)
+      .select("*, buyer:buyers(*)")
+      .single();
+
+    if (updateError) throw updateError;
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "UPDATE_ORDER",
+      entity: "order",
+      entity_id: id,
+      details: `Updated order ${order.order_number} status to ${updated.order_status} (Payment: ${updated.payment_status})`,
     });
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "UPDATE_ORDER",
-        entity: "order",
-        entityId: id,
-        details: `Updated order ${order.orderNumber} status to ${updated.orderStatus} (Payment: ${updated.paymentStatus})`,
-      },
-    });
+    const formatted = {
+      id: updated.id,
+      orderNumber: updated.order_number,
+      planKey: updated.plan_key,
+      planName: updated.plan_name,
+      amount: Number(updated.amount),
+      paymentMethod: updated.payment_method,
+      paymentStatus: updated.payment_status,
+      orderStatus: updated.order_status,
+      trxId: updated.trx_id,
+      payerPhone: updated.payer_phone,
+      targetEmail: updated.target_email,
+      customerName: updated.customer_name,
+      customerPhone: updated.customer_phone,
+      notes: updated.notes,
+      buyer: updated.buyer,
+    };
 
     return NextResponse.json({
       success: true,
-      order: updated,
-      message: `অর্ডার ${order.orderNumber} সফলভাবে আপডেট করা হয়েছে`,
+      order: formatted,
+      message: `অর্ডার ${order.order_number} সফলভাবে আপডেট করা হয়েছে`,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -95,27 +139,22 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const order = await prisma.order.findUnique({ where: { id } });
+    const { data: order } = await supabase.from("orders").select("order_number").eq("id", id).maybeSingle();
 
-    if (!order) {
-      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404 });
-    }
+    const { error } = await supabase.from("orders").delete().eq("id", id);
+    if (error) throw error;
 
-    await prisma.order.delete({ where: { id } });
-
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "DELETE_ORDER",
-        entity: "order",
-        entityId: id,
-        details: `Deleted order ${order.orderNumber}`,
-      },
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "DELETE_ORDER",
+      entity: "order",
+      entity_id: id,
+      details: `Deleted order ${order?.order_number || id}`,
     });
 
     return NextResponse.json({
       success: true,
-      message: `অর্ডার ${order.orderNumber} মুছে ফেলা হয়েছে`,
+      message: `অর্ডার ${order?.order_number || ""} মুছে ফেলা হয়েছে`,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createBKashPayment } from "@/lib/bkash";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 const PLAN_PRICES: Record<string, { name: string; price: number }> = {
   "1m": { name: "1 Month Trial Pack", price: 149 },
@@ -13,12 +13,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { planId = "18m", fullName = "Customer", email = "customer@gmail.com", phone = "01700000000" } = body;
 
-    // Check if dynamic plan exists in DB
-    const dbPlan = await prisma.planPricing.findUnique({
-      where: { planKey: planId },
-    });
+    // Check if dynamic plan exists in Supabase
+    const { data: dbPlan } = await supabase
+      .from("plan_pricing")
+      .select("*")
+      .eq("plan_key", planId)
+      .maybeSingle();
 
-    const amount = dbPlan ? dbPlan.price : (PLAN_PRICES[planId] || PLAN_PRICES["18m"]).price;
+    const amount = dbPlan ? Number(dbPlan.price) : (PLAN_PRICES[planId] || PLAN_PRICES["18m"]).price;
     const planName = dbPlan ? dbPlan.name : (PLAN_PRICES[planId] || PLAN_PRICES["18m"]).name;
 
     // Generate unique order number & invoice
@@ -41,25 +43,23 @@ export async function POST(req: NextRequest) {
       callbackURL,
     });
 
-    // Record initial pending order in database
-    await prisma.order.create({
-      data: {
-        orderNumber,
-        planKey: planId,
-        planName,
-        amount,
-        paymentMethod: "bkash_gateway",
-        paymentStatus: "pending",
-        orderStatus: "pending_activation",
-        targetEmail: email.trim().toLowerCase(),
-        customerName: fullName.trim(),
-        customerPhone: phone.trim(),
-        notes: `bKash PaymentID: ${paymentResponse.paymentID || ""}, Invoice: ${invoiceNumber}`,
-        metadata: JSON.stringify({
-          paymentID: paymentResponse.paymentID,
-          invoiceNumber,
-        }),
-      },
+    // Record initial pending order in Supabase
+    await supabase.from("orders").insert({
+      order_number: orderNumber,
+      plan_key: planId,
+      plan_name: planName,
+      amount,
+      payment_method: "bkash_gateway",
+      payment_status: "pending",
+      order_status: "pending_activation",
+      target_email: email.trim().toLowerCase(),
+      customer_name: fullName.trim(),
+      customer_phone: phone.trim(),
+      notes: `bKash PaymentID: ${paymentResponse.paymentID || ""}, Invoice: ${invoiceNumber}`,
+      metadata: JSON.stringify({
+        paymentID: paymentResponse.paymentID,
+        invoiceNumber,
+      }),
     });
 
     return NextResponse.json({

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import {
   verifyPassword,
   generateAdminToken,
@@ -33,24 +33,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Lookup admin by username or email
-    const admin = await prisma.admin.findFirst({
-      where: {
-        OR: [
-          { username: username.trim() },
-          { email: username.trim().toLowerCase() },
-        ],
-      },
-    });
+    // Lookup admin by username or email in Supabase
+    const { data: admin, error } = await supabase
+      .from("admins")
+      .select("*")
+      .or(`username.eq.${username.trim()},email.eq.${username.trim().toLowerCase()}`)
+      .maybeSingle();
 
-    if (!admin) {
+    if (error || !admin) {
       return NextResponse.json(
         { success: false, message: "ভুল ইউজারনেম বা পাসওয়ার্ড" },
         { status: 401 }
       );
     }
 
-    const isMatch = await verifyPassword(password, admin.passwordHash);
+    const isMatch = await verifyPassword(password, admin.password_hash);
     if (!isMatch) {
       return NextResponse.json(
         { success: false, message: "ভুল ইউজারনেম বা পাসওয়ার্ড" },
@@ -66,22 +63,20 @@ export async function POST(req: NextRequest) {
       adminId: admin.id,
       username: admin.username,
       email: admin.email,
-      role: admin.role,
+      role: admin.role || "super_admin",
     });
 
     // Set HTTP-Only session cookie
     await setAdminSessionCookie(token);
 
-    // Log admin login activity
-    await prisma.adminLog.create({
-      data: {
-        adminId: admin.id,
-        action: "LOGIN",
-        entity: "admin",
-        entityId: admin.id,
-        details: "Admin successfully logged in",
-        ipAddress: ip,
-      },
+    // Log admin login activity in Supabase
+    await supabase.from("admin_logs").insert({
+      admin_id: admin.id,
+      action: "LOGIN",
+      entity: "admin",
+      entity_id: admin.id,
+      details: "Admin successfully logged in",
+      ip_address: ip,
     });
 
     return NextResponse.json({

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function PUT(req: NextRequest) {
@@ -21,10 +21,13 @@ export async function PUT(req: NextRequest) {
 
     for (const item of items) {
       if (item.id && typeof item.orderIndex === "number") {
-        await prisma.faq.update({
-          where: { id: item.id },
-          data: { orderIndex: item.orderIndex },
-        });
+        await supabase
+          .from("faqs")
+          .update({
+            order_index: item.orderIndex,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.id);
       }
     }
 

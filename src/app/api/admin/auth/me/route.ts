@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function GET() {
@@ -9,23 +9,27 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const admin = await prisma.admin.findUnique({
-      where: { id: session.adminId },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-      },
-    });
+    const { data: admin, error } = await supabase
+      .from("admins")
+      .select("id, username, email, name, role, created_at")
+      .eq("id", session.adminId)
+      .maybeSingle();
 
-    if (!admin) {
+    if (error || !admin) {
       return NextResponse.json({ success: false, message: "Admin not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, admin });
+    return NextResponse.json({
+      success: true,
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
+        createdAt: admin.created_at,
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

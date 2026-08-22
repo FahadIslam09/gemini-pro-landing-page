@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function POST() {
@@ -9,10 +9,11 @@ export async function POST() {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    // Delete all orders and buyers to start with a fresh clean database
-    await prisma.order.deleteMany({});
-    await prisma.buyer.deleteMany({});
-    await prisma.adminLog.deleteMany({});
+    // Delete all orders, buyers, and logs in Supabase
+    await supabase.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("buyers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("admin_logs").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    await supabase.from("sms_transactions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
     return NextResponse.json({
       success: true,

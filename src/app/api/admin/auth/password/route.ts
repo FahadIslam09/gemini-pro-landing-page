@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession, verifyPassword, hashPassword } from "@/lib/auth";
 
 export async function PUT(req: NextRequest) {
@@ -12,16 +12,18 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { currentPassword, newPassword, name, email } = body;
 
-    const admin = await prisma.admin.findUnique({
-      where: { id: session.adminId },
-    });
+    const { data: admin, error } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("id", session.adminId)
+      .maybeSingle();
 
-    if (!admin) {
+    if (error || !admin) {
       return NextResponse.json({ success: false, message: "Admin not found" }, { status: 404 });
     }
 
     // If changing password
-    let updatedPasswordHash = admin.passwordHash;
+    let updatedPasswordHash = admin.password_hash;
     if (newPassword) {
       if (!currentPassword) {
         return NextResponse.json(
@@ -30,7 +32,7 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      const isCurrentMatch = await verifyPassword(currentPassword, admin.passwordHash);
+      const isCurrentMatch = await verifyPassword(currentPassword, admin.password_hash);
       if (!isCurrentMatch) {
         return NextResponse.json(
           { success: false, message: "বর্তমান পাসওয়ার্ড সঠিক নয়" },
@@ -48,30 +50,30 @@ export async function PUT(req: NextRequest) {
       updatedPasswordHash = await hashPassword(newPassword);
     }
 
-    const updatedAdmin = await prisma.admin.update({
-      where: { id: session.adminId },
-      data: {
-        name: name ? name.trim() : admin.name,
-        email: email ? email.trim().toLowerCase() : admin.email,
-        passwordHash: updatedPasswordHash,
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
+    const updatePayload: Record<string, any> = {
+      name: name ? name.trim() : admin.name,
+      email: email ? email.trim().toLowerCase() : admin.email,
+      password_hash: updatedPasswordHash,
+      updated_at: new Date().toISOString(),
+    };
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "UPDATE_SETTINGS",
-        entity: "admin",
-        entityId: session.adminId,
-        details: "Admin updated profile / security password",
-      },
+    const { data: updatedAdmin, error: updateError } = await supabase
+      .from("admins")
+      .update(updatePayload)
+      .eq("id", session.adminId)
+      .select("id, username, name, email, role")
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "UPDATE_SETTINGS",
+      entity: "admin",
+      entity_id: session.adminId,
+      details: "Admin updated profile / security password",
     });
 
     return NextResponse.json({

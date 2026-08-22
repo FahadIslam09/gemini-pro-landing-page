@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function GET(
@@ -13,20 +13,32 @@ export async function GET(
     }
 
     const { id } = await params;
-    const buyer = await prisma.buyer.findUnique({
-      where: { id },
-      include: {
-        orders: {
-          orderBy: { createdAt: "desc" },
-        },
-      },
-    });
+    const { data: buyer, error } = await supabase
+      .from("buyers")
+      .select("*, orders(*)")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!buyer) {
+    if (error || !buyer) {
       return NextResponse.json({ success: false, message: "Buyer not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, buyer });
+    return NextResponse.json({
+      success: true,
+      buyer: {
+        id: buyer.id,
+        name: buyer.name,
+        email: buyer.email,
+        phone: buyer.phone,
+        totalOrders: buyer.total_orders,
+        totalSpent: Number(buyer.total_spent),
+        currentPlan: buyer.current_plan,
+        status: buyer.status,
+        notes: buyer.notes,
+        createdAt: buyer.created_at,
+        orders: buyer.orders,
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -45,33 +57,41 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
-    const buyer = await prisma.buyer.findUnique({
-      where: { id },
-    });
+    const { data: buyer, error: findError } = await supabase
+      .from("buyers")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!buyer) {
+    if (findError || !buyer) {
       return NextResponse.json({ success: false, message: "Buyer not found" }, { status: 404 });
     }
 
-    const updated = await prisma.buyer.update({
-      where: { id },
-      data: {
-        name: body.name !== undefined ? String(body.name).trim() : buyer.name,
-        phone: body.phone !== undefined ? String(body.phone).trim() : buyer.phone,
-        status: body.status !== undefined ? String(body.status) : buyer.status,
-        notes: body.notes !== undefined ? String(body.notes) : buyer.notes,
-        currentPlan: body.currentPlan !== undefined ? String(body.currentPlan) : buyer.currentPlan,
-      },
-    });
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "UPDATE_BUYER",
-        entity: "buyer",
-        entityId: id,
-        details: `Updated customer ${updated.name}`,
-      },
+    if (body.name !== undefined) updatePayload.name = String(body.name).trim();
+    if (body.phone !== undefined) updatePayload.phone = String(body.phone).trim();
+    if (body.status !== undefined) updatePayload.status = String(body.status);
+    if (body.notes !== undefined) updatePayload.notes = String(body.notes);
+    if (body.currentPlan !== undefined) updatePayload.current_plan = String(body.currentPlan);
+
+    const { data: updated, error: updateError } = await supabase
+      .from("buyers")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "UPDATE_BUYER",
+      entity: "buyer",
+      entity_id: id,
+      details: `Updated customer ${updated.name}`,
     });
 
     return NextResponse.json({
@@ -95,22 +115,17 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const buyer = await prisma.buyer.findUnique({ where: { id } });
+    const { data: buyer } = await supabase.from("buyers").select("name, email").eq("id", id).maybeSingle();
 
-    if (!buyer) {
-      return NextResponse.json({ success: false, message: "Buyer not found" }, { status: 404 });
-    }
+    const { error } = await supabase.from("buyers").delete().eq("id", id);
+    if (error) throw error;
 
-    await prisma.buyer.delete({ where: { id } });
-
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "DELETE_BUYER",
-        entity: "buyer",
-        entityId: id,
-        details: `Deleted customer ${buyer.name} (${buyer.email})`,
-      },
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "DELETE_BUYER",
+      entity: "buyer",
+      entity_id: id,
+      details: `Deleted customer ${buyer?.name || ""} (${buyer?.email || ""})`,
     });
 
     return NextResponse.json({

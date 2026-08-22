@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
 
 export async function PUT(
@@ -15,38 +15,53 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
-    const faq = await prisma.faq.findUnique({
-      where: { id },
-    });
+    const { data: faq, error: findError } = await supabase
+      .from("faqs")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-    if (!faq) {
+    if (findError || !faq) {
       return NextResponse.json({ success: false, message: "FAQ not found" }, { status: 404 });
     }
 
-    const updated = await prisma.faq.update({
-      where: { id },
-      data: {
-        question: body.question !== undefined ? String(body.question).trim() : faq.question,
-        answer: body.answer !== undefined ? String(body.answer).trim() : faq.answer,
-        category: body.category !== undefined ? String(body.category).trim() : faq.category,
-        isActive: body.isActive !== undefined ? Boolean(body.isActive) : faq.isActive,
-        orderIndex: body.orderIndex !== undefined ? Number(body.orderIndex) : faq.orderIndex,
-      },
-    });
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "UPDATE_FAQ",
-        entity: "faq",
-        entityId: id,
-        details: `Updated FAQ "${updated.question.substring(0, 40)}..."`,
-      },
+    if (body.question !== undefined) updatePayload.question = String(body.question).trim();
+    if (body.answer !== undefined) updatePayload.answer = String(body.answer).trim();
+    if (body.category !== undefined) updatePayload.category = String(body.category).trim();
+    if (body.isActive !== undefined) updatePayload.is_active = Boolean(body.isActive);
+    if (body.orderIndex !== undefined) updatePayload.order_index = Number(body.orderIndex);
+
+    const { data: updated, error: updateError } = await supabase
+      .from("faqs")
+      .update(updatePayload)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "UPDATE_FAQ",
+      entity: "faq",
+      entity_id: id,
+      details: `Updated FAQ "${(updated.question || "").substring(0, 40)}..."`,
     });
 
     return NextResponse.json({
       success: true,
-      faq: updated,
+      faq: {
+        id: updated.id,
+        question: updated.question,
+        answer: updated.answer,
+        category: updated.category,
+        orderIndex: updated.order_index,
+        isActive: updated.is_active,
+      },
       message: "FAQ সফলভাবে আপডেট করা হয়েছে",
     });
   } catch (error: any) {
@@ -65,18 +80,19 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.faq.delete({
-      where: { id },
-    });
+    const { error } = await supabase
+      .from("faqs")
+      .delete()
+      .eq("id", id);
 
-    await prisma.adminLog.create({
-      data: {
-        adminId: session.adminId,
-        action: "DELETE_FAQ",
-        entity: "faq",
-        entityId: id,
-        details: "Deleted FAQ",
-      },
+    if (error) throw error;
+
+    await supabase.from("admin_logs").insert({
+      admin_id: session.adminId,
+      action: "DELETE_FAQ",
+      entity: "faq",
+      entity_id: id,
+      details: "Deleted FAQ",
     });
 
     return NextResponse.json({

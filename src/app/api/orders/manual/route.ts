@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
 import { sendCustomerEmail } from "@/lib/email";
@@ -21,44 +21,40 @@ export async function POST(req: NextRequest) {
     const cleanTrxId = trxId.trim().toUpperCase();
 
     // 1. Anti-Fraud & Duplicate Prevention: Check if this TrxID is already used in an active/paid order
-    const duplicateOrder = await prisma.order.findFirst({
-      where: {
-        trxId: {
-          equals: cleanTrxId,
-          mode: "insensitive",
-        },
-        paymentStatus: "paid",
-      },
-    });
+    const { data: duplicateOrder } = await supabase
+      .from("orders")
+      .select("order_number")
+      .ilike("trx_id", cleanTrxId)
+      .eq("payment_status", "paid")
+      .maybeSingle();
 
     if (duplicateOrder) {
       return NextResponse.json(
         {
           success: false,
-          message: `❌ এই Transaction ID (${cleanTrxId}) দিয়ে ইতোমধ্যে অর্ডার ${duplicateOrder.orderNumber} সম্পন্ন করা হয়েছে! একই TrxID দিয়ে একাধিক অর্ডার করা যাবে না।`,
+          message: `❌ এই Transaction ID (${cleanTrxId}) দিয়ে ইতোমধ্যে অর্ডার ${duplicateOrder.order_number} সম্পন্ন করা হয়েছে! একই TrxID দিয়ে একাধিক অর্ডার করা যাবে না।`,
         },
         { status: 400 }
       );
     }
 
-    // Look up plan from MongoDB
-    const plan = await prisma.planPricing.findUnique({
-      where: { planKey: planId },
-    });
+    // Look up plan from Supabase
+    const { data: plan } = await supabase
+      .from("plan_pricing")
+      .select("*")
+      .eq("plan_key", planId)
+      .maybeSingle();
 
-    const amount = plan ? plan.price : planId === "18m" ? 499 : planId === "12m" ? 399 : 149;
+    const amount = plan ? Number(plan.price) : planId === "18m" ? 499 : planId === "12m" ? 399 : 149;
     const planName = plan ? plan.name : `Google AI Pro (${planId})`;
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
 
     // 2. Strict SMS Verification: Check if an SMS transaction with this TrxID exists in DB
-    const existingSms = await (prisma as any).smsTransaction.findFirst({
-      where: {
-        trxId: {
-          equals: cleanTrxId,
-          mode: "insensitive",
-        },
-      },
-    });
+    const { data: existingSms } = await supabase
+      .from("sms_transactions")
+      .select("*")
+      .ilike("trx_id", cleanTrxId)
+      .maybeSingle();
 
     if (!existingSms) {
       return NextResponse.json(
@@ -71,76 +67,100 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Prevent reuse of already consumed SMS TrxID
-    if (existingSms.isUsed) {
+    if (existingSms.is_used) {
       return NextResponse.json(
         {
           success: false,
-          message: `❌ এই Transaction ID (${cleanTrxId}) ইতোমধ্যে ব্যবহৃত হয়েছে (${existingSms.usedInOrderId || "আগের অর্ডারে"})! একই TrxID দ্বিতীয়বার ব্যবহার করা যাবে না।`,
+          message: `❌ এই Transaction ID (${cleanTrxId}) ইতোমধ্যে ব্যবহৃত হয়েছে (${existingSms.used_in_order_id || "আগের অর্ডারে"})! একই TrxID দ্বিতীয়বার ব্যবহার করা যাবে না।`,
         },
         { status: 400 }
       );
     }
 
     // 4. Strict Amount Verification: Ensure SMS amount matches or exceeds plan price
-    if (existingSms.amount < amount) {
+    const smsAmount = Number(existingSms.amount || 0);
+    if (smsAmount < amount) {
       return NextResponse.json(
         {
           success: false,
-          message: `❌ অপর্যাপ্ত পেমেন্ট! এই প্ল্যানের মূল্য ৳${amount} BDT, কিন্তু আপনার পেমেন্ট ট্রানজেকশনে পাওয়া গেছে মাত্র ৳${existingSms.amount} BDT। সম্পূর্ণ মূল্য পরিশোধ করে পুনরায় চেষ্টা করুন।`,
+          message: `❌ অপর্যাপ্ত পেমেন্ট! এই প্ল্যানের মূল্য ৳${amount} BDT, কিন্তু আপনার পেমেন্ট ট্রানজেকশনে পাওয়া গেছে মাত্র ৳${smsAmount} BDT। সম্পূর্ণ মূল্য পরিশোধ করে পুনরায় চেষ্টা করুন।`,
         },
         { status: 400 }
       );
     }
 
     // 5. Mark SMS Transaction as Used atomically
-    await (prisma as any).smsTransaction.update({
-      where: { id: existingSms.id },
-      data: {
-        isUsed: true,
-        usedInOrderId: orderNumber,
-      },
-    });
+    await supabase
+      .from("sms_transactions")
+      .update({
+        is_used: true,
+        used_in_order_id: orderNumber,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingSms.id);
 
-    // 6. Upsert Buyer in MongoDB
-    const buyer = await prisma.buyer.upsert({
-      where: { email: email.trim().toLowerCase() },
-      create: {
-        name: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        totalOrders: 1,
-        totalSpent: amount,
-        currentPlan: planName,
-        status: "active",
-      },
-      update: {
-        name: fullName.trim(),
-        phone: phone.trim(),
-        totalOrders: { increment: 1 },
-        totalSpent: { increment: amount },
-        currentPlan: planName,
-      },
-    });
+    // 6. Upsert Buyer in Supabase
+    const { data: existingBuyer } = await supabase
+      .from("buyers")
+      .select("*")
+      .eq("email", email.trim().toLowerCase())
+      .maybeSingle();
 
-    // 7. Create Verified Order in MongoDB
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        planKey: planId,
-        planName,
+    let buyerId: string | null = null;
+    if (existingBuyer) {
+      buyerId = existingBuyer.id;
+      await supabase
+        .from("buyers")
+        .update({
+          name: fullName.trim(),
+          phone: phone.trim(),
+          total_orders: (existingBuyer.total_orders || 1) + 1,
+          total_spent: Number(existingBuyer.total_spent || 0) + amount,
+          current_plan: planName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingBuyer.id);
+    } else {
+      const { data: newBuyer } = await supabase
+        .from("buyers")
+        .insert({
+          name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          total_orders: 1,
+          total_spent: amount,
+          current_plan: planName,
+          status: "active",
+        })
+        .select()
+        .single();
+      if (newBuyer) buyerId = newBuyer.id;
+    }
+
+    // 7. Create Verified Order in Supabase
+    const providerName = (existingSms.provider || "bkash").toUpperCase();
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        order_number: orderNumber,
+        plan_key: planId,
+        plan_name: planName,
         amount,
-        paymentMethod,
-        paymentStatus: "paid",
-        orderStatus: "active",
-        trxId: cleanTrxId,
-        payerPhone: phone.trim(),
-        targetEmail: email.trim().toLowerCase(),
-        customerName: fullName.trim(),
-        customerPhone: phone.trim(),
-        buyerId: buyer.id,
-        notes: `Auto-verified against ${existingSms.provider.toUpperCase()} SMS TrxID: ${cleanTrxId} (Amount: ৳${existingSms.amount})`,
-      },
-    });
+        payment_method: paymentMethod,
+        payment_status: "paid",
+        order_status: "active",
+        trx_id: cleanTrxId,
+        payer_phone: phone.trim(),
+        target_email: email.trim().toLowerCase(),
+        customer_name: fullName.trim(),
+        customer_phone: phone.trim(),
+        buyer_id: buyerId,
+        notes: `Auto-verified against ${providerName} SMS TrxID: ${cleanTrxId} (Amount: ৳${smsAmount})`,
+      })
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
 
     // 8. Send instant confirmation email to customer (awaited)
     await sendCustomerEmail({
@@ -153,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     // 9. Send Instant Telegram Bot Alert (awaited)
     await sendTelegramOrderNotification({
-      orderNumber: order.orderNumber,
+      orderNumber: order.order_number,
       customerName: fullName.trim(),
       customerEmail: email.trim(),
       customerPhone: phone.trim(),
@@ -161,7 +181,7 @@ export async function POST(req: NextRequest) {
       amount,
       paymentMethod,
       trxId: cleanTrxId,
-      status: `✅ SMS দিয়ে সফলভাবে ভেরিফাইড (${existingSms.provider.toUpperCase()}) - Paid`,
+      status: `✅ SMS দিয়ে সফলভাবে ভেরিফাইড (${providerName}) - Paid`,
     });
 
     // 10. Server-side Meta Conversions API (CAPI) Purchase Event
@@ -191,9 +211,17 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      orderNumber: order.orderNumber,
+      orderNumber: order.order_number,
       isAutoVerified: true,
-      order,
+      order: {
+        id: order.id,
+        orderNumber: order.order_number,
+        planKey: order.plan_key,
+        planName: order.plan_name,
+        amount: Number(order.amount),
+        paymentStatus: order.payment_status,
+        orderStatus: order.order_status,
+      },
       message: "পেমেন্ট সফলভাবে স্বয়ংক্রিয়ভাবে ভেরিফাই ও অর্ডার কনফার্ম হয়েছে!",
     });
   } catch (error: any) {
