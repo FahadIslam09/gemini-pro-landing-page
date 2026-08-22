@@ -94,7 +94,7 @@ export default function ComparisonTable({ onOpenCheckout }: ComparisonTableProps
       <div className="max-w-[1040px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-14 reveal-init">
+        <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Feature Comparison Matrix</span>
@@ -108,7 +108,7 @@ export default function ComparisonTable({ onOpenCheckout }: ComparisonTableProps
         </div>
 
         {/* Comparison Table Card */}
-        <div className="reveal-init reveal-scale bg-white border border-brand-border rounded-3xl shadow-card overflow-hidden">
+        <div className="bg-white border border-brand-border rounded-3xl shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[620px]">
               <thead>

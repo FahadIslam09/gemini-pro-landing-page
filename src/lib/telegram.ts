@@ -22,15 +22,6 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
     return { success: false, reason: "Missing Telegram credentials" };
   }
 
-  const methodBadge =
-    payload.paymentMethod.toLowerCase().includes("bkash")
-      ? "🔴 bKash"
-      : payload.paymentMethod.toLowerCase().includes("nagad")
-      ? "🟠 Nagad"
-      : payload.paymentMethod.toLowerCase().includes("rocket")
-      ? "🟣 Rocket"
-      : `💳 ${payload.paymentMethod.toUpperCase()}`;
-
   const nowFormatted = new Date().toLocaleString("en-US", {
     timeZone: "Asia/Dhaka",
     dateStyle: "medium",
@@ -40,24 +31,24 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
   const cleanPhone = payload.customerPhone.replace(/[^0-9]/g, "");
   const waPhone = cleanPhone.startsWith("88") ? cleanPhone : `88${cleanPhone}`;
 
-  // Clean Telegram notification with 1-click single field copy on tap (Name, Email, Phone, TrxID, Order ID)
+  // Clean, professional, plain text formatting without excessive emojis
   const messageHtml = `
-🚀 <b>নতুন সাবস্ক্রিপশন অর্ডার ভেরিফাইড ও কনফার্মড!</b>
+<b>NEW ORDER RECEIVED (Processing)</b>
 ━━━━━━━━━━━━━━━━━━
-🆔 <b>অর্ডার নং:</b> <code>${payload.orderNumber}</code>
-👤 <b>গ্রাহকের নাম:</b> <code>${payload.customerName}</code>
-📧 <b>জিমেইল:</b> <code>${payload.customerEmail}</code>
-📱 <b>ফোন নম্বর:</b> <code>${payload.customerPhone}</code>
+Order Number: <code>${payload.orderNumber}</code>
+Customer: <code>${payload.customerName}</code>
+Email: <code>${payload.customerEmail}</code>
+Phone: <code>${payload.customerPhone}</code>
 
-📦 <b>প্ল্যান:</b> ${payload.planName}
-💰 <b>টাকার পরিমাণ:</b> <b>৳${payload.amount} BDT</b>
-💳 <b>পেমেন্ট মাধ্যম:</b> ${methodBadge}
-🔢 <b>TrxID:</b> <code>${payload.trxId}</code>
+Plan: ${payload.planName}
+Amount: ৳${payload.amount} BDT
+Payment Method: ${payload.paymentMethod}
+TrxID: <code>${payload.trxId}</code>
 
-⏰ <b>সময়:</b> ${nowFormatted}
-⚡ <b>স্ট্যাটাস:</b> ${payload.status || "✅ পেমেন্ট ভেরিফাইড (Paid)"}
+Status: ${payload.status || "Processing (Payment Verified)"}
+Time: ${nowFormatted}
 ━━━━━━━━━━━━━━━━━━
-💡 <i>যেকোনো তথ্যে (জিমেইল / ফোন / TrxID) ট্যাপ করলেই ১-ক্লিকে কপি হবে।</i>
+Tap any field above to copy.
   `.trim();
 
   // Telegram Inline Keyboard Buttons
@@ -65,25 +56,17 @@ export async function sendTelegramOrderNotification(payload: TelegramOrderPayloa
     inline_keyboard: [
       [
         {
-          text: "✉️ সরাসরি গ্রাহককে অ্যাক্টিভেশন ইমেইল পাঠান",
-          callback_data: `mail:${payload.orderNumber}:${payload.customerEmail}`,
-        },
-      ],
-      [
-        {
-          text: "💬 WhatsApp মেসেজ দিন",
+          text: "WhatsApp Customer",
           url: `https://wa.me/${waPhone}?text=${encodeURIComponent(
-            `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been verified. We are activating your access.`
+            `Hello ${payload.customerName}, your Google AI Pro order (${payload.orderNumber}) has been received and verified. We are preparing your activation.`
           )}`,
         },
-      ],
-      [
         {
-          text: "📧 Gmail অ্যাপে ওপেন করুন",
+          text: "Open in Gmail",
           url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
             payload.customerEmail
           )}&su=${encodeURIComponent(
-            `Google AI Pro Subscription Active (${payload.orderNumber})`
+            `Google AI Pro Subscription (${payload.orderNumber})`
           )}`,
         },
       ],

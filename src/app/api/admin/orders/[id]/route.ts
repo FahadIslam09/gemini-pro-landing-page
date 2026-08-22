@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getAdminSession } from "@/lib/auth";
+import { sendOrderActivationEmail } from "@/lib/email";
 
 export async function GET(
   req: NextRequest,
@@ -39,6 +40,8 @@ export async function GET(
       customerPhone: order.customer_phone,
       notes: order.notes,
       metadata: order.metadata,
+      activationLink: order.metadata?.activationLink || null,
+      completedAt: order.metadata?.completedAt || null,
       createdAt: order.created_at,
       updatedAt: order.updated_at,
       buyerId: order.buyer_id,
@@ -78,10 +81,44 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     };
 
-    if (body.orderStatus !== undefined) updatePayload.order_status = String(body.orderStatus);
-    if (body.paymentStatus !== undefined) updatePayload.payment_status = String(body.paymentStatus);
-    if (body.notes !== undefined) updatePayload.notes = String(body.notes);
-    if (body.trxId !== undefined) updatePayload.trx_id = String(body.trxId).trim();
+    let isOrderCompletion = false;
+
+    // Handle "Complete Order" action with activation link delivery
+    if (body.action === "complete" || body.activationLink) {
+      const link = String(body.activationLink || "").trim();
+      if (!link) {
+        return NextResponse.json(
+          { success: false, message: "অনুগ্রহ করে কাস্টমারের অ্যাক্টিভেশন লিংক দিন" },
+          { status: 400 }
+        );
+      }
+
+      isOrderCompletion = true;
+      updatePayload.order_status = "completed";
+      updatePayload.payment_status = "paid";
+      updatePayload.metadata = {
+        ...(order.metadata || {}),
+        activationLink: link,
+        completedAt: new Date().toISOString(),
+      };
+      updatePayload.notes = body.notes || order.notes || `Activation Link: ${link}`;
+
+      // Send Activation Email to Customer
+      await sendOrderActivationEmail({
+        to: order.target_email,
+        customerName: order.customer_name || "Valued Customer",
+        orderNumber: order.order_number,
+        planName: order.plan_name,
+        activationLink: link,
+      }).catch((emailErr) => {
+        console.error("Failed to send activation email:", emailErr);
+      });
+    } else {
+      if (body.orderStatus !== undefined) updatePayload.order_status = String(body.orderStatus);
+      if (body.paymentStatus !== undefined) updatePayload.payment_status = String(body.paymentStatus);
+      if (body.notes !== undefined) updatePayload.notes = String(body.notes);
+      if (body.trxId !== undefined) updatePayload.trx_id = String(body.trxId).trim();
+    }
 
     const { data: updated, error: updateError } = await supabase
       .from("orders")
@@ -92,12 +129,26 @@ export async function PUT(
 
     if (updateError) throw updateError;
 
+    // Update Buyer status to active if completed
+    if (isOrderCompletion && order.target_email) {
+      await supabase
+        .from("buyers")
+        .update({
+          status: "active",
+          current_plan: order.plan_name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", order.target_email.toLowerCase());
+    }
+
     await supabase.from("admin_logs").insert({
       admin_id: session.adminId,
-      action: "UPDATE_ORDER",
+      action: isOrderCompletion ? "COMPLETE_ORDER" : "UPDATE_ORDER",
       entity: "order",
       entity_id: id,
-      details: `Updated order ${order.order_number} status to ${updated.order_status} (Payment: ${updated.payment_status})`,
+      details: isOrderCompletion
+        ? `Completed order ${order.order_number} and emailed activation link to ${order.target_email}`
+        : `Updated order ${order.order_number} status to ${updated.order_status}`,
     });
 
     const formatted = {
@@ -115,13 +166,18 @@ export async function PUT(
       customerName: updated.customer_name,
       customerPhone: updated.customer_phone,
       notes: updated.notes,
+      metadata: updated.metadata,
+      activationLink: updated.metadata?.activationLink || null,
+      completedAt: updated.metadata?.completedAt || null,
       buyer: updated.buyer,
     };
 
     return NextResponse.json({
       success: true,
       order: formatted,
-      message: `অর্ডার ${order.order_number} সফলভাবে আপডেট করা হয়েছে`,
+      message: isOrderCompletion
+        ? `অর্ডার ${order.order_number} সফলভাবে সম্পন্ন হয়েছে এবং গ্রাহককে অ্যাক্টিভেশন লিংক পাঠানো হয়েছে!`
+        : `অর্ডার ${order.order_number} আপডেট করা হয়েছে`,
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useState } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import WhyGemini from "@/components/WhyGemini";
@@ -16,47 +15,20 @@ import FaqSection from "@/components/FaqSection";
 import FinalCta from "@/components/FinalCta";
 import CheckoutModal from "@/components/CheckoutModal";
 import StickyMobileBar from "@/components/StickyMobileBar";
-import ScrollProgress from "@/components/ScrollProgress";
 import Footer from "@/components/Footer";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
-function HomeContent() {
-  const searchParams = useSearchParams();
+export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState("18m");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [dynamicPlansData, setDynamicPlansData] = useState<any[] | null>(null);
 
-  // Fast pre-fetch of live database pricing as soon as the page loads
-  useEffect(() => {
-    fetch("/api/public/pricing", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.plans?.length > 0) {
-          setDynamicPlansData(data.plans);
-        }
-      })
-      .catch((err) => console.error("Error preloading pricing:", err));
-  }, []);
-
-  const showToast = (message: string, type: "success" | "error" = "success") => {
+  const showToast = (message: string) => {
     setToastMessage(message);
-    setToastType(type);
     setTimeout(() => {
       setToastMessage((prev) => (prev === message ? null : prev));
-    }, 4500);
+    }, 3500);
   };
-
-  useEffect(() => {
-    const paymentStatus = searchParams.get("payment");
-    const reason = searchParams.get("reason");
-    if (paymentStatus === "cancelled") {
-      showToast("bKash পেমেন্ট বাতিল করা হয়েছে। আবার চেষ্টা করতে পারেন।", "error");
-    } else if (paymentStatus === "failed") {
-      showToast(reason || "পেমেন্ট ব্যর্থ হয়েছে। দয়া করে আবার চেষ্টা করুন।", "error");
-    }
-  }, [searchParams]);
 
   const handleOpenCheckout = (plan: string = "18m") => {
     setModalPlan(plan);
@@ -65,16 +37,13 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-brand-surface text-brand-body relative">
-      {/* Scroll Progress & Scroll-to-Top Indicator */}
-      <ScrollProgress />
-
       {/* Header */}
       <Header onOpenCheckout={handleOpenCheckout} />
 
       {/* Hero Section */}
       <Hero onOpenCheckout={handleOpenCheckout} />
 
-      {/* Why Google AI Pro Feature Grid */}
+      {/* Why Google AI Pro Feature Grid (অল-ইন-ওয়ান অফিসিয়াল পাওয়ার হাউস) */}
       <WhyGemini />
 
       {/* Gemini Omni Video & Multimodal Studio Showcase */}
@@ -90,7 +59,7 @@ function HomeContent() {
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
 
       {/* Pricing Section */}
-      <PricingSection onOpenCheckout={handleOpenCheckout} initialPlans={dynamicPlansData} />
+      <PricingSection onOpenCheckout={handleOpenCheckout} />
 
       {/* How It Works */}
       <HowItWorks />
@@ -110,13 +79,12 @@ function HomeContent() {
       {/* Sticky Mobile Quick Checkout Bar */}
       <StickyMobileBar onOpenCheckout={handleOpenCheckout} />
 
-      {/* Interactive Checkout Modal with Instant Live DB Prices */}
+      {/* Interactive Checkout Modal with Multi-Stage Loading */}
       <CheckoutModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialPlan={modalPlan}
-        initialPlansData={dynamicPlansData}
-        onToast={(msg) => showToast(msg, "success")}
+        onToast={showToast}
       />
 
       {/* Toast Notification Container */}
@@ -124,26 +92,12 @@ function HomeContent() {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-20 sm:bottom-6 right-6 z-50 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200 ${
-            toastType === "error" ? "bg-red-900 border border-red-700" : "bg-slate-900"
-          }`}
+          className="fixed bottom-20 sm:bottom-6 right-6 z-50 bg-slate-900 text-white text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-3 duration-200"
         >
-          {toastType === "error" ? (
-            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-          ) : (
-            <CheckCircle2 className="w-4 h-4 text-brand-success flex-shrink-0" />
-          )}
+          <CheckCircle2 className="w-4 h-4 text-brand-success flex-shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
     </main>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-brand-surface" />}>
-      <HomeContent />
-    </Suspense>
   );
 }

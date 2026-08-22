@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
           .from("orders")
           .update({
             payment_status: "paid",
-            order_status: "active",
+            order_status: "processing",
             notes: `Auto-verified via SMS Webhook (${provider.toUpperCase()}) on ${new Date().toISOString()}`,
             updated_at: new Date().toISOString(),
           })

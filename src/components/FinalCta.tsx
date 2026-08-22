@@ -13,7 +13,7 @@ export default function FinalCta({ onOpenCheckout }: FinalCtaProps) {
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Banner Card */}
-        <div className="reveal-init reveal-scale bg-gradient-to-br from-[#F0F4FF] via-[#F5F0FF] to-[#FAF5FF] border-1.5 border-[#E0E6FC] rounded-[32px] p-8 sm:p-12 shadow-gemini grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#F0F4FF] via-[#F5F0FF] to-[#FAF5FF] border-1.5 border-[#E0E6FC] rounded-[32px] p-8 sm:p-12 shadow-gemini grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative overflow-hidden">
           
           {/* Subtle Ambient Radial Glow */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-brand-purple/10 rounded-full blur-3xl pointer-events-none" />

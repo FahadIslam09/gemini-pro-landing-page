@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ShoppingCart, CreditCard, ShieldCheck } from "lucide-react";
+import { ShoppingCart, CreditCard, ShieldCheck, ArrowRight } from "lucide-react";
 
 export default function HowItWorks() {
   const steps = [
@@ -33,7 +33,7 @@ export default function HowItWorks() {
       <div className="max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16 reveal-init">
+        <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-brand-dark tracking-tight mb-4">
             কিভাবে কাজ করে?
           </h2>
@@ -47,7 +47,7 @@ export default function HowItWorks() {
           {steps.map((step, idx) => (
             <div
               key={step.num}
-              className={`reveal-init stagger-${idx + 1} reveal-scale bg-white border border-brand-border hover:border-brand-indigo/30 rounded-2xl p-7 flex flex-col items-center text-center shadow-soft hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 relative group`}
+              className="bg-white border border-brand-border hover:border-brand-indigo/30 rounded-2xl p-7 flex flex-col items-center text-center shadow-soft hover:shadow-card-hover transition-all duration-200 relative group"
             >
               {/* Circular Icon Bubble with Number */}
               <div className={`relative w-16 h-16 rounded-full ${step.bubbleBg} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform`}>

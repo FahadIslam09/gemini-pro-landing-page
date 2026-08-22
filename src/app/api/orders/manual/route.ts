@@ -9,14 +9,17 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { fullName, email, phone, planId = "18m", paymentMethod = "bkash_manual", trxId, eventId } = body;
+    let { fullName, email, phone, planId = "18m", paymentMethod = "bkash_manual", trxId, eventId } = body;
 
-    if (!fullName || !email || !phone || !trxId) {
+    if (!email || !trxId) {
       return NextResponse.json(
-        { success: false, message: "অনুগ্রহ করে আপনার নাম, জিমেইল, ফোন ও TrxID পূরণ করুন" },
+        { success: false, message: "অনুগ্রহ করে আপনার জিমেইল ও TrxID পূরণ করুন" },
         { status: 400 }
       );
     }
+
+    if (!fullName) fullName = email.split("@")[0] || "Customer";
+    if (!phone) phone = "N/A";
 
     const cleanTrxId = trxId.trim().toUpperCase();
 
@@ -148,7 +151,7 @@ export async function POST(req: NextRequest) {
         amount,
         payment_method: paymentMethod,
         payment_status: "paid",
-        order_status: "active",
+        order_status: "processing",
         trx_id: cleanTrxId,
         payer_phone: phone.trim(),
         target_email: email.trim().toLowerCase(),

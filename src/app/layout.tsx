@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Hind_Siliguri, Outfit } from "next/font/google";
+import { Noto_Sans_Bengali, Outfit } from "next/font/google";
 import "./globals.css";
-import { Suspense } from "react";
-import MetaPixel from "@/components/MetaPixel";
 
-const hindSiliguri = Hind_Siliguri({
-  subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-hind",
+const notoSansBengali = Noto_Sans_Bengali({
+  subsets: ["bengali"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-bangla",
   display: "swap",
 });
 
@@ -55,27 +53,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn" className={`${hindSiliguri.variable} ${outfit.variable}`}>
+    <html lang="bn" className={`${notoSansBengali.variable} ${outfit.variable}`}>
       <head>
-        {/* Unregister old rogue service workers from prior development / ports */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                  for(var reg of registrations) {
-                    reg.unregister();
-                  }
-                }).catch(function(){});
-              }
-            `,
-          }}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@100..900&display=swap"
+          rel="stylesheet"
         />
       </head>
       <body className="font-bangla antialiased selection:bg-brand-purple/20 selection:text-brand-purple">
-        <Suspense fallback={null}>
-          <MetaPixel />
-        </Suspense>
         {children}
       </body>
     </html>

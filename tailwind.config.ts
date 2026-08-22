@@ -26,7 +26,7 @@ const config: Config = {
         }
       },
       fontFamily: {
-        bangla: ["var(--font-hind)", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        bangla: ["var(--font-bangla)", "'Noto Sans Bengali'", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
         outfit: ["var(--font-outfit)", "sans-serif"],
       },
       backgroundImage: {

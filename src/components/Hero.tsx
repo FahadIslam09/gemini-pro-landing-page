@@ -36,23 +36,24 @@ export default function Hero({ onOpenCheckout }: HeroProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
           {/* Left Column (Content & CTAs) */}
-          <div className="lg:col-span-6 flex flex-col items-center text-center lg:items-start lg:text-left">
+          <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Top Badge */}
-            <div className="inline-flex items-center gap-2 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-4 py-2 text-sm font-semibold text-[#C25E00] shadow-[0_2px_8px_rgba(245,158,11,0.08)] mb-6 animate-pulse-glow mx-auto lg:mx-0">
+            <div className="inline-flex items-center gap-2 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-4 py-2 text-sm font-semibold text-[#C25E00] shadow-[0_2px_8px_rgba(245,158,11,0.08)] mb-6 animate-pulse-glow">
               <Sparkles className="w-4 h-4 text-brand-accent fill-brand-accent/20" />
               <span>১৮ মাসের অফিসিয়াল মেগা অফার • ৮৫% ছাড়</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.14] tracking-tight mb-5 text-center lg:text-left">
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.12] tracking-tight mb-5">
+              <span className="block">18 মাসের</span>
               <span className="block">
-                18 মাসের Google <span className="gradient-text">AI Pro</span>
+                Google <span className="gradient-text">AI Pro</span>
               </span>
               <span className="block text-brand-dark">মাত্র ৳499!</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-brand-body leading-relaxed mb-8 max-w-xl text-center lg:text-left mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg text-brand-body leading-relaxed mb-8 max-w-xl">
               সর্বাধুনিক <strong>Gemini 3.1 Pro</strong>, ডিপ রিসার্চ (Deep Research), <strong>Veo 3.1</strong> ভিডিও জেনারেশন, 
               Google Workspace AI, <strong>5 TB ক্লাউড স্টোরেজ</strong> এবং YouTube Premium — সব কিছু এক প্রিমিয়াম বান্ডলে।
             </p>

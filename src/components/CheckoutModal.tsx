@@ -11,151 +11,52 @@ import {
   Loader2,
   CheckCircle2,
   MessageCircle,
+  QrCode,
+  Mail,
+  Receipt,
+  ChevronDown,
+  ChevronUp,
   ShieldCheck,
-  KeyRound,
-  Users,
-  Zap,
-  ArrowRight,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { trackPixelEvent, generateEventId } from "@/lib/pixel-client";
 
 interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPlan?: string;
-  initialPlansData?: any[] | null;
   onToast: (msg: string) => void;
 }
-
-interface PlanDetail {
-  name: string;
-  price: number;
-  duration: string;
-  type: string;
-  badge?: string;
-  popular?: boolean;
-}
-
-const DEFAULT_PLANS: Record<string, PlanDetail> = {
-  "1m": {
-    name: "Google AI Pro (১ মাস - ফ্যামিলি ইনভাইট)",
-    price: 149,
-    duration: "১ মাস",
-    type: "ফ্যামিলি ইনভাইটেশন (Google Family)",
-    badge: "ট্রায়াল প্যাক",
-    popular: false,
-  },
-  "18m": {
-    name: "Google AI Pro (১৮ মাস - প্রাইভেট অ্যাকাউন্ট)",
-    price: 499,
-    duration: "১৮ মাস",
-    type: "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
-    badge: "৮৫% ছাড়",
-    popular: true,
-  },
-  "12m": {
-    name: "Google AI Pro (১২ মাস - জিমেইল ও পাসওয়ার্ড)",
-    price: 399,
-    duration: "১২ মাস",
-    type: "জিমেইল ও পাসওয়ার্ড প্রয়োজন",
-    badge: "বার্ষিক প্ল্যান",
-  },
-};
-
-function BkashIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <Image
-      src="/BKash-Icon2-Logo.wine.svg"
-      alt="bKash"
-      width={20}
-      height={20}
-      className={`object-contain ${className}`}
-    />
-  );
-}
-
-type PaymentMethodType = "bkash" | "bkash_manual" | "nagad" | "rocket";
 
 export default function CheckoutModal({
   isOpen,
   onClose,
   initialPlan = "18m",
-  initialPlansData,
   onToast,
 }: CheckoutModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [plansMap, setPlansMap] = useState<Record<string, PlanDetail>>(() => {
-    if (initialPlansData && initialPlansData.length > 0) {
-      const map: Record<string, PlanDetail> = {};
-      initialPlansData.forEach((p: any) => {
-        map[p.planKey] = {
-          name: p.name,
-          price: p.price,
-          duration: p.monthlyBreakdown || `${p.planKey} মেয়াদ`,
-          type: p.accountTypeTitle || "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
-          badge: p.badge || "",
-          popular: p.popular || p.planKey === "18m",
-        };
-      });
-      return { ...DEFAULT_PLANS, ...map };
-    }
-    return DEFAULT_PLANS;
-  });
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("bkash");
+  const [showQr, setShowQr] = useState(false);
+
+  const paymentNumber = "01516556465";
 
   // Form State
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [trxId, setTrxId] = useState("");
 
   // Loading & Submission States
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isBkashRedirecting, setIsBkashRedirecting] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [progressStatusText, setProgressStatusText] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [trackingId, setTrackingId] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Sync dynamic plans when pre-fetched data updates
   useEffect(() => {
-    if (initialPlansData && initialPlansData.length > 0) {
-      const map: Record<string, PlanDetail> = {};
-      initialPlansData.forEach((p: any) => {
-        map[p.planKey] = {
-          name: p.name,
-          price: p.price,
-          duration: p.monthlyBreakdown || `${p.planKey} মেয়াদ`,
-          type: p.accountTypeTitle || "১০০% নিজস্ব প্রাইভেট অ্যাকাউন্ট",
-          badge: p.badge || "",
-          popular: p.popular || p.planKey === "18m",
-        };
-      });
-      setPlansMap((prev) => ({ ...prev, ...map }));
-    }
-  }, [initialPlansData]);
-
-  useEffect(() => {
-    if (initialPlan) {
-      setSelectedPlan(initialPlan);
-    }
-    if (isOpen) {
-      const plan = plansMap[initialPlan || selectedPlan] || DEFAULT_PLANS["18m"];
-      trackPixelEvent("InitiateCheckout", {
-        content_name: plan.name,
-        content_category: "AI Subscription",
-        content_ids: [initialPlan || selectedPlan],
-        currency: "BDT",
-        value: plan.price,
-      });
-    }
-  }, [initialPlan, isOpen]);
+    if (initialPlan) setSelectedPlan(initialPlan);
+  }, [initialPlan]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting && !isBkashRedirecting) {
+      if (e.key === "Escape" && isOpen && !isSubmitting) {
         onClose();
       }
     };
@@ -169,552 +70,387 @@ export default function CheckoutModal({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, isSubmitting, isBkashRedirecting, onClose]);
+  }, [isOpen, isSubmitting, onClose]);
 
-  const merchantNumbers: Record<string, string> = {
-    bkash_manual: "01516556465",
-    // nagad: "01798765432",
-    // rocket: "019123456789",
+  const planDetails: Record<string, { name: string; price: number; badge: string }> = {
+    "1m": {
+      name: "Google AI Pro (১ মাস)",
+      price: 149,
+      badge: "ইনভাইটেশন",
+    },
+    "18m": {
+      name: "Google AI Pro (১৮ মাস)",
+      price: 499,
+      badge: "প্রাইভেট অ্যাকাউন্ট",
+    },
+    "12m": {
+      name: "Google AI Pro (১২ মাস)",
+      price: 399,
+      badge: "পাসওয়ার্ড প্রয়োজন",
+    },
   };
 
-  const currentPlan = plansMap[selectedPlan] || plansMap["18m"] || DEFAULT_PLANS["18m"];
+  const currentPlan = planDetails[selectedPlan] || planDetails["18m"];
 
   const handleCopyNumber = () => {
-    const num = merchantNumbers[paymentMethod] || "01798765432";
-    navigator.clipboard.writeText(num).then(() => {
+    navigator.clipboard.writeText(paymentNumber).then(() => {
       setCopied(true);
-      onToast("পেমেন্ট নম্বর সফলভাবে কপি হয়েছে!");
+      onToast("পেমেন্ট নম্বর কপি হয়েছে!");
       setTimeout(() => setCopied(false), 2500);
     });
   };
 
-  // Direct Official bKash Gateway Payment Handler
-  const handleBkashAutoPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !phone.trim()) {
-      onToast("অনুগ্রহ করে আপনার নাম, জিমেইল ও ফোন নম্বর দিন");
-      return;
-    }
-
-    try {
-      setIsBkashRedirecting(true);
-      onToast("bKash নিরাপদ গেটওয়েতে রিডাইরেক্ট করা হচ্ছে...");
-
-      const res = await fetch("/api/bkash/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId: selectedPlan,
-          fullName,
-          email,
-          phone,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (data.success && data.bkashURL) {
-        window.location.href = data.bkashURL;
-      } else {
-        setIsBkashRedirecting(false);
-        onToast(data.message || "bKash গেটওয়ে শুরু করতে সমস্যা হয়েছে");
-      }
-    } catch (err: any) {
-      setIsBkashRedirecting(false);
-      console.error("bKash redirect error:", err);
-      onToast("সার্ভার ত্রুটি: অনুগ্রহ করে পুনরায় চেষ্টা করুন");
-    }
-  };
-
-  // Manual Send Money Submission Handler (Nagad / Rocket)
+  // Handle Manual Payment Submission with Animated Multi-step Progress Bar
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim() || !phone.trim() || !trxId.trim()) {
-      onToast("অনুগ্রহ করে সমস্ত প্রয়োজনীয় তথ্য পূরণ করুন");
+    if (!email.trim() || !trxId.trim()) {
+      onToast("অনুগ্রহ করে জিমেইল ও TrxID দিন");
       return;
     }
 
     setIsSubmitting(true);
-    setSubmissionProgress(20);
-    setProgressStatusText("ডাটা এনক্রিপ্ট ও সাবমিট হচ্ছে...");
+    setSubmissionProgress(35);
+    setProgressStatusText("পেমেন্ট ডাটা এনক্রিপ্ট হচ্ছে...");
 
-    const purchaseEventId = generateEventId();
+    const timer1 = setTimeout(() => {
+      setSubmissionProgress(75);
+      setProgressStatusText("bKash TrxID ও ব্যাংক রেকর্ড যাচাই হচ্ছে...");
+    }, 400);
 
     try {
-      setTimeout(() => {
-        setSubmissionProgress(60);
-        setProgressStatusText("পেমেন্ট ট্রানজেকশন যাচাই করা হচ্ছে...");
-      }, 400);
-
-      const res = await fetch("/api/orders/manual", {
+      const response = await fetch("/api/orders/manual", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName,
-          email,
-          phone,
+          fullName: email.trim().split("@")[0] || "Customer",
+          email: email.trim(),
+          phone: "N/A",
           planId: selectedPlan,
-          paymentMethod,
-          trxId,
-          eventId: purchaseEventId,
+          paymentMethod: "bkash_manual",
+          trxId: trxId.trim().toUpperCase(),
         }),
       });
 
-      setSubmissionProgress(85);
-      setProgressStatusText("অর্ডার কনফার্মেশন ও ইনভয়েস তৈরি হচ্ছে...");
+      clearTimeout(timer1);
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (!res.ok || !data.success) {
+      if (!response.ok || !data.success) {
         setIsSubmitting(false);
         setSubmissionProgress(0);
-        setProgressStatusText("");
-        onToast(data.message || "ভুল Transaction ID! কোনো ভেরিফাইড পেমেন্ট রেকর্ড পাওয়া যায়নি।");
+        onToast(data.message || "ভেরিফিকেশন ব্যর্থ হয়েছে। সঠিক TrxID দিন।");
         return;
       }
 
+      setSubmissionProgress(100);
+      setProgressStatusText("পেমেন্ট সফলভাবে ভেরিফাইড!");
+
       setTimeout(() => {
-        setSubmissionProgress(100);
-        setProgressStatusText("অর্ডার সফলভাবে সম্পন্ন!");
         setIsSubmitting(false);
         setIsCompleted(true);
-        setTrackingId(data.orderNumber || `#GAI-${Math.floor(10000 + Math.random() * 90000)}`);
-
-        // Client-side Meta Pixel Purchase Event
-        trackPixelEvent(
-          "Purchase",
-          {
-            currency: "BDT",
-            value: currentPlan.price,
-            content_name: currentPlan.name,
-            content_ids: [selectedPlan],
-            content_type: "product",
-            order_id: data.orderNumber,
-          },
-          purchaseEventId
-        );
+        setTrackingId(data.orderNumber || data.order?.orderNumber || `#GAI-${Math.floor(10000 + Math.random() * 90000)}`);
 
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: 70,
+          spread: 60,
           origin: { y: 0.6 },
-          colors: ["#3157D5", "#5B55D8", "#7B4FD8", "#2FA36B", "#F59E0B"],
+          colors: ["#3157D5", "#5B55D8", "#7B4FD8", "#2FA36B"],
         });
-        onToast("অভিনন্দন! আপনার পেমেন্ট ভেরিফাই হয়েছে ও অর্ডার নিশ্চিত হয়েছে");
-      }, 400);
-    } catch {
+        onToast("অভিনন্দন! আপনার অর্ডার সফলভাবে নিশ্চিত হয়েছে!");
+      }, 350);
+    } catch (err: any) {
+      clearTimeout(timer1);
+      console.error("Order submission error:", err);
       setIsSubmitting(false);
       setSubmissionProgress(0);
-      setProgressStatusText("");
-      onToast("অর্ডার সাবমিট করতে সমস্যা হয়েছে, পুনরায় চেষ্টা করুন");
+      onToast("সার্ভার সমস্যা। কিছুক্ষণ পর চেষ্টা করুন।");
     }
   };
 
   const resetAndClose = () => {
     setIsCompleted(false);
     setIsSubmitting(false);
-    setIsBkashRedirecting(false);
     setSubmissionProgress(0);
-    setProgressStatusText("");
+    setEmail("");
     setTrxId("");
+    setShowQr(false);
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={resetAndClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      {/* Backdrop */}
       <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-brand-border overflow-hidden animate-in zoom-in-95 duration-200 my-auto"
-      >
-        {/* Modal Header */}
-        <div className="bg-brand-surface border-b border-brand-border px-6 py-5 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-brand-blue animate-pulse" />
-              <h2 className="font-bangla font-bold text-lg text-brand-dark">
-                Google AI Pro সাবস্ক্রিপশন
-              </h2>
-            </div>
-            <p className="text-xs text-brand-muted font-bangla">
-              নিরাপদ ও দ্রুত অ্যাক্টিভেশন • ৫-১৫ মিনিটে সক্রিয়
-            </p>
-          </div>
+        className="fixed inset-0 bg-brand-dark/50 backdrop-blur-xs transition-opacity"
+        onClick={() => !isSubmitting && resetAndClose()}
+      />
+
+      {/* Modal Shell (Ultra Minimal, Compact & Polished) */}
+      <div className="relative z-10 w-full max-w-[440px] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150">
+        
+        {/* Close Button */}
+        {!isSubmitting && (
           <button
             type="button"
             onClick={resetAndClose}
-            aria-label="Close modal"
-            className="w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-brand-border text-brand-muted hover:text-brand-dark flex items-center justify-center transition-colors cursor-pointer"
+            className="absolute top-4 right-4 w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors z-20 cursor-pointer"
+            aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
-        </div>
+        )}
 
-        {/* Modal Body with Custom Styled Scrollbar */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <div className="p-5 sm:p-6">
           {!isCompleted ? (
             <>
-              {/* Plan Selection Tabs (1m, 18m, 12m in clean exact visual layout) */}
-              <div className="mb-5">
-                <label className="block text-xs font-bold text-brand-dark mb-2 font-bangla">
-                  সাবস্ক্রিপশন প্ল্যান বেছে নিন:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["1m", "18m", "12m"] as const).map((planKey) => {
-                    const plan = plansMap[planKey] || DEFAULT_PLANS[planKey];
-                    const isSelected = selectedPlan === planKey;
-                    return (
-                      <button
-                        key={planKey}
-                        type="button"
-                        onClick={() => setSelectedPlan(planKey)}
-                        className={`relative p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-brand-purple/5 border-brand-purple shadow-sm ring-2 ring-brand-purple/20"
-                            : "bg-white border-brand-border hover:border-gray-300"
-                        }`}
-                      >
-                        {plan.popular && (
-                          <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-brand-gradient text-white text-[9px] font-bold px-2 py-0.2 rounded-full font-outfit shadow-sm">
-                            Popular
-                          </span>
-                        )}
-                        <span className="block text-xs font-bold text-brand-dark font-bangla">
-                          {planKey === "1m" ? "১ মাস" : planKey === "18m" ? "১৮ মাস" : "১২ মাস"}
-                        </span>
-                        <span className="block font-outfit text-sm font-extrabold text-brand-blue mt-0.5">
-                          ৳{plan.price}
-                        </span>
-                      </button>
-                    );
-                  })}
+              {/* Header */}
+              <div className="mb-4 text-center">
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-brand-blue/10 text-brand-blue text-[11px] font-bold font-outfit mb-1">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Google AI Pro Checkout</span>
                 </div>
+                <h3 className="text-lg font-bold text-slate-900 font-bangla">
+                  সাবস্ক্রিপশন সম্পন্ন করুন
+                </h3>
               </div>
 
-              {/* Selected Plan Summary Card */}
-              <div className="bg-[#FAFBFD] border border-brand-border/80 rounded-2xl p-4 mb-5 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    {selectedPlan === "1m" ? (
-                      <Users className="w-3.5 h-3.5 text-brand-blue" />
-                    ) : selectedPlan === "12m" ? (
-                      <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                    ) : (
-                      <ShieldCheck className="w-3.5 h-3.5 text-brand-purple" />
-                    )}
-                    <span className="text-xs font-bold text-brand-dark font-bangla">
-                      {currentPlan.type}
+              {/* Minimal Plan Selector Pills */}
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl mb-4 border border-slate-200/60">
+                {[
+                  { id: "1m", label: "১ মাস", price: "৳149" },
+                  { id: "18m", label: "১৮ মাস", price: "৳499", popular: true },
+                  { id: "12m", label: "১২ মাস", price: "৳399" },
+                ].map((p) => {
+                  const isSelected = selectedPlan === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => !isSubmitting && setSelectedPlan(p.id)}
+                      disabled={isSubmitting}
+                      className={`relative py-1.5 px-2 rounded-xl text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-white text-slate-900 shadow-xs font-bold border border-slate-200/80"
+                          : "text-slate-600 hover:text-slate-900 font-medium"
+                      }`}
+                    >
+                      <span className="block text-[11px] font-bangla leading-tight">{p.label}</span>
+                      <span className={`block text-xs font-outfit font-extrabold ${isSelected ? "text-brand-blue" : "text-slate-700"}`}>
+                        {p.price}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Clean Payment Box */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 mb-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#D12053]" />
+                    <span className="text-xs font-bold text-slate-800 font-bangla">
+                      bKash / Bangla QR পেমেন্ট:
                     </span>
                   </div>
-                  <p className="text-[11px] text-brand-muted font-bangla">
-                    {currentPlan.name}
-                  </p>
-                </div>
-                <div className="text-right font-outfit">
-                  <span className="text-xl font-extrabold text-brand-dark">
-                    ৳{currentPlan.price}
-                  </span>
-                  <span className="block text-[10px] text-brand-muted">
-                    {currentPlan.duration}
-                  </span>
-                </div>
-              </div>
-
-              {/* Form Content */}
-              <form
-                onSubmit={paymentMethod === "bkash" ? handleBkashAutoPayment : handleManualSubmit}
-                className="space-y-4"
-              >
-                {/* Full Name */}
-                <div>
-                  <label className="block text-xs font-bold text-brand-dark mb-1 font-bangla">
-                    আপনার নাম <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="আপনার পূর্ণ নাম লিখুন"
-                    required
-                    disabled={isSubmitting || isBkashRedirecting}
-                    className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Gmail Address */}
-                <div>
-                  <label className="block text-xs font-bold text-brand-dark mb-1 font-bangla">
-                    যে জিমেইলে এক্সেস চান <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="example@gmail.com"
-                    required
-                    disabled={isSubmitting || isBkashRedirecting}
-                    className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-xs font-bold text-brand-dark mb-1 font-bangla">
-                    মোবাইল নম্বর <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="017XXXXXXXX"
-                    required
-                    disabled={isSubmitting || isBkashRedirecting}
-                    className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm text-brand-dark outline-none transition-colors"
-                  />
-                </div>
-
-                {/* Payment Method Selector (bKash Auto, bKash Manual) */}
-                <div>
-                  <label className="block text-xs font-bold text-brand-dark mb-1.5 font-bangla">
-                    পেমেন্ট মাধ্যম বেছে নিন:
-                  </label>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <strong className="font-outfit text-sm font-extrabold text-slate-900 tracking-wider">
+                      {paymentNumber}
+                    </strong>
                     <button
                       type="button"
-                      onClick={() => setPaymentMethod("bkash")}
-                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer relative ${
-                        paymentMethod === "bkash"
-                          ? "bg-[#E2136E]/10 border-[#E2136E] text-[#E2136E] ring-2 ring-[#E2136E]/20"
-                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
-                      }`}
+                      onClick={handleCopyNumber}
+                      className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold font-outfit flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
                     >
-                      <span className="flex items-center gap-1.5">
-                        <BkashIcon className="w-4 h-4" />
-                        <span>bKash (অটো)</span>
-                        <Zap className="w-3 h-3 text-[#E2136E] fill-[#E2136E]" />
-                      </span>
+                      {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copied ? "Copied" : "Copy"}</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("bkash_manual")}
-                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer ${
-                        paymentMethod === "bkash_manual"
-                          ? "bg-[#E2136E]/10 border-[#E2136E] text-[#E2136E] ring-2 ring-[#E2136E]/20"
-                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
-                      }`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <BkashIcon className="w-4 h-4" />
-                        <span>bKash (ম্যানুয়াল)</span>
-                      </span>
-                    </button>
-
-                    {/* Nagad and Rocket (commented out) */}
-                    {/*
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("nagad")}
-                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer ${
-                        paymentMethod === "nagad"
-                          ? "bg-[#F7931E]/10 border-[#F7931E] text-[#F7931E] ring-2 ring-[#F7931E]/20"
-                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
-                      }`}
-                    >
-                      Nagad
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("rocket")}
-                      className={`h-11 rounded-xl border flex items-center justify-center font-outfit text-xs font-bold transition-all cursor-pointer ${
-                        paymentMethod === "rocket"
-                          ? "bg-[#8C3494]/10 border-[#8C3494] text-[#8C3494] ring-2 ring-[#8C3494]/20"
-                          : "bg-white border-brand-border text-brand-body hover:border-gray-300"
-                      }`}
-                    >
-                      Rocket
-                    </button>
-                    */}
                   </div>
                 </div>
 
-                {/* Conditional UI: bKash Auto Gateway vs Manual Send Money (Nagad / Rocket) */}
-                {paymentMethod === "bkash" ? (
-                  /* bKash Official Gateway Callout */
-                  <div className="bg-[#FFF5F8] border border-[#FAD2E1] rounded-2xl p-4 space-y-2 text-xs">
-                    <div className="flex items-center gap-2 text-[#E2136E] font-bold font-bangla">
-                      <Zap className="w-4 h-4 fill-[#E2136E]" />
-                      <span>অফিসিয়াল bKash পেমেন্ট গেটওয়ে (১-ক্লিক)</span>
-                    </div>
-                    <p className="text-[11px] text-brand-body leading-relaxed font-bangla">
-                      নিচের বাটনে চাপ দিলে সরাসরি অফিসিয়াল bKash সিকিউর পেজে নিয়ে যাওয়া হবে। পেমেন্ট সম্পন্ন হলে সাথে সাথে আপনার সাবস্ক্রিপশন নিশ্চিত হবে।
-                    </p>
-                  </div>
-                ) : (
-                  /* Manual Send Money Details Box + TrxID Input */
-                  <>
-                    <div className="bg-[#F8F9FD] border border-brand-border rounded-2xl p-4 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-brand-body font-medium font-bangla">
-                          ম্যানুয়াল পেমেন্ট নম্বর ({paymentMethod === "bkash_manual" ? "bKash" : paymentMethod.toUpperCase()} Personal):
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <strong className="font-outfit text-brand-dark font-bold text-sm">
-                            {merchantNumbers[paymentMethod]}
-                          </strong>
-                          <button
-                            type="button"
-                            onClick={handleCopyNumber}
-                            className="bg-white hover:bg-gray-100 text-brand-blue border border-brand-border rounded-md px-2 py-0.5 text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            {copied ? <Check className="w-3 h-3 text-brand-success" /> : <Copy className="w-3 h-3" />}
-                            <span>{copied ? "কপি হয়েছে" : "কপি"}</span>
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-[11px] text-brand-muted leading-relaxed font-bangla">
-                        টাকা পাঠিয়ে নিচের ঘরে আপনার ট্রানজেকশন আইডি (TrxID) দিন:
-                      </p>
-                    </div>
+                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px] text-slate-500 font-bangla">
+                  <span>bKash, Nagad বা Rocket দিয়ে <strong>৳{currentPlan.price}</strong> পরিশোধ করুন</span>
+                  
+                  {/* QR Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowQr(!showQr)}
+                    className="text-brand-blue hover:underline font-medium inline-flex items-center gap-0.5 cursor-pointer ml-1"
+                  >
+                    <QrCode className="w-3 h-3" />
+                    <span>{showQr ? "QR লুকান" : "QR দেখুন"}</span>
+                    {showQr ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </button>
+                </div>
 
-                    {/* TrxID Input */}
-                    <div>
-                      <label className="block text-xs font-bold text-brand-dark mb-1 font-bangla">
-                        Transaction ID (TrxID) <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={trxId}
-                        onChange={(e) => setTrxId(e.target.value.toUpperCase())}
-                        placeholder="যেমন: 9J87AKL0P1"
-                        required
-                        disabled={isSubmitting}
-                        className="w-full h-10 px-3.5 bg-brand-surface border border-brand-border focus:border-brand-blue rounded-xl text-sm font-mono text-brand-dark uppercase tracking-wider outline-none transition-colors"
+                {/* Collapsible QR Preview */}
+                {showQr && (
+                  <div className="pt-2 text-center animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs inline-block">
+                      <Image
+                        src="/bKash_Merchant.png"
+                        alt="Bangla QR Code"
+                        width={140}
+                        height={180}
+                        className="rounded-lg object-contain mx-auto"
                       />
                     </div>
-                  </>
+                    <p className="text-[10px] text-slate-500 mt-1 font-bangla">
+                      যেকোনো ব্যাংকিং বা MFS অ্যাপ থেকে স্ক্যান করুন
+                    </p>
+                  </div>
                 )}
+              </div>
 
-                {/* Submission Progress & Status Feedback (for manual flow) */}
+              {/* Minimal Form */}
+              <form onSubmit={handleManualSubmit} className="space-y-3">
+                {/* Email Field */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 font-bangla">
+                    আপনার জিমেইল এড্রেস
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="yourname@gmail.com"
+                      required
+                      disabled={isSubmitting}
+                      className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs sm:text-sm text-slate-900 outline-none transition-all font-outfit"
+                    />
+                  </div>
+                </div>
+
+                {/* TrxID Field */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 font-bangla">
+                    পেমেন্ট TrxID (Transaction ID)
+                  </label>
+                  <div className="relative">
+                    <Receipt className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={trxId}
+                      onChange={(e) => setTrxId(e.target.value.toUpperCase())}
+                      placeholder="যেমন: 9J87AKL0P1"
+                      required
+                      disabled={isSubmitting}
+                      className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs sm:text-sm font-mono text-slate-900 uppercase tracking-wider outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Verification Progress Bar Display */}
                 {isSubmitting && (
-                  <div className="space-y-1.5 pt-1 animate-in fade-in">
-                    <div className="flex justify-between text-xs text-brand-muted font-medium font-bangla">
-                      <span>{progressStatusText}</span>
-                      <span className="font-outfit font-bold text-brand-blue">{submissionProgress}%</span>
+                  <div className="bg-slate-50 border border-brand-blue/20 rounded-2xl p-3 space-y-2 animate-in fade-in duration-150">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-slate-800 font-bangla flex items-center gap-1.5">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-blue" />
+                        <span>{progressStatusText}</span>
+                      </span>
+                      <span className="font-outfit font-extrabold text-brand-blue text-xs">
+                        {submissionProgress}%
+                      </span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+
+                    {/* Progress Track */}
+                    <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
                       <div
-                        className="bg-brand-gradient h-full transition-all duration-300 rounded-full"
+                        className="h-full bg-gradient-to-r from-[#3157D5] via-[#5B55D8] to-[#8A4EDB] transition-all duration-300 ease-out rounded-full shadow-sm"
                         style={{ width: `${submissionProgress}%` }}
                       />
                     </div>
+
+                    <div className="flex justify-between text-[10px] text-slate-400 font-bangla pt-0.5">
+                      <span>TrxID যাচাই</span>
+                      <span>ব্যাংক ব্যালেন্স চেক</span>
+                      <span>অর্ডার সক্রিয়করণ</span>
+                    </div>
                   </div>
                 )}
 
-                {/* Submit Action Button */}
-                {paymentMethod === "bkash" ? (
-                  <button
-                    type="submit"
-                    disabled={isBkashRedirecting}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#E2136E] hover:bg-[#c2105e] text-white text-sm font-semibold py-3.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                  >
-                    {isBkashRedirecting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>bKash গেটওয়েতে রিডাইরেক্ট হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>bKash দিয়ে সরাসরি পে করুন (৳{currentPlan.price})</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold py-3.5 px-6 rounded-xl shadow-glow transition-all disabled:opacity-75 disabled:cursor-not-allowed hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>অর্ডার প্রসেস করা হচ্ছে...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>অর্ডার নিশ্চিত করুন (৳{currentPlan.price})</span>
-                        <Sparkles className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                )}
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 mt-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#3157D5] via-[#5B55D8] to-[#8A4EDB] hover:opacity-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="font-bangla">যাচাই করা হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-bangla">৳{currentPlan.price} দিয়ে নিশ্চিত করুন</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
 
-                <div className="flex items-center justify-center gap-1.5 text-[11px] text-brand-muted text-center pt-0.5 font-bangla">
-                  <Lock className="w-3 h-3 text-brand-muted" />
-                  <span>আপনার ডাটা ২৫৬-বিট SSL এনক্রিপশনে সুরক্ষিত</span>
+                <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 text-center font-bangla pt-0.5">
+                  <Lock className="w-2.5 h-2.5" />
+                  <span>২৫৬-বিট এনক্রিপশনে শতভাগ সুরক্ষিত</span>
                 </div>
               </form>
             </>
           ) : (
-            /* Order Success Confirmation Screen */
-            <div className="text-center py-4 space-y-4 animate-in zoom-in-95 duration-200">
-              <div className="w-14 h-14 rounded-full bg-brand-success/10 text-brand-success flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+            /* Clean Minimal Success Screen */
+            <div className="text-center py-2 space-y-3.5 animate-in zoom-in-95 duration-150">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/60 shadow-2xs">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-brand-dark mb-1 font-bangla">
+                <h3 className="text-lg font-bold text-slate-900 font-bangla">
                   অর্ডার সফল হয়েছে!
                 </h3>
-                <p className="text-xs text-brand-body leading-relaxed max-w-sm mx-auto font-bangla">
-                  ধন্যবাদ <strong>{fullName}</strong>! আপনার পেমেন্ট ভেরিফিকেশনের কাজ চলছে। আগামী ৫-১৫ মিনিটের মধ্যে আপনার জিমেইল ({email})-এ কনফার্মেশন ও অ্যাক্সেস পৌঁছে যাবে।
+                <p className="text-xs text-slate-500 mt-0.5 font-bangla max-w-xs mx-auto">
+                  আপনার জিমেইল ({email})-এ ৫-১৫ মিনিটের মধ্যে সাবস্ক্রিপশন সক্রিয় হয়ে যাবে।
                 </p>
               </div>
 
-              {/* Receipt Summary Chip */}
-              <div className="bg-brand-surface border border-brand-border rounded-2xl p-3.5 text-left space-y-2 text-xs font-bangla">
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
-                  <span className="text-brand-muted">অর্ডার ট্র্যাকিং আইডি:</span>
-                  <strong className="font-outfit text-brand-blue font-bold">{trackingId}</strong>
+              {/* Minimal Receipt Box */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-left space-y-1.5 text-xs font-outfit">
+                <div className="flex justify-between items-center text-slate-500">
+                  <span className="font-bangla">অর্ডার আইডি:</span>
+                  <strong className="text-slate-900 font-mono font-bold">{trackingId}</strong>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
-                  <span className="text-brand-muted">প্ল্যান:</span>
-                  <span className="font-semibold text-brand-dark">{currentPlan.name}</span>
+                <div className="flex justify-between items-center text-slate-500">
+                  <span className="font-bangla">প্ল্যান:</span>
+                  <span className="text-slate-800 font-semibold font-bangla">{currentPlan.name}</span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-1.5">
-                  <span className="text-brand-muted">পরিশোধিত মূল্য:</span>
-                  <strong className="font-outfit text-brand-dark">৳{currentPlan.price} BDT</strong>
+                <div className="flex justify-between items-center text-slate-500">
+                  <span className="font-bangla">মূল্য:</span>
+                  <strong className="text-brand-blue font-extrabold">৳{currentPlan.price} BDT</strong>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-brand-muted">TrxID:</span>
-                  <span className="font-mono font-bold text-brand-dark">{trxId}</span>
-                </div>
+                {trxId && (
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span>TrxID:</span>
+                    <span className="font-mono font-bold text-slate-900">{trxId}</span>
+                  </div>
+                )}
               </div>
 
-              {/* WhatsApp Support Button */}
-              <div className="pt-2 space-y-2 font-bangla">
+              {/* Action Buttons */}
+              <div className="pt-1 space-y-2">
                 <a
-                  href={`https://wa.me/8801516556465?text=${encodeURIComponent(
-                    `হ্যালো, আমি Google AI Pro অর্ডার করেছি। Order ID: ${trackingId}, TrxID: ${trxId}, Plan: ${currentPlan.name}`
-                  )}`}
+                  href={`https://wa.me/?text=Hello%2C%20I%20placed%20an%20order%20for%20Google%20AI%20Pro%20with%20Order%20ID%3A%20${trackingId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-3 px-4 rounded-xl shadow-sm transition-colors cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>হোয়াটসঅ্যাপে দ্রুত কনফার্মেশন নিন</span>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span className="font-bangla">WhatsApp-এ দ্রুত নিশ্চিত করুন</span>
                 </a>
 
                 <button
                   type="button"
                   onClick={resetAndClose}
-                  className="w-full text-xs font-semibold text-brand-muted hover:text-brand-dark py-1.5 cursor-pointer"
+                  className="w-full text-xs font-medium text-slate-400 hover:text-slate-700 py-1 cursor-pointer font-bangla"
                 >
                   উইন্ডো বন্ধ করুন
                 </button>
