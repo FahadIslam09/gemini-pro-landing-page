@@ -14,9 +14,7 @@ import {
   QrCode,
   Mail,
   Receipt,
-  ChevronDown,
-  ChevronUp,
-  ShieldCheck,
+  Smartphone,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -34,7 +32,7 @@ export default function CheckoutModal({
   onToast,
 }: CheckoutModalProps) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [showQr, setShowQr] = useState(false);
+  const [paymentMethodTab, setPaymentMethodTab] = useState<"bkash" | "bangla_qr">("bkash");
 
   const paymentNumber = "01516556465";
 
@@ -114,7 +112,7 @@ export default function CheckoutModal({
 
     const timer1 = setTimeout(() => {
       setSubmissionProgress(75);
-      setProgressStatusText("bKash TrxID ও ব্যাংক রেকর্ড যাচাই হচ্ছে...");
+      setProgressStatusText("TrxID ও ব্যাংক রেকর্ড যাচাই হচ্ছে...");
     }, 400);
 
     try {
@@ -126,7 +124,7 @@ export default function CheckoutModal({
           email: email.trim(),
           phone: "N/A",
           planId: selectedPlan,
-          paymentMethod: "bkash_manual",
+          paymentMethod: paymentMethodTab === "bkash" ? "bkash_manual" : "bangla_qr_manual",
           trxId: trxId.trim().toUpperCase(),
         }),
       });
@@ -173,22 +171,21 @@ export default function CheckoutModal({
     setSubmissionProgress(0);
     setEmail("");
     setTrxId("");
-    setShowQr(false);
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-brand-dark/50 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-brand-dark/60 backdrop-blur-xs transition-opacity"
         onClick={() => !isSubmitting && resetAndClose()}
       />
 
-      {/* Modal Shell (Ultra Minimal, Compact & Polished) */}
-      <div className="relative z-10 w-full max-w-[440px] bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150">
+      {/* Modal Shell */}
+      <div className="relative z-10 w-full max-w-[460px] max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150 my-auto">
         
         {/* Close Button */}
         {!isSubmitting && (
@@ -202,7 +199,7 @@ export default function CheckoutModal({
           </button>
         )}
 
-        <div className="p-5 sm:p-6">
+        <div className="p-5 sm:p-6 overflow-y-auto modal-scroll">
           {!isCompleted ? (
             <>
               {/* Header */}
@@ -216,7 +213,7 @@ export default function CheckoutModal({
                 </h3>
               </div>
 
-              {/* Minimal Plan Selector Pills */}
+              {/* Plan Selector Pills */}
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl mb-4 border border-slate-200/60">
                 {[
                   { id: "1m", label: "১ মাস", price: "৳149" },
@@ -245,63 +242,117 @@ export default function CheckoutModal({
                 })}
               </div>
 
-              {/* Clean Payment Box */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 mb-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#D12053]" />
-                    <span className="text-xs font-bold text-slate-800 font-bangla">
-                      bKash / Bangla QR পেমেন্ট:
+              {/* Payment Method Switcher Tabs (Separate bKash vs Bangla QR) */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl mb-3 border border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethodTab("bkash")}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold font-bangla flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    paymentMethodTab === "bkash"
+                      ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#D12053]" />
+                  <span>bKash Payment</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethodTab("bangla_qr")}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold font-bangla flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    paymentMethodTab === "bangla_qr"
+                      ? "bg-white text-slate-900 shadow-xs border border-slate-200/80"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <QrCode className="w-3.5 h-3.5 text-brand-blue" />
+                  <span>Bangla QR (Nagad / Rocket)</span>
+                </button>
+              </div>
+
+              {/* SECTION 1: bKash Payment Area */}
+              {paymentMethodTab === "bkash" && (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 mb-4 space-y-2.5 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 font-bangla flex items-center gap-1.5">
+                      <Smartphone className="w-3.5 h-3.5 text-[#D12053]" />
+                      <span>bKash মার্চেন্ট পেমেন্ট নম্বর:</span>
+                    </span>
+                    <span className="text-[10px] bg-[#D12053]/10 text-[#D12053] font-bold px-2 py-0.5 rounded-md font-bangla">
+                      Payment
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <strong className="font-outfit text-sm font-extrabold text-slate-900 tracking-wider">
+
+                  {/* Merchant Number Display & Copy Button */}
+                  <div className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-2xs">
+                    <strong className="font-outfit text-base font-extrabold text-slate-900 tracking-wider">
                       {paymentNumber}
                     </strong>
                     <button
                       type="button"
                       onClick={handleCopyNumber}
-                      className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold font-outfit flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                      className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold font-outfit flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
                     >
-                      {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      <span>{copied ? "Copied" : "Copy"}</span>
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? "কপি হয়েছে" : "Copy"}</span>
                     </button>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px] text-slate-500 font-bangla">
-                  <span>bKash, Nagad বা Rocket দিয়ে <strong>৳{currentPlan.price}</strong> পরিশোধ করুন</span>
-                  
-                  {/* QR Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setShowQr(!showQr)}
-                    className="text-brand-blue hover:underline font-medium inline-flex items-center gap-0.5 cursor-pointer ml-1"
-                  >
-                    <QrCode className="w-3 h-3" />
-                    <span>{showQr ? "QR লুকান" : "QR দেখুন"}</span>
-                    {showQr ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </button>
+                  <p className="text-[11px] text-slate-500 font-bangla leading-relaxed">
+                    bKash অ্যাপ বা *247# ডায়াল করে <strong>Payment</strong> অপশনে <strong>৳{currentPlan.price}</strong> পরিশোধ করে TrxID নিচে দিন।
+                  </p>
                 </div>
+              )}
 
-                {/* Collapsible QR Preview */}
-                {showQr && (
-                  <div className="pt-2 text-center animate-in fade-in zoom-in-95 duration-150">
-                    <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-xs inline-block">
-                      <Image
-                        src="/bKash_Merchant.png"
-                        alt="Bangla QR Code"
-                        width={140}
-                        height={180}
-                        className="rounded-lg object-contain mx-auto"
-                      />
+              {/* SECTION 2: Bangla QR Dedicated Area (Large, High Visibility, Spaced & Crisp) */}
+              {paymentMethodTab === "bangla_qr" && (
+                <div className="bg-slate-50 border border-brand-blue/20 rounded-2xl p-4 mb-4 text-center space-y-3 animate-in fade-in duration-150">
+                  <div>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-brand-blue/10 text-brand-blue text-[10px] font-bold font-outfit mb-0.5">
+                      <QrCode className="w-3 h-3" />
+                      <span>Bangla QR Standard</span>
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-1 font-bangla">
-                      যেকোনো ব্যাংকিং বা MFS অ্যাপ থেকে স্ক্যান করুন
+                    <h4 className="text-xs font-bold text-slate-900 font-bangla">
+                      যেকোনো MFS বা ব্যাংক অ্যাপ থেকে স্ক্যান করুন
+                    </h4>
+                    <p className="text-[10px] text-slate-500 font-bangla mt-0.5">
+                      Nagad, Rocket, Upay, Cellfin, Citytouch ও সকল বাংলা কিউআর সমর্থিত অ্যাপ
                     </p>
                   </div>
-                )}
-              </div>
+
+                  {/* Large High-Quality QR Code Card with Generous Padding */}
+                  <div className="p-4 bg-white rounded-2xl border border-slate-200/90 shadow-md inline-block mx-auto">
+                    <div className="relative w-48 h-64 sm:w-52 sm:h-72 mx-auto">
+                      <Image
+                        src="/bKash_Merchant.png"
+                        alt="Bangla QR Code for Payment"
+                        fill
+                        priority
+                        sizes="(max-width: 640px) 200px, 220px"
+                        className="object-contain rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Amount Badge & Fallback Number */}
+                  <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-xs">
+                    <span className="text-[11px] text-slate-500 font-bangla">
+                      পরিশোধযোগ্য: <strong className="text-slate-900 font-outfit">৳{currentPlan.price}</strong>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-xs font-bold text-slate-700">{paymentNumber}</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyNumber}
+                        className="text-brand-blue hover:underline text-[11px] font-semibold cursor-pointer"
+                      >
+                        {copied ? "কপি হয়েছে" : "কপি"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Minimal Form */}
               <form onSubmit={handleManualSubmit} className="space-y-3">
@@ -362,12 +413,6 @@ export default function CheckoutModal({
                         className="h-full bg-gradient-to-r from-[#3157D5] via-[#5B55D8] to-[#8A4EDB] transition-all duration-300 ease-out rounded-full shadow-sm"
                         style={{ width: `${submissionProgress}%` }}
                       />
-                    </div>
-
-                    <div className="flex justify-between text-[10px] text-slate-400 font-bangla pt-0.5">
-                      <span>TrxID যাচাই</span>
-                      <span>ব্যাংক ব্যালেন্স চেক</span>
-                      <span>অর্ডার সক্রিয়করণ</span>
                     </div>
                   </div>
                 )}
