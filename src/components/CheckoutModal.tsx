@@ -85,7 +85,7 @@ export default function CheckoutModal({
           const map: Record<string, number> = {};
           data.plans.forEach((p: any) => {
             const key = p.planKey || p.plan_key;
-            if (key && p.price) {
+            if (key && p.price !== undefined) {
               map[key] = Number(p.price);
             }
           });

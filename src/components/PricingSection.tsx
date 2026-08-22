@@ -22,8 +22,9 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
         if (data?.plans && Array.isArray(data.plans)) {
           const map: Record<string, number> = {};
           data.plans.forEach((p: any) => {
-            if (p.plan_key && p.price) {
-              map[p.plan_key] = Number(p.price);
+            const key = p.planKey || p.plan_key;
+            if (key && p.price !== undefined) {
+              map[key] = Number(p.price);
             }
           });
           setLivePrices((prev) => ({ ...prev, ...map }));
