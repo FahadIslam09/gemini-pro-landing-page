@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Bengali, Outfit } from "next/font/google";
+import { Suspense } from "react";
+import MetaPixel from "@/components/MetaPixel";
 import "./globals.css";
 
 const notoSansBengali = Noto_Sans_Bengali({
@@ -63,6 +65,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-bangla antialiased selection:bg-brand-purple/20 selection:text-brand-purple">
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         {children}
       </body>
     </html>
