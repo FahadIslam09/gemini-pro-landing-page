@@ -71,20 +71,44 @@ export default function CheckoutModal({
     };
   }, [isOpen, isSubmitting, onClose]);
 
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({
+    "1m": 149,
+    "18m": 499,
+    "12m": 399,
+  });
+
+  useEffect(() => {
+    fetch("/api/public/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plans && Array.isArray(data.plans)) {
+          const map: Record<string, number> = {};
+          data.plans.forEach((p: any) => {
+            const key = p.planKey || p.plan_key;
+            if (key && p.price) {
+              map[key] = Number(p.price);
+            }
+          });
+          setLivePrices((prev) => ({ ...prev, ...map }));
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
   const planDetails: Record<string, { name: string; price: number; badge: string }> = {
     "1m": {
       name: "Google AI Pro (১ মাস)",
-      price: 149,
+      price: livePrices["1m"] || 149,
       badge: "ইনভাইটেশন",
     },
     "18m": {
       name: "Google AI Pro (১৮ মাস)",
-      price: 499,
+      price: livePrices["18m"] || 499,
       badge: "প্রাইভেট অ্যাকাউন্ট",
     },
     "12m": {
       name: "Google AI Pro (১২ মাস)",
-      price: 399,
+      price: livePrices["12m"] || 399,
       badge: "পাসওয়ার্ড প্রয়োজন",
     },
   };
@@ -218,9 +242,9 @@ export default function CheckoutModal({
               {/* Minimal Plan Selector Pills */}
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl mb-4 border border-slate-200/60">
                 {[
-                  { id: "1m", label: "১ মাস", price: "৳149" },
-                  { id: "18m", label: "১৮ মাস", price: "৳499", popular: true },
-                  { id: "12m", label: "১২ মাস", price: "৳399" },
+                  { id: "1m", label: "১ মাস", price: `৳${livePrices["1m"] || 149}` },
+                  { id: "18m", label: "১৮ মাস", price: `৳${livePrices["18m"] || 499}`, popular: true },
+                  { id: "12m", label: "১২ মাস", price: `৳${livePrices["12m"] || 399}` },
                 ].map((p) => {
                   const isSelected = selectedPlan === p.id;
                   return (
