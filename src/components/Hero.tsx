@@ -19,9 +19,10 @@ import {
 
 interface HeroProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function Hero({ onOpenCheckout }: HeroProps) {
+export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
   const [activePrompt, setActivePrompt] = useState("Generate Deep Research report on renewable energy...");
   const [promptResult, setPromptResult] = useState<string | null>(null);
 
@@ -49,7 +50,7 @@ export default function Hero({ onOpenCheckout }: HeroProps) {
               <span className="block">
                 Google <span className="gradient-text">AI Pro</span>
               </span>
-              <span className="block text-brand-dark">মাত্র ৳499!</span>
+              <span className="block text-brand-dark">মাত্র ৳{price18m}!</span>
             </h1>
 
             {/* Subtitle */}

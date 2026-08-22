@@ -5,9 +5,10 @@ import { ArrowRight, X } from "lucide-react";
 
 interface HeaderProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function Header({ onOpenCheckout }: HeaderProps) {
+export default function Header({ onOpenCheckout, price18m = 499 }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -32,13 +33,11 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
   }, [mobileMenuOpen]);
 
   const navLinks = [
-    { label: "সুবিধা", href: "#features" },
-    { label: "কেন AI Pro", href: "#deep-dive" },
-    { label: "ফিচার তুলনা", href: "#comparison" },
-    { label: "প্রাইসিং", href: "#pricing" },
-    { label: "পদ্ধতি", href: "#how-it-works" },
-    { label: "রিভিউ", href: "#testimonials" },
-    { label: "FAQ", href: "#faq" },
+    { label: "ফিচারসমূহ", href: "#features" },
+    { label: "তুলনামূলক সুবিধা", href: "#comparison" },
+    { label: "প্ল্যান ও প্যাকেজ", href: "#pricing" },
+    { label: "কাস্টমার রিভিউ", href: "#testimonials" },
+    { label: "প্রশ্নোত্তর", href: "#faq" },
   ];
 
   return (
@@ -50,7 +49,7 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
             সীমিত সময়ের অফার
           </span>
           <span>
-            18 মাসের Google AI Pro সাবস্ক্রিপশনে পাচ্ছেন <strong>৮৫% পর্যন্ত ছাড়</strong> — মাত্র ৳499!
+            18 মাসের Google AI Pro সাবস্ক্রিপশনে পাচ্ছেন <strong>৮৫% পর্যন্ত ছাড়</strong> — মাত্র ৳{price18m}!
           </span>
           <a
             href="#pricing"
@@ -205,7 +204,7 @@ export default function Header({ onOpenCheckout }: HeaderProps) {
               }}
               className="w-full inline-flex items-center justify-center gap-2 bg-brand-gradient text-white text-base font-semibold py-3 px-4 rounded-xl shadow-glow hover:shadow-lg transition-all cursor-pointer"
             >
-              <span>এখনই কিনুন — ৳499</span>
+              <span>এখনই কিনুন — ৳{price18m}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

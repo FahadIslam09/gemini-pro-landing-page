@@ -3,7 +3,11 @@
 import React from "react";
 import { ShoppingCart, CreditCard, ShieldCheck, ArrowRight } from "lucide-react";
 
-export default function HowItWorks() {
+interface HowItWorksProps {
+  price18m?: number;
+}
+
+export default function HowItWorks({ price18m = 499 }: HowItWorksProps) {
   const steps = [
     {
       num: "01",
@@ -15,7 +19,7 @@ export default function HowItWorks() {
     {
       num: "02",
       title: "পেমেন্ট করুন",
-      desc: "bKash, Nagad বা Rocket-এর মাধ্যমে মাত্র ৳499 সেন্ড মানি করুন।",
+      desc: `bKash, Nagad বা Rocket-এর মাধ্যমে মাত্র ৳${price18m} পেমেন্ট করুন।`,
       icon: <CreditCard className="w-6 h-6 text-brand-blue" />,
       bubbleBg: "bg-[#EBF2FE]",
     },

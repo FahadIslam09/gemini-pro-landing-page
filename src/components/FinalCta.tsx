@@ -5,9 +5,10 @@ import { ArrowRight, ShieldCheck, Zap, Headphones, Lock, Sparkles } from "lucide
 
 interface FinalCtaProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function FinalCta({ onOpenCheckout }: FinalCtaProps) {
+export default function FinalCta({ onOpenCheckout, price18m = 499 }: FinalCtaProps) {
   return (
     <section id="support" className="py-16 lg:py-24 bg-brand-surface">
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +42,7 @@ export default function FinalCta({ onOpenCheckout }: FinalCtaProps) {
               আপনার AI জার্নি আজ থেকেই <span className="gradient-text">শুরু করুন</span>
             </h2>
             <p className="text-base sm:text-lg font-semibold text-brand-dark mb-2">
-              18 মাসের Google AI Pro — <span className="text-brand-blue font-bold">মাত্র ৳499</span>
+              18 মাসের Google AI Pro — <span className="text-brand-blue font-bold">মাত্র ৳{price18m}</span>
             </p>
             <p className="text-sm text-brand-body leading-relaxed mb-6 max-w-md">
               কাজ, পড়াশোনা, সৃজনশীলতা ও প্রোডাক্টিভিটিতে নিন গুগলের সবচেয়ে শক্তিশালী AI-এর সহায়তা।
@@ -68,10 +69,10 @@ export default function FinalCta({ onOpenCheckout }: FinalCtaProps) {
           <div className="lg:col-span-3 flex flex-col items-center lg:items-end text-center lg:text-right gap-3 border-t lg:border-t-0 lg:border-l border-brand-border/80 pt-6 lg:pt-0 lg:pl-6">
             <div>
               <div className="font-outfit text-4xl sm:text-5xl font-extrabold text-brand-dark tracking-tight leading-none">
-                ৳499
+                ৳{price18m}
               </div>
               <div className="text-xs font-semibold text-brand-muted mt-1 font-outfit">
-                ≈ ৳28 / month only
+                ≈ ৳{Math.round(price18m / 18)} / month only
               </div>
             </div>
 

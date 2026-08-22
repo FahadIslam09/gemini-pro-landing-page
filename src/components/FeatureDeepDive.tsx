@@ -19,9 +19,10 @@ import {
 
 interface FeatureDeepDiveProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps) {
+export default function FeatureDeepDive({ onOpenCheckout, price18m = 499 }: FeatureDeepDiveProps) {
   const [activeTab, setActiveTab] = useState(0);
 
   const tabs = [
@@ -301,7 +302,7 @@ export default function FeatureDeepDive({ onOpenCheckout }: FeatureDeepDiveProps
               onClick={() => onOpenCheckout()}
               className="inline-flex items-center gap-2 bg-brand-gradient hover:bg-brand-gradient-hover text-white text-sm font-semibold px-6 py-3.5 rounded-xl shadow-glow hover:shadow-lg transition-all"
             >
-              <span>এই অফারে যোগ দিন (৳499)</span>
+              <span>এই অফারে যোগ দিন (৳{price18m})</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -22,6 +22,21 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState("18m");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [price18m, setPrice18m] = useState(499);
+
+  React.useEffect(() => {
+    fetch("/api/public/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plans && Array.isArray(data.plans)) {
+          const p18 = data.plans.find((p: any) => (p.planKey || p.plan_key) === "18m");
+          if (p18 && p18.price !== undefined) {
+            setPrice18m(Number(p18.price));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -38,10 +53,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-brand-surface text-brand-body relative">
       {/* Header */}
-      <Header onOpenCheckout={handleOpenCheckout} />
+      <Header onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Hero Section */}
-      <Hero onOpenCheckout={handleOpenCheckout} />
+      <Hero onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Why Google AI Pro Feature Grid (অল-ইন-ওয়ান অফিসিয়াল পাওয়ার হাউস) */}
       <WhyGemini />
@@ -53,7 +68,7 @@ export default function Home() {
       <CreativeGenerativeShowcase onOpenCheckout={handleOpenCheckout} />
 
       {/* Interactive Deep Dive with Tabs */}
-      <FeatureDeepDive onOpenCheckout={handleOpenCheckout} />
+      <FeatureDeepDive onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Comparison Table */}
       <ComparisonTable onOpenCheckout={handleOpenCheckout} />
@@ -62,22 +77,22 @@ export default function Home() {
       <PricingSection onOpenCheckout={handleOpenCheckout} />
 
       {/* How It Works */}
-      <HowItWorks />
+      <HowItWorks price18m={price18m} />
 
       {/* Testimonials / Social Proof */}
-      <Testimonials />
+      <Testimonials price18m={price18m} />
 
       {/* FAQ Section */}
       <FaqSection />
 
       {/* Final CTA Banner */}
-      <FinalCta onOpenCheckout={handleOpenCheckout} />
+      <FinalCta onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Footer */}
       <Footer />
 
       {/* Sticky Mobile Quick Checkout Bar */}
-      <StickyMobileBar onOpenCheckout={handleOpenCheckout} />
+      <StickyMobileBar onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Interactive Checkout Modal with Multi-Stage Loading */}
       <CheckoutModal

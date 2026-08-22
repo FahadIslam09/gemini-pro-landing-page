@@ -5,9 +5,10 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 interface StickyMobileBarProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function StickyMobileBar({ onOpenCheckout }: StickyMobileBarProps) {
+export default function StickyMobileBar({ onOpenCheckout, price18m = 499 }: StickyMobileBarProps) {
   return (
     <aside aria-label="Quick Checkout" className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-brand-border px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom duration-300">
       <div className="flex items-center justify-between gap-3">
@@ -16,7 +17,7 @@ export default function StickyMobileBar({ onOpenCheckout }: StickyMobileBarProps
             ১৮ মাসের অফার
           </span>
           <div className="flex items-baseline gap-1 font-outfit">
-            <span className="text-xl font-extrabold text-brand-blue">৳499</span>
+            <span className="text-xl font-extrabold text-brand-blue">৳{price18m}</span>
             <span className="text-[10px] font-bold text-brand-body">BDT</span>
           </div>
         </div>

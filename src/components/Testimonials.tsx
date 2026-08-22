@@ -3,14 +3,18 @@
 import React from "react";
 import { Star, ShieldCheck, Clock, Users, CheckCircle2 } from "lucide-react";
 
-export default function Testimonials() {
+interface TestimonialsProps {
+  price18m?: number;
+}
+
+export default function Testimonials({ price18m = 499 }: TestimonialsProps) {
   const reviews = [
     {
       name: "তানভীর আহমেদ",
       role: "সফটওয়্যার ইঞ্জিনিয়ার, ঢাকা",
       avatarBg: "bg-blue-100 text-brand-blue",
       content:
-        "Gemini 1.5 Pro কোডিং এবং বড় আর্কিটেকচার পর্যালোচনায় অসাধারণ কাজ করে। সাথে ২ টেরাবাইট ড্রাইভ স্টোরেজ পাওয়ার পর আমার সমস্ত প্রোজেক্ট ফাইল ব্যাকআপ নিরাপদ হয়েছে। মাত্র ৳499-এ এত সুবিধা অবিশ্বাস্য!",
+        `Gemini 1.5 Pro কোডিং এবং বড় আর্কিটেকচার পর্যালোচনায় অসাধারণ কাজ করে। সাথে ২ টেরাবাইট ড্রাইভ স্টোরেজ পাওয়ার পর আমার সমস্ত প্রোজেক্ট ফাইল ব্যাকআপ নিরাপদ হয়েছে। মাত্র ৳${price18m}-এ এত সুবিধা অবিশ্বাস্য!`,
       rating: 5,
     },
     {
