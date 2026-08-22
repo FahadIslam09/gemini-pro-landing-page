@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       customerName: fullName.trim(),
       orderNumber,
       planName,
-      messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে স্বয়ংক্রিয়ভাবে যাচাই করা হয়েছে। ধন্যবাদ!`,
+      messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে। সেই লিংকে ক্লিক করলেই একাউন্ট সক্রিয় হয়ে যাবে।`,
     }).catch((err) => console.error("Email send error:", err));
 
     // 9. Send Instant Telegram Bot Alert (awaited)

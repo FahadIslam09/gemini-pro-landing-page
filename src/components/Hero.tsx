@@ -90,7 +90,7 @@ export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
                 <div className="w-7 h-7 rounded-full bg-white border border-brand-border shadow-sm flex items-center justify-center text-brand-indigo">
                   <Zap className="w-4 h-4" />
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">৫-১৫ মি. অ্যাক্টিভেশন</span>
+                <span className="text-xs sm:text-sm font-medium text-brand-dark">ইমেইল অ্যাক্টিভেশন লিংক</span>
               </div>
 
               <div className="flex items-center gap-2.5">

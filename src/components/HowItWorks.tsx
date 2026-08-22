@@ -25,8 +25,8 @@ export default function HowItWorks({ price18m = 499 }: HowItWorksProps) {
     },
     {
       num: "03",
-      title: "অ্যাক্সেস পান",
-      desc: "পেমেন্ট যাচাইয়ের ৫-১৫ মিনিটের মধ্যেই আপনার গুগল একাউন্টে ফুল অ্যাক্সেস এক্টিভ হবে।",
+      title: "অ্যাক্টিভেশন লিংক পান",
+      desc: "পেমেন্ট যাচাইয়ের পর আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে। লিংকে ক্লিক করলেই একাউন্ট সক্রিয় হবে।",
       icon: <ShieldCheck className="w-6 h-6 text-brand-success" />,
       bubbleBg: "bg-[#EAF7EE]",
     },

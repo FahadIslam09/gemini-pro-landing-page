@@ -69,7 +69,7 @@ function SuccessContent() {
           পেমেন্ট সফলভাবে সম্পন্ন হয়েছে!
         </h1>
         <p className="text-xs sm:text-sm text-brand-muted mb-6 leading-relaxed">
-          আপনার bKash গেটওয়ে পেমেন্ট সফলভাবে ভেরিফাই করা হয়েছে। আপনার গুগল অ্যাকাউন্টে ৫-১৫ মিনিটের মধ্যে সাবস্ক্রিপশন চালু হবে।
+          আপনার পেমেন্ট সফলভাবে ভেরিফাই করা হয়েছে। আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে, লিংকে ক্লিক করলেই সাবস্ক্রিপশন সক্রিয় হবে।
         </p>
 
         {/* Transaction Summary Card */}
@@ -113,10 +113,10 @@ function SuccessContent() {
         <div className="bg-[#FAF5FF] border border-purple-200/80 rounded-2xl p-4 text-left mb-6">
           <div className="flex items-center gap-2 mb-1.5 text-brand-purple font-bold text-xs sm:text-sm">
             <ShieldCheck className="w-4 h-4" />
-            <span>অ্যাক্টিভেশন সম্পন্ন করতে যোগাযোগ করুন</span>
+            <span>অ্যাক্টিভেশন লিংক ও সাপোর্ট</span>
           </div>
           <p className="text-xs text-brand-body leading-relaxed">
-            আপনার TrxID কপি করে সরাসরি আমাদের অফিশিয়াল হোয়াটসঅ্যাপ বা টেলিগ্রাম সাপোর্টে মেসেজ দিন। আমাদের টিম দ্রুত আপনার জিমেইলে প্রিমিয়াম এক্সেস প্রদান করবে।
+            আপনার জিমেইল ইনবক্স চেক করে অ্যাক্টিভেশন লিংকে ক্লিক করুন অথবা যেকোনো প্রয়োজনে TrxID সহ হোয়াটসঅ্যাপ সাপোর্টে যোগাযোগ করুন।
           </p>
         </div>
 

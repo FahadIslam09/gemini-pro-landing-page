@@ -113,7 +113,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             আপনার পছন্দের <span className="gradient-text">প্ল্যান বেছে নিন</span>
           </h2>
           <p className="text-base sm:text-lg text-brand-muted leading-relaxed">
-            সকল প্ল্যানে Google AI Pro-এর পূর্ণ ফিচার অন্তর্ভুক্ত। bKash, Nagad বা Rocket দিয়ে ৫-১৫ মিনিটে সক্রিয় করুন।
+            সকল প্ল্যানে Google AI Pro-এর পূর্ণ ফিচার অন্তর্ভুক্ত। পেমেন্ট সম্পন্ন করে জিমেইল লিংকে সক্রিয় করুন।
           </p>
         </div>
 

@@ -378,6 +378,9 @@ export default function CheckoutModal({
                       className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs sm:text-sm text-slate-900 outline-none transition-all font-outfit"
                     />
                   </div>
+                  <p className="text-[10px] text-slate-500 mt-1 font-bangla">
+                    এই জিমেইল এড্রেসেই অ্যাক্টিভেশন লিংক পাঠানো হবে
+                  </p>
                 </div>
 
                 {/* TrxID Field */}
@@ -471,8 +474,8 @@ export default function CheckoutModal({
                 <h3 className="text-lg font-bold text-slate-900 font-bangla">
                   অর্ডার সফল হয়েছে!
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5 font-bangla max-w-xs mx-auto">
-                  আপনার জিমেইল ({email})-এ ৫-১৫ মিনিটের মধ্যে সাবস্ক্রিপশন সক্রিয় হয়ে যাবে।
+                <p className="text-xs text-slate-600 mt-1 font-bangla max-w-xs mx-auto leading-relaxed">
+                  আপনার জিমেইল (<span className="font-semibold text-slate-900 font-outfit">{email}</span>)-এ অ্যাক্টিভেশন লিংক পাঠানো হবে। ইমেইলের লিংকে ক্লিক করলেই সাথে সাথে Google AI Pro সক্রিয় হয়ে যাবে।
                 </p>
               </div>
 

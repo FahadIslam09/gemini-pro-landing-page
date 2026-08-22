@@ -217,7 +217,7 @@ export async function POST(req: NextRequest) {
           customerName: matchingOrder.customer_name,
           orderNumber: matchingOrder.order_number,
           planName: matchingOrder.plan_name,
-          messageText: `আপনার ${matchingOrder.plan_name} সাবস্ক্রিপশন সফলভাবে সক্রিয় করা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
+          messageText: `আপনার ${matchingOrder.plan_name} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে। সেই লিংকে ক্লিক করলেই একাউন্ট সক্রিয় হয়ে যাবে।`,
         }).catch((err) => console.error("Auto email delivery error:", err));
       }
     }
