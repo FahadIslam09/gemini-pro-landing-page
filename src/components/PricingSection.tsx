@@ -9,13 +9,35 @@ interface PricingSectionProps {
 
 export default function PricingSection({ onOpenCheckout }: PricingSectionProps) {
   const [selectedPlan, setSelectedPlan] = useState<"1m" | "12m" | "18m">("18m");
+  const [livePrices, setLivePrices] = useState<Record<string, number>>({
+    "1m": 149,
+    "18m": 499,
+    "12m": 399,
+  });
+
+  React.useEffect(() => {
+    fetch("/api/public/pricing")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.plans && Array.isArray(data.plans)) {
+          const map: Record<string, number> = {};
+          data.plans.forEach((p: any) => {
+            if (p.plan_key && p.price) {
+              map[p.plan_key] = Number(p.price);
+            }
+          });
+          setLivePrices((prev) => ({ ...prev, ...map }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const plans = [
     {
       id: "1m",
       name: "১ মাসের সাবস্ক্রিপশন",
-      price: 149,
-      monthlyBreakdown: "৳149 / মাস",
+      price: livePrices["1m"] || 149,
+      monthlyBreakdown: `৳${livePrices["1m"] || 149} / মাস`,
       badge: "ট্রায়াল প্যাক",
       badgeColor: "bg-gray-100 text-gray-700 border-gray-200",
       description: "স্বল্পমেয়াদী ট্রায়াল ও টেস্ট করার জন্য।",
@@ -35,8 +57,8 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
     {
       id: "18m",
       name: "১৮ মাসের মেগা অফার",
-      price: 499,
-      monthlyBreakdown: "≈ ৳28 / মাস মাত্র",
+      price: livePrices["18m"] || 499,
+      monthlyBreakdown: `≈ ৳${Math.round((livePrices["18m"] || 499) / 18)} / মাস মাত্র`,
       badge: "সেরা মূল্য • ৮৫% ছাড়",
       badgeColor: "bg-[#FEF6EA] text-[#B45309] border-[#FDE68A]",
       description: "সর্বোচ্চ সাশ্রয়ী অফিসিয়াল মেগা প্ল্যান।",
@@ -56,8 +78,8 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
     {
       id: "12m",
       name: "১২ মাসের সাবস্ক্রিপশন",
-      price: 399,
-      monthlyBreakdown: "≈ ৳33 / মাস",
+      price: livePrices["12m"] || 399,
+      monthlyBreakdown: `≈ ৳${Math.round((livePrices["12m"] || 399) / 12)} / মাস`,
       badge: "বার্ষিক প্ল্যান",
       badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
       description: "১ বছরের জন্য নির্ভরযোগ্য AI সমাধান।",

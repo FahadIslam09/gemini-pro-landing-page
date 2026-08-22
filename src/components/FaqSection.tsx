@@ -6,7 +6,7 @@ import { Plus, HelpCircle } from "lucide-react";
 export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const faqs = [
+  const defaultFaqs = [
     {
       q: "Google AI Pro কী এবং এতে কী কী রয়েছে?",
       a: "Google AI Pro হলো গুগলের সর্বোচ্চ ক্ষমতাসম্পন্ন AI প্ল্যাটফর্ম। এতে রয়েছে Gemini 3.1 Pro (1M টোকেন কনটেক্সট), Deep Research অটোনোমাস ব্রাউজিং, Gemini Spark ২৪/৭ পার্সোনাল এজেন্ট, Gmail/Docs/Sheets-এ AI ইন্টিগ্রেশন, 5 TB Google One ক্লাউড স্টোরেজ, Veo 3.1 ভিডিও জেনারেশন ও YouTube Premium।",
@@ -41,6 +41,24 @@ export default function FaqSection() {
     },
   ];
 
+  const [faqList, setFaqList] = useState(defaultFaqs);
+
+  React.useEffect(() => {
+    fetch("/api/public/faqs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.faqs && Array.isArray(data.faqs) && data.faqs.length > 0) {
+          setFaqList(
+            data.faqs.map((f: any) => ({
+              q: f.question,
+              a: f.answer,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
@@ -63,22 +81,22 @@ export default function FaqSection() {
           </p>
         </div>
 
-        {/* 2-Column Accordion Grid with Smooth Opening and Closing Transitions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {faqs.map((faq, idx) => {
-            const isOpen = openIndex === idx;
+        {/* FAQ Accordion List */}
+        <div className="space-y-4">
+          {faqList.map((faq, index) => {
+            const isOpen = openIndex === index;
             return (
               <div
-                key={idx}
-                className={`bg-white border rounded-2xl transition-all duration-300 overflow-hidden ${
+                key={index}
+                className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden ${
                   isOpen
-                    ? "border-brand-purple/40 shadow-sm bg-gradient-to-b from-white to-[#FBFBFE]"
-                    : "border-brand-border hover:border-brand-border/90"
+                    ? "border-brand-purple/40 shadow-sm"
+                    : "border-brand-border hover:border-brand-purple/20 shadow-2xs"
                 }`}
               >
                 <button
                   type="button"
-                  onClick={() => toggleFaq(idx)}
+                  onClick={() => toggleFaq(index)}
                   className="w-full text-left p-5 flex items-center justify-between gap-4 font-semibold text-base text-brand-dark hover:text-brand-blue transition-colors cursor-pointer"
                   aria-expanded={isOpen}
                 >
