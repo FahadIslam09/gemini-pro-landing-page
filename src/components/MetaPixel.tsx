@@ -1,28 +1,32 @@
 "use client";
 
-import React, { useEffect } from "react";
-import Script from "next/script";
+import React, { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+
+const DEFAULT_PIXEL_ID = "37766606856318381";
 
 export default function MetaPixel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || DEFAULT_PIXEL_ID;
+  const isFirstRender = useRef(true);
 
-  // Track PageView on route changes
+  // Track PageView on route change (skip initial load since base script tracks it)
   useEffect(() => {
-    if (pixelId && typeof window !== "undefined" && typeof window.fbq === "function") {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (typeof window !== "undefined" && typeof window.fbq === "function") {
       window.fbq("track", "PageView");
     }
-  }, [pathname, searchParams, pixelId]);
-
-  if (!pixelId) return null;
+  }, [pathname, searchParams]);
 
   return (
     <>
-      <Script
+      <script
         id="meta-pixel-script"
-        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s)
@@ -44,7 +48,7 @@ export default function MetaPixel() {
           width="1"
           style={{ display: "none" }}
           src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
-          alt=""
+          alt="Meta Pixel"
         />
       </noscript>
     </>
