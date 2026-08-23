@@ -8,7 +8,7 @@ interface StickyMobileBarProps {
   price18m?: number;
 }
 
-export default function StickyMobileBar({ onOpenCheckout, price18m = 499 }: StickyMobileBarProps) {
+export default function StickyMobileBar({ onOpenCheckout, price18m = 299 }: StickyMobileBarProps) {
   return (
     <aside aria-label="Quick Checkout" className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-brand-border px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom duration-300">
       <div className="flex items-center justify-between gap-3">

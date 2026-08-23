@@ -26,10 +26,10 @@ export default function AdminPricingPage() {
   const [newPlan, setNewPlan] = useState({
     planKey: "",
     name: "",
-    price: 499,
+    price: 299,
     originalPrice: 2499,
-    discountPercent: 80,
-    monthlyBreakdown: "৳499 / মাস",
+    discountPercent: 88,
+    monthlyBreakdown: "৳299 / মাস",
     badge: "নতুন প্ল্যান",
     badgeColor: "bg-blue-50 text-brand-blue border-blue-200",
     description: "বিশেষ প্যাকেজ",

@@ -7,7 +7,7 @@ interface HowItWorksProps {
   price18m?: number;
 }
 
-export default function HowItWorks({ price18m = 499 }: HowItWorksProps) {
+export default function HowItWorks({ price18m = 299 }: HowItWorksProps) {
   const steps = [
     {
       num: "01",

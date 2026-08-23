@@ -8,7 +8,7 @@ interface ComparisonTableProps {
   price18m?: number;
 }
 
-export default function ComparisonTable({ onOpenCheckout, price18m = 499 }: ComparisonTableProps) {
+export default function ComparisonTable({ onOpenCheckout, price18m = 299 }: ComparisonTableProps) {
   const rows = [
     {
       feature: "AI মডেল ও সক্ষমতা",

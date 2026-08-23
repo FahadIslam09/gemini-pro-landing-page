@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       .eq("plan_key", planKey)
       .maybeSingle();
 
-    const finalAmount = amount ? Number(amount) : (plan ? Number(plan.price) : 499);
+    const finalAmount = amount ? Number(amount) : (plan ? Number(plan.price) : 299);
     const planName = plan ? plan.name : `Google AI Pro (${planKey})`;
     const orderNumber = `#GAI-${Math.floor(10000 + Math.random() * 90000)}`;
 

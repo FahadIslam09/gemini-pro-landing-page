@@ -19,21 +19,21 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Google AI Pro — 18 Months Premium Subscription @ ৳499 BDT",
+  title: "Google AI Pro — 18 Months Premium Subscription @ ৳299 BDT",
   description:
-    "Google AI Pro 18 মাসের প্রিমিয়াম সাবস্ক্রিপশন মাত্র ৳499 টাকায়। Gemini Advanced (Gemini 1.5 Pro), 2 TB Google One Storage, Workspace AI ও YouTube Premium সুবিধা নিন নিরাপদে।",
+    "Google AI Pro 18 মাসের প্রিমিয়াম সাবস্ক্রিপশন মাত্র ৳299 টাকায়। Gemini 3.1 Pro, 5 TB Google One Storage, Workspace AI ও YouTube Premium সুবিধা নিন নিরাপদে।",
   keywords: [
     "Google AI Pro",
     "Gemini Advanced",
-    "Google One 2TB",
+    "Google One 5TB",
     "YouTube Premium",
     "AI Subscription Bangladesh",
-    "Gemini 1.5 Pro",
+    "Gemini 3.1 Pro",
     "bKash AI payment",
   ],
   authors: [{ name: "Google AI Pro Subscription Platform" }],
   openGraph: {
-    title: "Google AI Pro — 18 Months Subscription @ ৳499 BDT",
+    title: "Google AI Pro — 18 Months Subscription @ ৳299 BDT",
     description: "Gemini Advanced, 2 TB Storage, Workspace AI & YouTube Premium in Bangladesh.",
     type: "website",
     locale: "bn_BD",

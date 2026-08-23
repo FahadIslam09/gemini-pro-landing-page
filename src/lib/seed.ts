@@ -83,10 +83,10 @@ export async function seedDatabase() {
       {
         plan_key: "18m",
         name: "১৮ মাসের মেগা অফার",
-        price: 499,
+        price: 299,
         original_price: 2499,
-        discount_percent: 80,
-        monthly_breakdown: "৳২৭ / মাস",
+        discount_percent: 88,
+        monthly_breakdown: "৳১৭ / মাস",
         badge: "সর্বোচ্চ সাশ্রয়ী (Best Value)",
         badge_color: "purple",
         description: "দেড় বছরের জন্য আনলিমিটেড সুপারপাওয়ার। সবচেয়ে কম খরচে সেরা ভ্যালু!",

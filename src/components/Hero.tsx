@@ -22,7 +22,7 @@ interface HeroProps {
   price18m?: number;
 }
 
-export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
+export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
   const [activePrompt, setActivePrompt] = useState("Generate Deep Research report on renewable energy...");
   const [promptResult, setPromptResult] = useState<string | null>(null);
 

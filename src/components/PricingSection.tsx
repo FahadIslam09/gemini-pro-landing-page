@@ -11,7 +11,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
   const [selectedPlan, setSelectedPlan] = useState<"1m" | "12m" | "18m">("18m");
   const [livePrices, setLivePrices] = useState<Record<string, number>>({
     "1m": 149,
-    "18m": 499,
+    "18m": 299,
     "12m": 399,
   });
 
@@ -58,8 +58,8 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
     {
       id: "18m",
       name: "১৮ মাসের মেগা অফার",
-      price: livePrices["18m"] || 499,
-      monthlyBreakdown: `≈ ৳${Math.round((livePrices["18m"] || 499) / 18)} / মাস মাত্র`,
+      price: livePrices["18m"] || 299,
+      monthlyBreakdown: `≈ ৳${Math.round((livePrices["18m"] || 299) / 18)} / মাস মাত্র`,
       badge: "সেরা মূল্য • ৮৫% ছাড়",
       badgeColor: "bg-[#FEF6EA] text-[#B45309] border-[#FDE68A]",
       description: "সর্বোচ্চ সাশ্রয়ী অফিসিয়াল মেগা প্ল্যান।",
@@ -233,11 +233,11 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             <div className="flex items-baseline gap-1 font-outfit mb-1">
               <span className="text-2xl font-bold text-brand-blue">৳</span>
               <span className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">
-                {livePrices["18m"] || 499}
+                {livePrices["18m"] || 299}
               </span>
             </div>
             <span className="text-xs font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-0.5 rounded-full font-outfit">
-              ≈ ৳{Math.round((livePrices["18m"] || 499) / 18)}/মাস মাত্র (৮৫% ছাড়)
+              ≈ ৳{Math.round((livePrices["18m"] || 299) / 18)}/মাস মাত্র (৮৫% ছাড়)
             </span>
           </div>
 

@@ -8,7 +8,7 @@ interface FinalCtaProps {
   price18m?: number;
 }
 
-export default function FinalCta({ onOpenCheckout, price18m = 499 }: FinalCtaProps) {
+export default function FinalCta({ onOpenCheckout, price18m = 299 }: FinalCtaProps) {
   return (
     <section id="support" className="py-16 lg:py-24 bg-brand-surface">
       <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-8">

@@ -8,7 +8,7 @@ interface HeaderProps {
   price18m?: number;
 }
 
-export default function Header({ onOpenCheckout, price18m = 499 }: HeaderProps) {
+export default function Header({ onOpenCheckout, price18m = 299 }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

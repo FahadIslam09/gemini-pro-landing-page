@@ -7,7 +7,7 @@ interface TestimonialsProps {
   price18m?: number;
 }
 
-export default function Testimonials({ price18m = 499 }: TestimonialsProps) {
+export default function Testimonials({ price18m = 299 }: TestimonialsProps) {
   const reviews = [
     {
       name: "তানভীর আহমেদ",

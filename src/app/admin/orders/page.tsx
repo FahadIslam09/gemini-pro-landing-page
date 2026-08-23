@@ -45,7 +45,7 @@ export default function AdminOrdersPage() {
     targetEmail: "",
     customerPhone: "",
     planKey: "18m",
-    amount: 499,
+    amount: 299,
     paymentMethod: "bkash_manual",
     trxId: "",
     orderStatus: "processing",
@@ -187,7 +187,7 @@ export default function AdminOrdersPage() {
           targetEmail: "",
           customerPhone: "",
           planKey: "18m",
-          amount: 499,
+          amount: 299,
           paymentMethod: "bkash_manual",
           trxId: "",
           orderStatus: "processing",
@@ -601,12 +601,12 @@ export default function AdminOrdersPage() {
                       setNewOrder({
                         ...newOrder,
                         planKey: pk,
-                        amount: pk === "18m" ? 499 : pk === "12m" ? 399 : 149,
+                        amount: pk === "18m" ? 299 : pk === "12m" ? 399 : 149,
                       });
                     }}
                     className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 outline-none focus:border-brand-blue"
                   >
-                    <option value="18m">১৮ মাস - মেগা অফার (৳499)</option>
+                    <option value="18m">১৮ মাস - মেগা অফার (৳299)</option>
                     <option value="12m">১২ মাস - বার্ষিক প্ল্যান (৳399)</option>
                     <option value="1m">১ মাস - ট্রায়াল প্যাক (৳149)</option>
                   </select>

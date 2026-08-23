@@ -77,7 +77,7 @@ export default function CheckoutModal({
 
   const [livePrices, setLivePrices] = useState<Record<string, number>>({
     "1m": 149,
-    "18m": 499,
+    "18m": 299,
     "12m": 399,
   });
 
@@ -109,7 +109,7 @@ export default function CheckoutModal({
     },
     "18m": {
       name: "Google AI Pro (১৮ মাস)",
-      price: livePrices["18m"] || 499,
+      price: livePrices["18m"] || 299,
       badge: "প্রাইভেট অ্যাকাউন্ট",
     },
     "12m": {
@@ -315,7 +315,7 @@ export default function CheckoutModal({
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl mb-4 border border-slate-200/60">
                 {[
                   { id: "1m", label: "১ মাস", price: `৳${livePrices["1m"] || 149}` },
-                  { id: "18m", label: "১৮ মাস", price: `৳${livePrices["18m"] || 499}`, popular: true },
+                  { id: "18m", label: "১৮ মাস", price: `৳${livePrices["18m"] || 299}`, popular: true },
                   { id: "12m", label: "১২ মাস", price: `৳${livePrices["12m"] || 399}` },
                 ].map((p) => {
                   const isSelected = selectedPlan === p.id;

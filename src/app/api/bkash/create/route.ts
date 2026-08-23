@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 const PLAN_PRICES: Record<string, { name: string; price: number }> = {
   "1m": { name: "1 Month Trial Pack", price: 149 },
   "12m": { name: "12 Months Annual Plan", price: 399 },
-  "18m": { name: "18 Months Mega Offer", price: 499 },
+  "18m": { name: "18 Months Mega Offer", price: 299 },
 };
 
 export async function POST(req: NextRequest) {

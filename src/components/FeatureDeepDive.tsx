@@ -22,7 +22,7 @@ interface FeatureDeepDiveProps {
   price18m?: number;
 }
 
-export default function FeatureDeepDive({ onOpenCheckout, price18m = 499 }: FeatureDeepDiveProps) {
+export default function FeatureDeepDive({ onOpenCheckout, price18m = 299 }: FeatureDeepDiveProps) {
   const [activeTab, setActiveTab] = useState(0);
 
   const tabs = [

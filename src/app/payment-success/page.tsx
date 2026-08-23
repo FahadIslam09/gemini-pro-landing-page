@@ -13,7 +13,7 @@ function SuccessContent() {
 
   const trxID = searchParams.get("trxID") || "BKASH-LIVE-OK";
   const paymentID = searchParams.get("paymentID") || "";
-  const amount = searchParams.get("amount") || "499";
+  const amount = searchParams.get("amount") || "299";
   const invoice = searchParams.get("invoice") || "GAI-18M";
   const payer = searchParams.get("payer") || "";
 
@@ -32,7 +32,7 @@ function SuccessContent() {
       "Purchase",
       {
         currency: "BDT",
-        value: Number(amount) || 499,
+        value: Number(amount) || 299,
         content_name: "Google AI Pro Subscription",
         content_category: "AI Subscription",
         order_id: invoice,

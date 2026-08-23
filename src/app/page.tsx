@@ -22,7 +22,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState("18m");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [price18m, setPrice18m] = useState(499);
+  const [price18m, setPrice18m] = useState(299);
 
   React.useEffect(() => {
     fetch("/api/public/pricing")
