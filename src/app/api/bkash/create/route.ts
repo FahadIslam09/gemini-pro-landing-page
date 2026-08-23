@@ -11,7 +11,7 @@ const PLAN_PRICES: Record<string, { name: string; price: number }> = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { planId = "18m", fullName = "Customer", email = "customer@gmail.com", phone = "01700000000" } = body;
+    const { planId = "18m", fullName = "Customer", email = "customer@gmail.com", phone = "" } = body;
 
     // Check if dynamic plan exists in Supabase
     const { data: dbPlan } = await supabase
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     const paymentResponse = await createBKashPayment({
       amount,
       invoiceNumber,
-      payerReference: phone || "01700000000",
+      payerReference: phone && phone !== "01700000000" ? phone.trim() : "Customer",
       callbackURL,
     });
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       order_status: "pending_activation",
       target_email: email.trim().toLowerCase(),
       customer_name: fullName.trim(),
-      customer_phone: phone.trim(),
+      customer_phone: phone && phone !== "01700000000" ? phone.trim() : "",
       notes: `bKash PaymentID: ${paymentResponse.paymentID || ""}, Invoice: ${invoiceNumber}`,
       metadata: JSON.stringify({
         paymentID: paymentResponse.paymentID,

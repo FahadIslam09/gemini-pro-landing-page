@@ -5,9 +5,10 @@ import { Check, X, ArrowRight, Sparkles } from "lucide-react";
 
 interface ComparisonTableProps {
   onOpenCheckout: (plan?: string) => void;
+  price18m?: number;
 }
 
-export default function ComparisonTable({ onOpenCheckout }: ComparisonTableProps) {
+export default function ComparisonTable({ onOpenCheckout, price18m = 499 }: ComparisonTableProps) {
   const rows = [
     {
       feature: "AI মডেল ও সক্ষমতা",
@@ -84,7 +85,7 @@ export default function ComparisonTable({ onOpenCheckout }: ComparisonTableProps
     {
       feature: "১৮ মাসের অফার মূল্য",
       free: "৳০ (অত্যন্ত সীমিত)",
-      pro: "৳৪৯৯ মাত্র (৮৫% ছাড়)",
+      pro: `৳${price18m} মাত্র (৮৫% ছাড়)`,
       highlight: true,
     },
   ];
@@ -176,7 +177,7 @@ export default function ComparisonTable({ onOpenCheckout }: ComparisonTableProps
           <div className="bg-[#F8F9FD] p-6 border-t border-brand-border flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <span className="font-bold text-brand-dark text-base block">
-                ১৮ মাসের ফুল সাবস্ক্রিপশন মাত্র ৳৪৯৯
+                ১৮ মাসের ফুল সাবস্ক্রিপশন মাত্র ৳{price18m}
               </span>
               <span className="text-xs text-brand-muted">
                 ১০০% নিরাপদ ও নিজস্ব জিমেইলে এক্টিভেশন গ্যারান্টি

@@ -54,7 +54,7 @@ export default function FeatureDeepDive({ onOpenCheckout, price18m = 499 }: Feat
             </div>
             <p className="font-sans text-xs text-brand-body leading-relaxed">
               ১. <strong>লোকাল পেমেন্ট গ্রহণযোগ্যতা:</strong> bKash/Nagad পেমেন্ট ইন্টিগ্রেশন ছাড়া কনভার্সন ৬৫% ড্রপ করে।<br/>
-              ২. <strong>মার্কেট ভ্যালু প্রপোজিশন:</strong> ৳৪৯৯ মূল্যে ১৮ মাসের অফার এশিয়ায় সর্বোচ্চ ROI প্রদানকারী বান্ডল।<br/>
+              ২. <strong>মার্কেট ভ্যালু প্রপোজিশন:</strong> ৳{price18m} মূল্যে ১৮ মাসের অফার এশিয়ায় সর্বোচ্চ ROI প্রদানকারী বান্ডল।<br/>
               ৩. <strong>ক্লাউড কম্বিনেশন:</strong> 5TB গুগল ওয়ান স্টোরেজ টিমের ডেটা ম্যানেজমেন্ট খরচ প্রতিমাসে $২০+ সাশ্রয় করে।
             </p>
           </div>

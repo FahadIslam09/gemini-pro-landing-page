@@ -71,7 +71,7 @@ export default function Home() {
       <FeatureDeepDive onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Comparison Table */}
-      <ComparisonTable onOpenCheckout={handleOpenCheckout} />
+      <ComparisonTable onOpenCheckout={handleOpenCheckout} price18m={price18m} />
 
       {/* Pricing Section */}
       <PricingSection onOpenCheckout={handleOpenCheckout} />

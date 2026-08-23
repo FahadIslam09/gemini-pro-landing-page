@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
         payer_phone: customerPhone ? customerPhone.trim() : "Admin Entry",
         target_email: targetEmail.trim().toLowerCase(),
         customer_name: customerName.trim(),
-        customer_phone: customerPhone ? customerPhone.trim() : "01700000000",
+        customer_phone: customerPhone ? customerPhone.trim() : "N/A",
         buyer_id: buyerId,
         notes: notes ? String(notes) : "Created manually by admin",
       })

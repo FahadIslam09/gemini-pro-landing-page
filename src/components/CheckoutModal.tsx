@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { trackPixelEvent, generateEventId } from "@/lib/pixel-client";
@@ -44,7 +45,7 @@ export default function CheckoutModal({
   const [trxId, setTrxId] = useState("");
 
   // Loading & Submission States
-  const [isGatewayLoading, setIsGatewayLoading] = useState(false);
+  const [isAutoLoading, setIsAutoLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [progressStatusText, setProgressStatusText] = useState("");
@@ -58,7 +59,7 @@ export default function CheckoutModal({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen && !isSubmitting) {
+      if (e.key === "Escape" && isOpen && !isSubmitting && !isAutoLoading) {
         onClose();
       }
     };
@@ -72,7 +73,7 @@ export default function CheckoutModal({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, isSubmitting, onClose]);
+  }, [isOpen, isSubmitting, isAutoLoading, onClose]);
 
   const [livePrices, setLivePrices] = useState<Record<string, number>>({
     "1m": 149,
@@ -81,21 +82,23 @@ export default function CheckoutModal({
   });
 
   useEffect(() => {
-    fetch("/api/public/pricing")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.plans && Array.isArray(data.plans)) {
-          const map: Record<string, number> = {};
-          data.plans.forEach((p: any) => {
-            const key = p.planKey || p.plan_key;
-            if (key && p.price !== undefined) {
-              map[key] = Number(p.price);
-            }
-          });
-          setLivePrices((prev) => ({ ...prev, ...map }));
-        }
-      })
-      .catch(() => {});
+    if (isOpen) {
+      fetch("/api/public/pricing")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.plans && Array.isArray(data.plans)) {
+            const map: Record<string, number> = {};
+            data.plans.forEach((p: any) => {
+              const key = p.planKey || p.plan_key;
+              if (key && p.price !== undefined) {
+                map[key] = Number(p.price);
+              }
+            });
+            setLivePrices((prev) => ({ ...prev, ...map }));
+          }
+        })
+        .catch(() => {});
+    }
   }, [isOpen]);
 
   const planDetails: Record<string, { name: string; price: number; badge: string }> = {
@@ -139,14 +142,15 @@ export default function CheckoutModal({
     }
   }, [isOpen]);
 
-  // Handle Instant bKash Merchant Gateway Checkout
-  const handleBKashGatewayPayment = async () => {
+  // Primary Action: Handle bKash Automated Merchant Payment
+  const handleBKashAutoPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!email.trim() || !email.includes("@")) {
       onToast("অনুগ্রহ করে আপনার সঠিক জিমেইল এড্রেস দিন");
       return;
     }
 
-    setIsGatewayLoading(true);
+    setIsAutoLoading(true);
     try {
       const response = await fetch("/api/bkash/create", {
         method: "POST",
@@ -155,7 +159,7 @@ export default function CheckoutModal({
           planId: selectedPlan,
           email: email.trim().toLowerCase(),
           fullName: email.trim().split("@")[0] || "Customer",
-          phone: "01700000000",
+          phone: "",
         }),
       });
 
@@ -163,16 +167,16 @@ export default function CheckoutModal({
       if (response.ok && data.success && data.bkashURL) {
         window.location.href = data.bkashURL;
       } else {
-        setIsGatewayLoading(false);
-        onToast(data.message || "bKash গেটওয়ে সংযোগে সমস্যা। নিচে TrxID দিয়ে নিশ্চিত করুন।");
+        setIsAutoLoading(false);
+        onToast(data.message || "bKash গেটওয়ে সংযোগে সমস্যা। কিছুক্ষণ পর চেষ্টা করুন।");
       }
     } catch {
-      setIsGatewayLoading(false);
-      onToast("সার্ভার সমস্যা। নিচে TrxID দিয়ে চেষ্টা করুন।");
+      setIsAutoLoading(false);
+      onToast("সার্ভার সমস্যা। কিছুক্ষণ পর চেষ্টা করুন।");
     }
   };
 
-  // Handle Manual Payment Submission
+  // Secondary Fallback: Handle Manual TrxID Confirmation if paid via QR
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !trxId.trim()) {
@@ -200,7 +204,7 @@ export default function CheckoutModal({
           email: email.trim(),
           phone: "N/A",
           planId: selectedPlan,
-          paymentMethod: "bkash_manual",
+          paymentMethod: "bkash_merchant_qr",
           trxId: trxId.trim().toUpperCase(),
           eventId: purchaseEventId,
         }),
@@ -260,6 +264,7 @@ export default function CheckoutModal({
   const resetAndClose = () => {
     setIsCompleted(false);
     setIsSubmitting(false);
+    setIsAutoLoading(false);
     setSubmissionProgress(0);
     setEmail("");
     setTrxId("");
@@ -274,14 +279,14 @@ export default function CheckoutModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-brand-dark/50 backdrop-blur-xs transition-opacity"
-        onClick={() => !isSubmitting && resetAndClose()}
+        onClick={() => !isSubmitting && !isAutoLoading && resetAndClose()}
       />
 
       {/* Modal Shell */}
       <div className="relative z-10 w-full max-w-[440px] max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden animate-in zoom-in-95 duration-150 my-auto">
         
         {/* Close Button */}
-        {!isSubmitting && (
+        {!isSubmitting && !isAutoLoading && (
           <button
             type="button"
             onClick={resetAndClose}
@@ -306,7 +311,7 @@ export default function CheckoutModal({
                 </h3>
               </div>
 
-              {/* Minimal Plan Selector Pills */}
+              {/* Plan Selector Pills */}
               <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl mb-4 border border-slate-200/60">
                 {[
                   { id: "1m", label: "১ মাস", price: `৳${livePrices["1m"] || 149}` },
@@ -318,8 +323,8 @@ export default function CheckoutModal({
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => !isSubmitting && setSelectedPlan(p.id)}
-                      disabled={isSubmitting}
+                      onClick={() => !isSubmitting && !isAutoLoading && setSelectedPlan(p.id)}
+                      disabled={isSubmitting || isAutoLoading}
                       className={`relative py-1.5 px-2 rounded-xl text-center transition-all cursor-pointer ${
                         isSelected
                           ? "bg-white text-slate-900 shadow-xs font-bold border border-slate-200/80"
@@ -335,67 +340,8 @@ export default function CheckoutModal({
                 })}
               </div>
 
-              {/* Clean Payment Box (Previous Design with Native QR Dimensions) */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 mb-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#D12053]" />
-                    <span className="text-xs font-bold text-slate-800 font-bangla">
-                      bKash / Bangla QR পেমেন্ট:
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <strong className="font-outfit text-sm font-extrabold text-slate-900 tracking-wider">
-                      {paymentNumber}
-                    </strong>
-                    <button
-                      type="button"
-                      onClick={handleCopyNumber}
-                      className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold font-outfit flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                    >
-                      {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      <span>{copied ? "Copied" : "Copy"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px] text-slate-500 font-bangla">
-                  <span>bKash, Nagad বা Rocket দিয়ে <strong>৳{currentPlan.price}</strong> পরিশোধ করুন</span>
-                  
-                  {/* QR Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setShowQr(!showQr)}
-                    className="text-brand-blue hover:underline font-medium inline-flex items-center gap-0.5 cursor-pointer ml-1"
-                  >
-                    <QrCode className="w-3 h-3" />
-                    <span>{showQr ? "QR লুকান" : "QR দেখুন"}</span>
-                    {showQr ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </button>
-                </div>
-
-                {/* Collapsible QR Preview (Native 612x780 Dimensions Unaltered) */}
-                {showQr && (
-                  <div className="pt-2 text-center animate-in fade-in zoom-in-95 duration-150">
-                    <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-xs inline-block">
-                      <Image
-                        src="/bKash_Merchant.png"
-                        alt="Bangla QR Code"
-                        width={612}
-                        height={780}
-                        priority
-                        className="w-full max-w-[240px] h-auto object-contain mx-auto rounded-xl"
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-1.5 font-bangla">
-                      Nagad, Rocket বা যেকোনো ব্যাংকিং অ্যাপ থেকে স্ক্যান করুন
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Minimal Form */}
-              <form onSubmit={handleManualSubmit} className="space-y-3">
+              {/* Main Automated bKash Checkout Form */}
+              <form onSubmit={handleBKashAutoPayment} className="space-y-3.5">
                 {/* Email Field */}
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1 font-bangla">
@@ -409,7 +355,7 @@ export default function CheckoutModal({
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="yourname@gmail.com"
                       required
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isAutoLoading}
                       className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs sm:text-sm text-slate-900 outline-none transition-all font-outfit"
                     />
                   </div>
@@ -418,95 +364,134 @@ export default function CheckoutModal({
                   </p>
                 </div>
 
-                {/* Direct bKash Gateway Button */}
-                <button
-                  type="button"
-                  onClick={handleBKashGatewayPayment}
-                  disabled={isGatewayLoading || isSubmitting}
-                  className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#D12053] hover:bg-[#b81846] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isGatewayLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="font-bangla">bKash গেটওয়ে লোড হচ্ছে...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="font-bangla">bKash দিয়ে সরাসরি পেমেন্ট করুন</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-
-                {/* Subtle Divider */}
-                <div className="relative flex py-0.5 items-center">
-                  <div className="flex-grow border-t border-slate-200"></div>
-                  <span className="flex-shrink mx-2 text-[10px] text-slate-400 font-bangla font-medium">অথবা TrxID দিয়ে ভেরিফাই করুন</span>
-                  <div className="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                {/* TrxID Field */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 font-bangla">
-                    পেমেন্ট TrxID (Transaction ID)
-                  </label>
-                  <div className="relative">
-                    <Receipt className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={trxId}
-                      onChange={(e) => setTrxId(e.target.value.toUpperCase())}
-                      placeholder="যেমন: 9J87AKL0P1"
-                      required
-                      disabled={isSubmitting}
-                      className="w-full h-10 pl-9 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs sm:text-sm font-mono text-slate-900 uppercase tracking-wider outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Verification Progress Bar Display */}
-                {isSubmitting && (
-                  <div className="bg-slate-50 border border-brand-blue/20 rounded-2xl p-3 space-y-2 animate-in fade-in duration-150">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-slate-800 font-bangla flex items-center gap-1.5">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-blue" />
-                        <span>{progressStatusText}</span>
-                      </span>
-                      <span className="font-outfit font-extrabold text-brand-blue text-xs">
-                        {submissionProgress}%
-                      </span>
-                    </div>
-
-                    {/* Progress Track */}
-                    <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-[#3157D5] via-[#5B55D8] to-[#8A4EDB] transition-all duration-300 ease-out rounded-full shadow-sm"
-                        style={{ width: `${submissionProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Submit Button */}
+                {/* Primary Automated bKash Button */}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-11 mt-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#3157D5] via-[#5B55D8] to-[#8A4EDB] hover:opacity-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
+                  disabled={isAutoLoading || isSubmitting}
+                  className="w-full h-12 inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#D12053] via-[#E2136E] to-[#C70A5E] hover:from-[#c21849] hover:via-[#d00f63] hover:to-[#b30752] text-white text-sm font-bold rounded-2xl shadow-[0_8px_20px_rgba(226,19,110,0.30)] hover:shadow-[0_10px_28px_rgba(226,19,110,0.42)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer group"
                 >
-                  {isSubmitting ? (
+                  {isAutoLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="font-bangla">যাচাই করা হচ্ছে...</span>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span className="font-bangla">bKash পেমেন্ট লোড হচ্ছে...</span>
                     </>
                   ) : (
                     <>
-                      <span className="font-bangla">৳{currentPlan.price} দিয়ে নিশ্চিত করুন</span>
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <div className="w-6 h-6 rounded-md bg-white/20 p-0.5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <img
+                          src="/BKash-Icon2-Logo.wine.svg"
+                          alt="bKash"
+                          className="w-full h-full object-contain drop-shadow-xs"
+                        />
+                      </div>
+                      <span className="font-bangla">bKash দিয়ে পেমেন্ট করুন — ৳{currentPlan.price}</span>
+                      <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
                     </>
                   )}
                 </button>
+              </form>
 
-                {/* WhatsApp Support Button */}
+              {/* Bangla QR & Merchant Scanner Card (Collapsible) */}
+              <div className="mt-4 pt-3 border-t border-slate-200/80">
+                <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3 space-y-2 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-700 font-bangla flex items-center gap-1.5">
+                      <QrCode className="w-3.5 h-3.5 text-brand-blue" />
+                      <span>Bangla QR / মার্চেন্ট পেমেন্ট:</span>
+                    </span>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setShowQr(!showQr)}
+                      className="text-brand-blue hover:underline font-bold inline-flex items-center gap-0.5 cursor-pointer text-[10px] font-bangla"
+                    >
+                      <span>{showQr ? "QR লুকান" : "QR দেখুন"}</span>
+                      {showQr ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="font-outfit text-xs font-extrabold text-slate-800 tracking-wider">
+                      {paymentNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyNumber}
+                      className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] font-bold font-outfit flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-slate-500" />}
+                      <span>{copied ? "Copied" : "Copy"}</span>
+                    </button>
+                  </div>
+
+                  {/* QR Preview & Direct TrxID Verification */}
+                  {showQr && (
+                    <div className="pt-2 text-center animate-in fade-in zoom-in-95 duration-150 space-y-3">
+                      <div className="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-xs inline-block">
+                        <Image
+                          src="/bKash_Merchant.png"
+                          alt="Bangla QR Code for bKash Payment"
+                          width={612}
+                          height={780}
+                          priority
+                          className="w-full max-w-[210px] h-auto object-contain mx-auto rounded-xl"
+                        />
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-bangla">
+                        Nagad, Rocket বা যেকোনো ব্যাংকিং অ্যাপ থেকে স্ক্যান করুন
+                      </p>
+
+                      {/* Direct TrxID Verification Form for QR / Manual Payers */}
+                      <form onSubmit={handleManualSubmit} className="pt-2.5 border-t border-slate-200/80 text-left space-y-2">
+                        <label className="block text-[11px] font-bold text-slate-700 font-bangla">
+                          পেমেন্ট TrxID (Transaction ID)
+                        </label>
+                        <div className="relative">
+                          <Receipt className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={trxId}
+                            onChange={(e) => setTrxId(e.target.value.toUpperCase())}
+                            placeholder="যেমন: 9J87AKL0P1"
+                            required
+                            disabled={isSubmitting}
+                            className="w-full h-9 pl-8 pr-3 bg-white border border-slate-200 focus:border-brand-blue focus:ring-1 focus:ring-brand-blue/30 rounded-xl text-xs font-mono uppercase tracking-wider text-slate-900 outline-none"
+                          />
+                        </div>
+
+                        {/* Verification Progress */}
+                        {isSubmitting && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-brand-blue font-bangla">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span>{progressStatusText} ({submissionProgress}%)</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full h-9 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer font-bangla flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>যাচাই হচ্ছে...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>TrxID দিয়ে নিশ্চিত করুন</span>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            </>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* WhatsApp Support Button */}
+              <div className="mt-3 space-y-2">
                 <a
                   href={`https://wa.me/8801516556465?text=${encodeURIComponent(
                     `হ্যালো, আমি Google AI Pro (${currentPlan.name}) নিতে আগ্রহী। পেমেন্ট বা অর্ডার সংক্রান্ত সহায়তা প্রয়োজন।`
@@ -521,9 +506,9 @@ export default function CheckoutModal({
 
                 <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 text-center font-bangla pt-0.5">
                   <Lock className="w-2.5 h-2.5" />
-                  <span>২৫৬-বিট এনক্রিপশনে শতভাগ সুরক্ষিত</span>
+                  <span>২৫৬-বিট এনক্রিপশনে শতভাগ সুরক্ষিত ও অফিসিয়াল পেমেন্ট</span>
                 </div>
-              </form>
+              </div>
             </>
           ) : (
             /* Clean Minimal Success Screen */

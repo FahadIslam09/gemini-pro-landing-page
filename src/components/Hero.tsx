@@ -39,13 +39,13 @@ export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
           {/* Left Column (Content & CTAs) */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             {/* Top Badge */}
-            <div className="inline-flex items-center gap-2 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-4 py-2 text-sm font-semibold text-[#C25E00] shadow-[0_2px_8px_rgba(245,158,11,0.08)] mb-6 animate-pulse-glow">
-              <Sparkles className="w-4 h-4 text-brand-accent fill-brand-accent/20" />
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-[#C25E00] shadow-[0_2px_8px_rgba(245,158,11,0.08)] mb-5 sm:mb-6 animate-pulse-glow">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-accent fill-brand-accent/20" />
               <span>১৮ মাসের অফিসিয়াল মেগা অফার • ৮৫% ছাড়</span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.15] tracking-tight mb-5">
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-bold text-brand-dark leading-[1.18] tracking-tight mb-4 sm:mb-5">
               <span className="block">
                 18 মাসের Google <span className="gradient-text">AI Pro</span>
               </span>
@@ -78,33 +78,33 @@ export default function Hero({ onOpenCheckout, price18m = 499 }: HeroProps) {
             </div>
 
             {/* Trust Row */}
-            <div className="w-full pt-6 border-t border-brand-border grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-white border border-brand-border shadow-sm flex items-center justify-center text-brand-blue">
-                  <ShieldCheck className="w-4 h-4" />
+            <div className="w-full pt-5 sm:pt-6 border-t border-brand-border grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-brand-border shadow-2xs flex items-center justify-center text-brand-blue flex-shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">১০০% ভেরিফাইড</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-brand-dark leading-tight">১০০% ভেরিফাইড</span>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-white border border-brand-border shadow-sm flex items-center justify-center text-brand-indigo">
-                  <Zap className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-brand-border shadow-2xs flex items-center justify-center text-brand-indigo flex-shrink-0">
+                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">ইমেইল অ্যাক্টিভেশন লিংক</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-brand-dark leading-tight">ইমেইল অ্যাক্টিভেশন</span>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-white border border-brand-border shadow-sm flex items-center justify-center text-brand-purple">
-                  <Headphones className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-brand-border shadow-2xs flex items-center justify-center text-brand-purple flex-shrink-0">
+                  <Headphones className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">২৪/৭ লাইভ সাপোর্ট</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-brand-dark leading-tight">২৪/৭ লাইভ সাপোর্ট</span>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-white border border-brand-border shadow-sm flex items-center justify-center text-brand-success">
-                  <CheckCircle2 className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-brand-border shadow-2xs flex items-center justify-center text-brand-success flex-shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-brand-dark">নিজস্ব জিমেইল একাউন্টে</span>
+                <span className="text-[11px] sm:text-xs font-semibold text-brand-dark leading-tight">প্রাইভেট একাউন্টে</span>
               </div>
             </div>
           </div>

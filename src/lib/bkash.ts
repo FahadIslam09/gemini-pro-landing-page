@@ -46,7 +46,7 @@ export async function createBKashPayment({
       secret: BKASH_BRIDGE_SECRET,
       amount,
       invoiceNumber,
-      payerReference: payerReference || "01700000000",
+      payerReference: payerReference || "Customer",
       callbackURL,
     }),
     cache: "no-store",

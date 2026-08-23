@@ -233,11 +233,11 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             <div className="flex items-baseline gap-1 font-outfit mb-1">
               <span className="text-2xl font-bold text-brand-blue">৳</span>
               <span className="text-4xl sm:text-5xl font-extrabold gradient-text tracking-tight">
-                499
+                {livePrices["18m"] || 499}
               </span>
             </div>
             <span className="text-xs font-semibold text-brand-blue bg-brand-blue/10 px-2.5 py-0.5 rounded-full font-outfit">
-              ≈ ৳28/মাস মাত্র (৮৫% ছাড়)
+              ≈ ৳{Math.round((livePrices["18m"] || 499) / 18)}/মাস মাত্র (৮৫% ছাড়)
             </span>
           </div>
 

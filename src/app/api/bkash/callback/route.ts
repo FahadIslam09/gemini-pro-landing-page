@@ -88,6 +88,8 @@ export async function GET(req: NextRequest) {
         );
       }
 
+      const realCustomerPhone = payer || (existingOrder.customer_phone && existingOrder.customer_phone !== "01700000000" ? existingOrder.customer_phone : "N/A");
+
       // 6. Upsert Buyer CRM Record in Supabase
       const { data: existingBuyer } = await supabase
         .from("buyers")
@@ -102,7 +104,7 @@ export async function GET(req: NextRequest) {
           .from("buyers")
           .update({
             name: existingOrder.customer_name,
-            phone: existingOrder.customer_phone || payer,
+            phone: realCustomerPhone,
             total_orders: (existingBuyer.total_orders || 1) + 1,
             total_spent: Number(existingBuyer.total_spent || 0) + (paidAmount || expectedAmount),
             current_plan: existingOrder.plan_name,
@@ -115,7 +117,7 @@ export async function GET(req: NextRequest) {
           .insert({
             name: existingOrder.customer_name,
             email: existingOrder.target_email.trim().toLowerCase(),
-            phone: existingOrder.customer_phone || payer,
+            phone: realCustomerPhone,
             total_orders: 1,
             total_spent: paidAmount || expectedAmount,
             current_plan: existingOrder.plan_name,
@@ -132,11 +134,12 @@ export async function GET(req: NextRequest) {
         .update({
           trx_id: trxID,
           payer_phone: payer,
+          customer_phone: realCustomerPhone,
           payment_status: "paid",
           order_status: "active",
           amount: paidAmount || expectedAmount,
           buyer_id: buyerId,
-          notes: `Official bKash Gateway Payment Completed. TrxID: ${trxID}, PaymentID: ${paymentID}`,
+          notes: `Official bKash Gateway Payment Completed. TrxID: ${trxID}, PaymentID: ${paymentID}, Payer: ${payer}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingOrder.id);
@@ -155,7 +158,7 @@ export async function GET(req: NextRequest) {
         orderNumber: existingOrder.order_number,
         customerName: existingOrder.customer_name,
         customerEmail: existingOrder.target_email,
-        customerPhone: existingOrder.customer_phone || payer,
+        customerPhone: realCustomerPhone,
         planName: existingOrder.plan_name,
         amount: paidAmount || expectedAmount,
         paymentMethod: "bKash (অফিসিয়াল গেটওয়ে)",
@@ -172,7 +175,7 @@ export async function GET(req: NextRequest) {
         eventId: `pur_bkash_${trxID}`,
         userData: {
           email: existingOrder.target_email,
-          phone: existingOrder.customer_phone || payer,
+          phone: realCustomerPhone,
           firstName: existingOrder.customer_name.split(" ")[0],
           clientIpAddress: clientIp,
           clientUserAgent: clientUserAgent,
