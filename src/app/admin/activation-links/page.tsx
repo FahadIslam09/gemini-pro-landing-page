@@ -55,6 +55,38 @@ interface Stats {
   used: number;
 }
 
+const ACTIVATION_LINKS_SQL = `-- Run this in Supabase SQL Editor:
+CREATE TABLE IF NOT EXISTS public.activation_links (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    link TEXT NOT NULL UNIQUE,
+    plan_key TEXT NOT NULL DEFAULT '18m',
+    status TEXT NOT NULL DEFAULT 'available',
+    order_id UUID,
+    order_number TEXT,
+    customer_name TEXT,
+    customer_email TEXT,
+    customer_phone TEXT,
+    assigned_at TIMESTAMPTZ,
+    sent_at TIMESTAMPTZ,
+    email_status TEXT,
+    email_error TEXT,
+    batch_label TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activation_links_status ON public.activation_links(status, plan_key);
+CREATE INDEX IF NOT EXISTS idx_activation_links_order_number ON public.activation_links(order_number);
+CREATE INDEX IF NOT EXISTS idx_activation_links_customer_email ON public.activation_links(customer_email);
+
+ALTER TABLE public.activation_links ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all operations for anon" ON public.activation_links
+    FOR ALL
+    USING (true)
+    WITH CHECK (true);`;
+
 export default function AdminActivationLinksPage() {
   // Vault Auth State
   const [isUnlocked, setIsUnlocked] = useState<boolean | null>(null);
@@ -65,6 +97,7 @@ export default function AdminActivationLinksPage() {
 
   // Management State
   const [links, setLinks] = useState<ActivationLink[]>([]);
+  const [tableNotCreated, setTableNotCreated] = useState(false);
   const [stats, setStats] = useState<Stats>({
     total: 0,
     available: 0,
@@ -174,6 +207,12 @@ export default function AdminActivationLinksPage() {
         return;
       }
       const data = await res.json();
+      if (data.tableNotCreated) {
+        setTableNotCreated(true);
+      } else {
+        setTableNotCreated(false);
+      }
+
       if (data.success) {
         setLinks(data.links || []);
         if (data.stats) setStats(data.stats);
@@ -515,6 +554,61 @@ export default function AdminActivationLinksPage() {
         </div>
       </div>
 
+      {/* Missing Database Table Setup Alert */}
+      {tableNotCreated && (
+        <div className="bg-amber-50/90 border-2 border-amber-300/80 rounded-2xl p-5 sm:p-6 shadow-sm animate-in fade-in">
+          <div className="flex flex-col sm:flex-row items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 font-bangla mb-1">
+                Supabase ডাটাবেজে &apos;activation_links&apos; টেবিল তৈরি করা বাকি রয়েছে
+              </h3>
+              <p className="text-xs text-slate-600 mb-3 leading-relaxed font-bangla">
+                অ্যাক্টিভেশন লিংক ইনভেন্টরি ও স্বয়ংক্রিয় ইমেইল ডেলিভারি সক্রিয় করতে Supabase ড্যাশবোর্ডের{" "}
+                <strong>SQL Editor</strong>-এ নিচের কোডটি পেস্ট করে <strong>Run</strong> বাটনে চাপুন:
+              </p>
+
+              <div className="relative bg-slate-900 text-emerald-400 p-3.5 rounded-xl font-mono text-xs overflow-x-auto max-h-40 mb-3 border border-slate-800">
+                <pre>{ACTIVATION_LINKS_SQL}</pre>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(ACTIVATION_LINKS_SQL);
+                    showToast("SQL কোড কপি হয়েছে! Supabase-এ পেস্ট করে রান করুন।", "success");
+                  }}
+                  className="absolute top-2.5 right-2.5 px-3 py-1.5 bg-brand-indigo hover:bg-brand-indigo/90 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>SQL কপি করুন</span>
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href="https://supabase.com/dashboard/project/ljedvghtylsyscwimbse/sql/new"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+                >
+                  <span>Supabase SQL Editor খুলুন</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                <button
+                  type="button"
+                  onClick={fetchLinks}
+                  className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  টেবিল তৈরি সম্পন্ন হলে রিফ্রেশ করুন ↻
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 4 Stat Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Available Links */}
@@ -854,8 +948,8 @@ export default function AdminActivationLinksPage() {
       {/* MODAL 1: ADD SINGLE LINK */}
       {/* ---------------------------------------------------- */}
       {isSingleModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-lg w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center">
@@ -932,8 +1026,8 @@ export default function AdminActivationLinksPage() {
       {/* MODAL 2: BULK ADD LINKS */}
       {/* ---------------------------------------------------- */}
       {isBulkModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-brand-gradient text-white flex items-center justify-center">

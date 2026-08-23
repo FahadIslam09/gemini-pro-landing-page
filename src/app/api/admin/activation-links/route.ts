@@ -19,9 +19,22 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search")?.trim().toLowerCase() || "";
 
     // 1. Fetch Stats Aggregation
-    const { data: allLinksSummary } = await supabase
+    const { data: allLinksSummary, error: summaryError } = await supabase
       .from("activation_links")
       .select("status");
+
+    if (summaryError) {
+      if (summaryError.message?.includes("schema cache") || summaryError.message?.includes("does not exist")) {
+        return NextResponse.json({
+          success: true,
+          tableNotCreated: true,
+          stats: { total: 0, available: 0, assigned: 0, sent: 0, used: 0 },
+          links: [],
+          message: "Database table 'activation_links' needs to be created in Supabase.",
+        });
+      }
+      throw summaryError;
+    }
 
     const stats = {
       total: allLinksSummary?.length || 0,
@@ -61,7 +74,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Fetch activation links error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    const msg = error.message?.includes("schema cache")
+      ? "⚠️ Database table 'activation_links' needs to be created in Supabase."
+      : error.message;
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
 
@@ -91,27 +107,44 @@ export async function POST(req: NextRequest) {
       rawLinksList = [link];
     }
 
-    // Clean, trim, and filter valid links
+    // Clean, trim, and normalize valid links (auto-prepend https:// if missing)
     const cleanedLinks = Array.from(
       new Set(
         rawLinksList
           .map((l) => l.trim())
-          .filter((l) => l.length > 5 && (l.startsWith("http://") || l.startsWith("https://") || l.includes("google.com")))
+          .filter((l) => l.length > 3)
+          .map((l) => {
+            if (l.startsWith("http://") || l.startsWith("https://")) return l;
+            return `https://${l}`;
+          })
       )
     );
 
     if (cleanedLinks.length === 0) {
       return NextResponse.json(
-        { success: false, message: "কোনো সঠিক অ্যাক্টিভেশন লিংক পাওয়া যায়নি। লিংকটি http:// বা https:// দিয়ে শুরু হতে হবে।" },
+        { success: false, message: "কোনো সঠিক অ্যাক্টিভেশন লিংক পাওয়া যায়নি।" },
         { status: 400 }
       );
     }
 
     // Fetch existing links in database to avoid duplicates
-    const { data: existingRecords } = await supabase
+    const { data: existingRecords, error: fetchErr } = await supabase
       .from("activation_links")
       .select("link")
       .in("link", cleanedLinks);
+
+    if (fetchErr) {
+      if (fetchErr.message?.includes("schema cache") || fetchErr.message?.includes("does not exist")) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "⚠️ Supabase ডাটাবেজে 'activation_links' টেবিলটি এখনও তৈরি করা হয়নি। অনুগ্রহ করে Supabase SQL Editor-এ স্ক্রিপ্ট রান করুন।",
+          },
+          { status: 500 }
+        );
+      }
+      throw fetchErr;
+    }
 
     const existingSet = new Set((existingRecords || []).map((r) => r.link));
     const newLinksToInsert = cleanedLinks
@@ -135,12 +168,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { data: inserted, error } = await supabase
+    const { error: insertErr } = await supabase
       .from("activation_links")
-      .insert(newLinksToInsert)
-      .select("id");
+      .insert(newLinksToInsert);
 
-    if (error) throw error;
+    if (insertErr) {
+      if (insertErr.message?.includes("schema cache") || insertErr.message?.includes("does not exist")) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "⚠️ Supabase ডাটাবেজে 'activation_links' টেবিলটি এখনও তৈরি করা হয়নি। অনুগ্রহ করে Supabase SQL Editor-এ স্ক্রিপ্ট রান করুন।",
+          },
+          { status: 500 }
+        );
+      }
+      throw insertErr;
+    }
 
     return NextResponse.json({
       success: true,
@@ -151,6 +194,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Insert activation links error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    const msg = error.message?.includes("schema cache")
+      ? "⚠️ Supabase ডাটাবেজে 'activation_links' টেবিলটি তৈরি করা হয়নি।"
+      : error.message;
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }
