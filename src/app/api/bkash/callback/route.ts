@@ -169,7 +169,7 @@ export async function GET(req: NextRequest) {
 
       sendServerMetaEvent({
         eventName: "Purchase",
-        eventId: `pur_bkash_${existingOrder.id}_${trxID}`,
+        eventId: `pur_bkash_${trxID}`,
         userData: {
           email: existingOrder.target_email,
           phone: existingOrder.customer_phone || payer,

@@ -37,7 +37,7 @@ function SuccessContent() {
         content_category: "AI Subscription",
         order_id: invoice,
       },
-      `pur_bkash_client_${trxID}`
+      `pur_bkash_${trxID}`
     );
   }, [amount, invoice, trxID]);
 

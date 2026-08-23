@@ -40,7 +40,10 @@ export async function sendServerMetaEvent({
     order_id?: string;
   };
 }) {
-  if (!META_PIXEL_ID || !META_ACCESS_TOKEN) {
+  const pixelId = (process.env.NEXT_PUBLIC_META_PIXEL_ID || "").trim();
+  const accessToken = (process.env.META_ACCESS_TOKEN || "").trim();
+
+  if (!pixelId || !accessToken) {
     console.warn("Meta Pixel ID or Access Token is missing. Skipping CAPI event dispatch.");
     return { success: false, reason: "Missing credentials" };
   }
@@ -52,7 +55,7 @@ export async function sendServerMetaEvent({
           event_name: eventName,
           event_time: Math.floor(Date.now() / 1000),
           event_id: eventId,
-          event_source_url: eventSourceUrl || "https://googleaipro.com",
+          event_source_url: eventSourceUrl || process.env.NEXT_PUBLIC_BASE_URL || "https://googleai.neonweb.xyz",
           action_source: "website",
           user_data: {
             em: userData.email ? [hashData(userData.email)] : undefined,
@@ -68,7 +71,7 @@ export async function sendServerMetaEvent({
       ],
     };
 
-    const res = await fetch(`https://graph.facebook.com/v19.0/${META_PIXEL_ID}/events?access_token=${META_ACCESS_TOKEN}`, {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
