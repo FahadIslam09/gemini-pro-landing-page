@@ -540,66 +540,165 @@ export default function CheckoutModal({
               </div>
             </>
           ) : (
-            /* Clean Minimal Success Screen */
-            <div className="text-center py-2 space-y-3.5 animate-in zoom-in-95 duration-150">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/60 shadow-2xs">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
+            /* DYNAMIC SUCCESS CONFIRMATION SCREENS */
+            selectedPlan === "18m" ? (
+              /* 18-MONTH PLAN: AUTO ACTIVATION LINK DELIVERED */
+              <div className="text-center py-1.5 space-y-3.5 animate-in zoom-in-95 duration-150">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/80 shadow-xs">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
 
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 font-bangla">
-                  অর্ডার সফল হয়েছে!
-                </h3>
-                <p className="text-xs text-slate-600 mt-1 font-bangla max-w-xs mx-auto leading-relaxed">
-                  আপনার জিমেইল (<span className="font-semibold text-slate-900 font-outfit">{email}</span>)-এ অ্যাক্টিভেশন লিংক পাঠানো হবে। ইমেইলের লিংকে ক্লিক করলেই সাথে সাথে Google AI Pro সক্রিয় হয়ে যাবে।
-                </p>
-              </div>
-
-              {/* Minimal Receipt Box */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-left space-y-1.5 text-xs font-outfit">
-                <div className="flex justify-between items-center text-slate-500">
-                  <span className="font-bangla">অর্ডার আইডি:</span>
-                  <strong className="text-slate-900 font-mono font-bold">{trackingId}</strong>
-                </div>
-                <div className="flex justify-between items-center text-slate-500">
-                  <span className="font-bangla">প্ল্যান:</span>
-                  <span className="text-slate-800 font-semibold font-bangla">{currentPlan.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-slate-500">
-                  <span className="font-bangla">মূল্য:</span>
-                  <strong className="text-brand-blue font-extrabold">৳{currentPlan.price} BDT</strong>
-                </div>
-                {trxId && (
-                  <div className="flex justify-between items-center text-slate-500">
-                    <span>TrxID:</span>
-                    <span className="font-mono font-bold text-slate-900">{trxId}</span>
+                <div>
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100/70 text-emerald-800 text-[11px] font-bold font-outfit mb-1.5">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>অ্যাক্টিভেশন লিংক স্বয়ংক্রিয়ভাবে প্রেরিত</span>
                   </div>
-                )}
-              </div>
+                  <h3 className="text-xl font-bold text-slate-900 font-bangla">
+                    পেমেন্ট সফল হয়েছে!
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1 font-bangla max-w-sm mx-auto leading-relaxed">
+                    আপনার জিমেইল (<span className="font-semibold text-slate-900 font-mono">{email}</span>)-এ অফিশিয়াল অ্যাক্টিভেশন লিংক পাঠিয়ে দেওয়া হয়েছে।
+                  </p>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="pt-1 space-y-2">
-                <a
-                  href={`https://wa.me/8801516556465?text=${encodeURIComponent(
-                    `হ্যালো, আমি Google AI Pro অর্ডার সম্পন্ন করেছি।\nঅর্ডার আইডি: ${trackingId}\nপ্ল্যান: ${currentPlan.name}\nTrxID: ${trxId || "N/A"}\nঅনুগ্রহ করে দ্রুত অ্যাকাউন্ট সক্রিয় করে দিন।`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span className="font-bangla">WhatsApp-এ দ্রুত নিশ্চিত করুন</span>
-                </a>
+                {/* Step-by-Step Activation Instruction Card */}
+                <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 text-left text-xs font-bangla text-emerald-950 space-y-1.5">
+                  <div className="font-bold text-[13px] text-emerald-950 flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-emerald-600" />
+                    <span>কীভাবে অ্যাকাউন্ট চালু করবেন? (সহজ ৩টি ধাপ)</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-1 text-[11px] leading-relaxed text-emerald-900">
+                    <li>আপনার <strong>Gmail</strong> ইনবক্স চেক করুন (ইনবক্সে না পেলে Spam/Junk ফোল্ডার দেখুন)।</li>
+                    <li>ইমেইলে থাকা <strong>&quot;Activate Subscription Now&quot;</strong> লিংকে ক্লিক করুন।</li>
+                    <li>আপনার জিমেইল দিয়ে সাইন ইন করে অফারটি গ্রহণ (Accept) করুন। সাথে সাথে Google AI Pro সক্রিয় হয়ে যাবে!</li>
+                  </ol>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={resetAndClose}
-                  className="w-full text-xs font-medium text-slate-400 hover:text-slate-700 py-1 cursor-pointer font-bangla"
-                >
-                  উইন্ডো বন্ধ করুন
-                </button>
+                {/* Minimal Receipt Box */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-left space-y-1.5 text-xs font-outfit">
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">অর্ডার আইডি:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{trackingId}</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">প্ল্যান:</span>
+                    <span className="text-slate-800 font-semibold font-bangla">{currentPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">মূল্য:</span>
+                    <strong className="text-brand-blue font-extrabold">৳{currentPlan.price} BDT</strong>
+                  </div>
+                  {trxId && (
+                    <div className="flex justify-between items-center text-slate-500">
+                      <span>TrxID:</span>
+                      <span className="font-mono font-bold text-slate-900">{trxId}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* WhatsApp Support & Close */}
+                <div className="pt-1 space-y-2">
+                  <a
+                    href={`https://wa.me/8801516556465?text=${encodeURIComponent(
+                      `হ্যালো, আমি Google AI Pro (১৮ মাসের মেগা অফার) অর্ডার সম্পন্ন করেছি।\nঅর্ডার আইডি: ${trackingId}\nইমেইল: ${email}\nTrxID: ${trxId || "N/A"}\nঅ্যাক্টিভেশন সংক্রান্ত সহায়তা প্রয়োজন।`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <span className="font-bangla">যেকোনো সহায়তায় WhatsApp সাপোর্ট</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={resetAndClose}
+                    className="w-full text-xs font-medium text-slate-400 hover:text-slate-700 py-1 cursor-pointer font-bangla"
+                  >
+                    উইন্ডো বন্ধ করুন
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* 1-MONTH & 12-MONTH PLANS: WHATSAPP ACTIVATION INSTRUCTION */
+              <div className="text-center py-1.5 space-y-3.5 animate-in zoom-in-95 duration-150">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/80 shadow-xs">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+
+                <div>
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100/70 text-emerald-800 text-[11px] font-bold font-outfit mb-1.5">
+                    <span>Payment Confirmed</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 font-bangla">
+                    পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে!
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1 font-bangla max-w-sm mx-auto leading-relaxed">
+                    আপনার <strong className="text-slate-900">{currentPlan.name}</strong> সাবস্ক্রিপশনটি সক্রিয় করে নেওয়ার জন্য অনুগ্রহ করে নিচের WhatsApp বাটনে যোগাযোগ করুন।
+                  </p>
+                </div>
+
+                {/* WhatsApp Action Alert Card */}
+                <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-3.5 text-left text-xs font-bangla text-amber-950 space-y-1">
+                  <div className="font-bold text-[12px] flex items-center gap-1.5 text-amber-900">
+                    <MessageCircle className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+                    <span>অ্যাকাউন্ট সক্রিয়করণ নির্দেশনা:</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-900">
+                    আপনার {currentPlan.name} প্যাকেজটি ১ মিনিটে আমাদের সাপোর্ট টিম থেকে সরাসরি আপনার জিমেইলে সক্রিয় করে নেওয়ার জন্য নিচের <strong>WhatsApp বাটনে</strong> ক্লিক করে মেসেজ পাঠান।
+                  </p>
+                </div>
+
+                {/* Minimal Receipt Box */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-left space-y-1.5 text-xs font-outfit">
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">অর্ডার আইডি:</span>
+                    <strong className="text-slate-900 font-mono font-bold">{trackingId}</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">প্ল্যান:</span>
+                    <span className="text-slate-800 font-semibold font-bangla">{currentPlan.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">মূল্য:</span>
+                    <strong className="text-brand-blue font-extrabold">৳{currentPlan.price} BDT</strong>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-500">
+                    <span className="font-bangla">জিমেইল:</span>
+                    <span className="font-mono text-slate-900 truncate">{email}</span>
+                  </div>
+                  {trxId && (
+                    <div className="flex justify-between items-center text-slate-500">
+                      <span>TrxID:</span>
+                      <span className="font-mono font-bold text-slate-900">{trxId}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Prominent WhatsApp CTA Button */}
+                <div className="pt-1 space-y-2">
+                  <a
+                    href={`https://wa.me/8801516556465?text=${encodeURIComponent(
+                      `হ্যালো, আমি Google AI Pro (${currentPlan.name}) এর পেমেন্ট সম্পন্ন করেছি।\nঅর্ডার আইডি: ${trackingId}\nইমেইল: ${email}\nTrxID: ${trxId || "N/A"}\nঅনুগ্রহ করে আমার একাউন্টে সাবস্ক্রিপশনটি সক্রিয় করে দিন।`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-sm py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-[1.01] cursor-pointer"
+                  >
+                    <MessageCircle className="w-5 h-5 fill-white" />
+                    <span className="font-bangla">WhatsApp-এ মেসেজ পাঠান (অ্যাক্টিভ করুন)</span>
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={resetAndClose}
+                    className="w-full text-xs font-medium text-slate-400 hover:text-slate-700 py-1 cursor-pointer font-bangla"
+                  >
+                    উইন্ডো বন্ধ করুন
+                  </button>
+                </div>
+              </div>
+            )
           )}
         </div>
       </div>
