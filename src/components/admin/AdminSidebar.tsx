@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Users,
   CreditCard,
+  KeyRound,
   FileText,
   Settings,
   Globe,
@@ -40,6 +41,7 @@ export default function AdminSidebar({
     { name: "FAQ Management", href: "/admin/faq", icon: HelpCircle },
     { name: "Buyer Management", href: "/admin/buyers", icon: Users },
     { name: "Orders & Transactions", href: "/admin/orders", icon: CreditCard },
+    { name: "Activation Links 🔒", href: "/admin/activation-links", icon: KeyRound },
     { name: "Website Content", href: "/admin/content", icon: FileText },
     { name: "Settings & Security", href: "/admin/settings", icon: Settings },
   ];

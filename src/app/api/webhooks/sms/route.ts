@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
 import { sendCustomerEmail } from "@/lib/email";
+import { assignAndSendActivationLink } from "@/lib/activation-service";
 
 export const dynamic = "force-dynamic";
 
@@ -211,14 +212,27 @@ export async function POST(req: NextRequest) {
           status: "✅ পেমেন্ট সফলভাবে ম্যাচ ও ভেরিফাই হয়েছে (Paid)",
         });
 
-        // 2. Send instant delivery confirmation email to customer (awaited)
-        await sendCustomerEmail({
-          to: matchingOrder.target_email,
-          customerName: matchingOrder.customer_name,
-          orderNumber: matchingOrder.order_number,
-          planName: matchingOrder.plan_name,
-          messageText: `আপনার ${matchingOrder.plan_name} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে। সেই লিংকে ক্লিক করলেই একাউন্ট সক্রিয় হয়ে যাবে।`,
-        }).catch((err) => console.error("Auto email delivery error:", err));
+        // 2. Automated Delivery: If 18-month plan, assign unique activation link; otherwise standard email
+        if (matchingOrder.plan_key === "18m") {
+          await assignAndSendActivationLink({
+            id: matchingOrder.id,
+            order_number: matchingOrder.order_number,
+            plan_key: matchingOrder.plan_key,
+            plan_name: matchingOrder.plan_name,
+            customer_name: matchingOrder.customer_name,
+            target_email: matchingOrder.target_email,
+            customer_phone: matchingOrder.customer_phone,
+            amount: Number(matchingOrder.amount),
+          }).catch((err) => console.error("Auto activation link assignment error:", err));
+        } else {
+          await sendCustomerEmail({
+            to: matchingOrder.target_email,
+            customerName: matchingOrder.customer_name,
+            orderNumber: matchingOrder.order_number,
+            planName: matchingOrder.plan_name,
+            messageText: `আপনার ${matchingOrder.plan_name} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
+          }).catch((err) => console.error("Auto email delivery error:", err));
+        }
       }
     }
 

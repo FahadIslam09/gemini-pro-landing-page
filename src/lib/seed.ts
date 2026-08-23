@@ -155,4 +155,33 @@ export async function seedDatabase() {
     await supabase.from("faqs").insert(defaultFaqs);
     console.log("Default FAQs seeded into Supabase.");
   }
+
+  // 4. Seed Activation Links Table initial records if empty
+  const { count: linkCount } = await supabase
+    .from("activation_links")
+    .select("*", { count: "exact", head: true });
+
+  if (linkCount === 0 || linkCount === null) {
+    const initialActivationLinks = [
+      {
+        link: "https://one.google.com/promo/gai-pro-18m-demo-link-101",
+        plan_key: "18m",
+        status: "available",
+        batch_label: "Initial Batch #1",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        link: "https://one.google.com/promo/gai-pro-18m-demo-link-102",
+        plan_key: "18m",
+        status: "available",
+        batch_label: "Initial Batch #1",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ];
+    try {
+      await supabase.from("activation_links").insert(initialActivationLinks);
+    } catch {}
+  }
 }

@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
 import { sendCustomerEmail } from "@/lib/email";
+import { assignAndSendActivationLink } from "@/lib/activation-service";
 
 export const dynamic = "force-dynamic";
 
@@ -165,14 +166,27 @@ export async function POST(req: NextRequest) {
 
     if (orderError) throw orderError;
 
-    // 8. Send instant confirmation email to customer (awaited)
-    await sendCustomerEmail({
-      to: email.trim().toLowerCase(),
-      customerName: fullName.trim(),
-      orderNumber,
-      planName,
-      messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আপনার জিমেইলে অ্যাক্টিভেশন লিংক পাঠানো হবে। সেই লিংকে ক্লিক করলেই একাউন্ট সক্রিয় হয়ে যাবে।`,
-    }).catch((err) => console.error("Email send error:", err));
+    // 8. Automated Delivery: If 18-month plan, assign unique activation link; otherwise standard email
+    if (planId === "18m") {
+      await assignAndSendActivationLink({
+        id: order.id,
+        order_number: order.order_number,
+        plan_key: planId,
+        plan_name: planName,
+        customer_name: fullName.trim(),
+        target_email: email.trim().toLowerCase(),
+        customer_phone: phone.trim(),
+        amount,
+      }).catch((err) => console.error("Activation link assignment error:", err));
+    } else {
+      await sendCustomerEmail({
+        to: email.trim().toLowerCase(),
+        customerName: fullName.trim(),
+        orderNumber,
+        planName,
+        messageText: `আপনার ${planName} সাবস্ক্রিপশন পেমেন্ট সফলভাবে যাচাই করা হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
+      }).catch((err) => console.error("Email send error:", err));
+    }
 
     // 9. Send Instant Telegram Bot Alert (awaited)
     await sendTelegramOrderNotification({

@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { sendServerMetaEvent } from "@/lib/meta-pixel";
 import { sendTelegramOrderNotification } from "@/lib/telegram";
 import { sendCustomerEmail } from "@/lib/email";
+import { assignAndSendActivationLink } from "@/lib/activation-service";
 
 export const dynamic = "force-dynamic";
 
@@ -144,14 +145,27 @@ export async function GET(req: NextRequest) {
         })
         .eq("id", existingOrder.id);
 
-      // 8. Send instant customer confirmation email (awaited)
-      await sendCustomerEmail({
-        to: existingOrder.target_email,
-        customerName: existingOrder.customer_name,
-        orderNumber: existingOrder.order_number,
-        planName: existingOrder.plan_name,
-        messageText: `আপনার ${existingOrder.plan_name} সাবস্ক্রিপশন bKash অফিসিয়াল গেটওয়ের মাধ্যমে সফলভাবে সম্পন্ন হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
-      }).catch((err) => console.error("Email delivery error:", err));
+      // 8. Automated Delivery: If 18-month plan, assign & send unique activation link; otherwise standard email
+      if (existingOrder.plan_key === "18m") {
+        await assignAndSendActivationLink({
+          id: existingOrder.id,
+          order_number: existingOrder.order_number,
+          plan_key: existingOrder.plan_key,
+          plan_name: existingOrder.plan_name,
+          customer_name: existingOrder.customer_name,
+          target_email: existingOrder.target_email,
+          customer_phone: realCustomerPhone,
+          amount: paidAmount || expectedAmount,
+        }).catch((err) => console.error("Activation link assignment error:", err));
+      } else {
+        await sendCustomerEmail({
+          to: existingOrder.target_email,
+          customerName: existingOrder.customer_name,
+          orderNumber: existingOrder.order_number,
+          planName: existingOrder.plan_name,
+          messageText: `আপনার ${existingOrder.plan_name} সাবস্ক্রিপশন bKash অফিসিয়াল গেটওয়ের মাধ্যমে সফলভাবে সম্পন্ন হয়েছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!`,
+        }).catch((err) => console.error("Email delivery error:", err));
+      }
 
       // 9. Send Instant Telegram Bot Alert (awaited)
       await sendTelegramOrderNotification({

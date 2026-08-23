@@ -52,6 +52,7 @@ export default function AdminLayout({
     if (pathname.startsWith("/admin/faq")) return { title: "FAQ Management", subtitle: "Add, edit, reorder, and publish customer FAQs" };
     if (pathname.startsWith("/admin/buyers")) return { title: "Buyer Management", subtitle: "View customer profiles, contact info, and lifetime value" };
     if (pathname.startsWith("/admin/orders")) return { title: "Orders & Transactions", subtitle: "Monitor bKash gateway and manual payments and activations" };
+    if (pathname.startsWith("/admin/activation-links")) return { title: "Activation Links Vault 🔒", subtitle: "Secure inventory management & automated delivery for 18-month plan" };
     if (pathname.startsWith("/admin/content")) return { title: "Website Content", subtitle: "Manage editable public text and promotional banners" };
     if (pathname.startsWith("/admin/settings")) return { title: "Admin Settings", subtitle: "Security profile, credentials, and access configuration" };
     return { title: "Admin Dashboard", subtitle: "Google AI Pro Subscription Platform" };
