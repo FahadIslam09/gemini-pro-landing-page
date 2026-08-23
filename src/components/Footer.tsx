@@ -115,7 +115,7 @@ export default function Footer() {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-muted text-center sm:text-left">
           <p>&copy; 2026 Google AI Pro Bangladesh Offer. সকল স্বত্ব সংরক্ষিত।</p>
           <p className="max-w-md text-[11px] text-gray-400">
-            Google, Gemini, Workspace, Google One ও YouTube হলো Google LLC-এর নিবন্ধিত ট্রেডমার্ক। এটি একটি স্বাধীন প্রমোশনাল প্ল্যাটফর্ম।
+            Google, Gemini, Workspace ও Google One হলো Google LLC-এর নিবন্ধিত ট্রেডমার্ক। এটি একটি স্বাধীন প্রমোশনাল প্ল্যাটফর্ম।
           </p>
         </div>
       </div>

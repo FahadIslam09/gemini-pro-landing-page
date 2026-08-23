@@ -14,7 +14,7 @@ import {
 export default function AdminContentPage() {
   const [content, setContent] = useState({
     heroTitle: "বাংলাদেশে সবচেয়ে সাশ্রয়ী মূল্যে অফিসিয়াল Google AI Pro সাবস্ক্রিপশন",
-    heroSubtitle: "Gemini 3.1 Pro, Deep Research, 5 TB ক্লাউড স্টোরেজ ও YouTube Premium — এখন ৮৫% ছাড়ে মাত্র ৳28/মাসে!",
+    heroSubtitle: "Gemini 3.1 Pro, Deep Research, 5 TB ক্লাউড স্টোরেজ ও Google Workspace AI — এখন ৮৮% ছাড়ে মাত্র ৳১৭/মাসে!",
     promoBanner: "🔥 সীমিত সময়ের মেগা অফার: ১৮ মাসের প্যাকেজে ৮৫% পর্যন্ত বিশেষ ছাড় চলছে!",
     ctaHeadline: "আজই শুরু করুন আপনার AI নির্ভর স্মার্ট যাত্রা",
     ctaSubtitle: "Google AI Pro এর সাথে কাজের গতি বাড়িয়ে তুলুন কয়েক গুণ। ১ মিনিটে সক্রিয় করুন!",

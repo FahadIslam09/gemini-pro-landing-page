@@ -77,9 +77,9 @@ export default function ComparisonTable({ onOpenCheckout, price18m = 299 }: Comp
       highlight: false,
     },
     {
-      feature: "YouTube Premium সুবিধা",
+      feature: "Google Workspace AI (Docs/Gmail)",
       free: false,
-      pro: "অ্যাড-ফ্রি ও ব্যাকগ্রাউন্ড প্লে",
+      pro: "সম্পূর্ণ ইন্টিগ্রেটেড এক্সেস",
       highlight: true,
     },
     {

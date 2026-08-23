@@ -39,7 +39,7 @@ export default function AdminPricingPage() {
     accountTypeIcon: "ShieldCheck",
     highlights: [
       "Gemini 3.1 Pro ও Deep Research এক্সেস",
-      "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+      "5 TB হাই-স্পিড গুগল ক্লাউড স্টোরেজ",
       "সক্রিয় মেয়াদ ও সাপোর্ট",
     ],
     durationPerk: "সম্পূর্ণ মেয়াদে সাপোর্ট",

@@ -50,7 +50,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       },
       highlights: [
         "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+        "5 TB হাই-স্পিড গুগল ক্লাউড স্টোরেজ",
         "১ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
       ],
       popular: false,
@@ -71,7 +71,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       },
       highlights: [
         "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+        "5 TB হাই-স্পিড গুগল ক্লাউড স্টোরেজ",
         "১৮ মাসের পূর্ণ মেগা প্যাক ও গ্যারান্টি",
       ],
       popular: true,
@@ -92,7 +92,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
       },
       highlights: [
         "Gemini 3.1 Pro ও Deep Research অ্যাক্সেস",
-        "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+        "5 TB হাই-স্পিড গুগল ক্লাউড স্টোরেজ",
         "১২ মাসের সক্রিয় মেয়াদ ও সাপোর্ট",
       ],
       popular: false,
@@ -246,7 +246,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
             {[
               "১০০% প্রাইভেট অ্যাকাউন্ট (শুধু আপনার একক এক্সেস)",
               "Gemini 3.1 Pro & Deep Research ফুল অ্যাক্সেস",
-              "5 TB ক্লাউড স্টোরেজ ও YouTube Premium",
+              "5 TB হাই-স্পিড গুগল ক্লাউড স্টোরেজ",
             ].map((item, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center flex-shrink-0">

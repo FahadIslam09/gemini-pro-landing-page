@@ -30,7 +30,7 @@ export default function Testimonials({ price18m = 299 }: TestimonialsProps) {
       role: "ডিজিটাল মার্কেটার ও কন্টেন্ট ক্রিয়েটর",
       avatarBg: "bg-emerald-100 text-brand-success",
       content:
-        "YouTube Premium-এ নো-অ্যাডস আর ব্যাকগ্রাউন্ড প্লে কন্টেন্ট রিসার্চে দারুণ সাহায্য করে। Google Docs-এ 'Help me write' ফিচার দিয়ে ক্লায়েন্টের ইমেইল ও ক্যাম্পেইন ড্রাফট এখন নিমিষেই লিখে ফেলি।",
+        "৫ টেরাবাইট ক্লাউড স্টোরেজ ও Google Docs-এ 'Help me write' ফিচার দিয়ে ক্লায়েন্টের ইমেইল, ক্যাম্পেইন ড্রাফট ও ফাইল ব্যাকআপ এখন নিমিষেই ম্যানেজ করতে পারছি। এই দামে ১৮ মাসের সার্ভিস অসাধারণ!",
       rating: 5,
     },
   ];

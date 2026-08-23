@@ -55,7 +55,7 @@ export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-brand-body leading-relaxed mb-8 max-w-xl">
               সর্বাধুনিক <strong>Gemini 3.1 Pro</strong>, ডিপ রিসার্চ (Deep Research), <strong>Veo 3.1</strong> ভিডিও জেনারেশন, 
-              Google Workspace AI, <strong>5 TB ক্লাউড স্টোরেজ</strong> এবং YouTube Premium — সব কিছু এক প্রিমিয়াম বান্ডলে।
+              Google Workspace AI এবং <strong>5 TB ক্লাউড স্টোরেজ</strong> — সব কিছু এক প্রিমিয়াম বান্ডলে।
             </p>
 
             {/* CTA Buttons */}
@@ -69,8 +69,8 @@ export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
                 <ArrowRight className="w-4 h-4" />
               </button>
               <a
-                href="#deep-dive"
-                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-brand-dark border border-brand-border text-base font-semibold px-6 py-4 rounded-xl shadow-soft hover:shadow-md transition-all duration-200"
+                href="#features"
+                className="inline-flex items-center justify-center gap-2 text-brand-dark bg-white hover:bg-brand-surface border border-brand-border text-base font-semibold px-6 py-4 rounded-xl shadow-xs transition-all duration-200"
               >
                 <span>ফিচারসমূহ দেখুন</span>
                 <ChevronDown className="w-4 h-4 text-brand-muted" />
@@ -158,11 +158,13 @@ export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
                 </svg>
               </div>
 
-              {/* Floating App Badge: YouTube (Right Middle) */}
+              {/* Floating App Badge: Google Photos (Right Middle) */}
               <div className="absolute top-1/2 -right-3 sm:-right-6 -translate-y-1/2 z-20 bg-white border border-brand-border p-2.5 rounded-2xl shadow-card animate-float [animation-delay:2.2s]">
                 <svg className="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 48 48">
-                  <path fill="#FF0000" d="M43.2,13.9c-0.5-1.9-2-3.4-3.9-3.9C35.8,9,24,9,24,9s-11.8,0-15.3,1c-1.9,0.5-3.4,2-3.9,3.9 C3.8,17.4,3.8,24,3.8,24s0,6.6,1,10.1c0.5,1.9,2,3.4,3.9,3.9c3.5,1,15.3,1,15.3,1s11.8,0,15.3-1c1.9-0.5,3.4-2,3.9-3.9 c1-3.5,1-10.1,1-10.1S44.2,17.4,43.2,13.9z"/>
-                  <polygon fill="#FFFFFF" points="20,31 31,24 20,17"/>
+                  <path fill="#EA4335" d="M24 13a11 11 0 0 1 11 11h-11V13z"/>
+                  <path fill="#4285F4" d="M24 35a11 11 0 0 1-11-11h11v11z"/>
+                  <path fill="#FBBC05" d="M13 24a11 11 0 0 1 11-11v11H13z"/>
+                  <path fill="#34A853" d="M35 24a11 11 0 0 1-11 11V24h11z"/>
                 </svg>
               </div>
 

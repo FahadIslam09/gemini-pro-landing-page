@@ -71,15 +71,15 @@ export default function WhyGemini() {
     },
     {
       id: "storage-media",
-      badge: "5 TB + YouTube",
-      title: "৫,০০০ জিবি ক্লাউড & নো-অ্যাডস",
+      badge: "5 TB Google One",
+      title: "৫,০০০ জিবি ক্লাউড স্টোরেজ",
       description:
-        "Google Drive, Photos ও Gmail-এর জন্য বিশাল ৫ টেরাবাইট ক্লাউড ব্যাকআপ (সর্বোচ্চ ৫ জন পরিবারের সদস্যের সাথে শেয়ারযোগ্য) এবং বিজ্ঞাপনহীন YouTube।",
+        "Google Drive, Photos ও Gmail-এর জন্য বিশাল ৫ টেরাবাইট হাই-স্পিড ক্লাউড ব্যাকআপ (সর্বোচ্চ ৫ জন পরিবারের সদস্যের সাথে শেয়ারযোগ্য)।",
       icon: <HardDrive className="w-6 h-6 text-amber-500" />,
       features: [
         "৫ টেরাবাইট হাই-স্পিড ক্লাউড স্পেস",
         "পরিবারের ৫ জনের সাথে শেয়ার সুবিধা",
-        "YouTube Premium (ব্যাকগ্রাউন্ড প্লে)",
+        "Google Photos ও Drive ফুল ব্যাকআপ",
       ],
       colorClass: "from-amber-500/10 to-orange-500/10 border-amber-200/60",
     },

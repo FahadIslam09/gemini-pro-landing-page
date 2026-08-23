@@ -49,7 +49,7 @@ const FALLBACK_PLANS = [
     highlights: [
       "Gemini Advanced 1.5 Pro & Ultra ফুল এক্সেস",
       "২০০০ জিবি (2TB) সিকিউর ক্লাউড স্টোরেজ",
-      "Docs, Sheets, Slides ও Meet-এ স্মার্ট AI সুবিধা",
+      "Docs, Sheets, Slides ও Gmail-এ স্মার্ট AI সুবিধা",
       "১২ মাসের ফুল রিপ্লেসমেন্ট ওয়ারেন্টি ও সাপোর্ট",
     ],
     durationPerk: "১২ মাস নিরবচ্ছিন্ন ভ্যালিডিটি",
