@@ -16,6 +16,7 @@ import {
   Receipt,
   ChevronDown,
   ChevronUp,
+  ArrowRight,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { trackPixelEvent, generateEventId } from "@/lib/pixel-client";
@@ -43,6 +44,7 @@ export default function CheckoutModal({
   const [trxId, setTrxId] = useState("");
 
   // Loading & Submission States
+  const [isGatewayLoading, setIsGatewayLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionProgress, setSubmissionProgress] = useState(0);
   const [progressStatusText, setProgressStatusText] = useState("");
@@ -136,6 +138,39 @@ export default function CheckoutModal({
       });
     }
   }, [isOpen]);
+
+  // Handle Instant bKash Merchant Gateway Checkout
+  const handleBKashGatewayPayment = async () => {
+    if (!email.trim() || !email.includes("@")) {
+      onToast("অনুগ্রহ করে আপনার সঠিক জিমেইল এড্রেস দিন");
+      return;
+    }
+
+    setIsGatewayLoading(true);
+    try {
+      const response = await fetch("/api/bkash/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: selectedPlan,
+          email: email.trim().toLowerCase(),
+          fullName: email.trim().split("@")[0] || "Customer",
+          phone: "01700000000",
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success && data.bkashURL) {
+        window.location.href = data.bkashURL;
+      } else {
+        setIsGatewayLoading(false);
+        onToast(data.message || "bKash গেটওয়ে সংযোগে সমস্যা। নিচে TrxID দিয়ে নিশ্চিত করুন।");
+      }
+    } catch {
+      setIsGatewayLoading(false);
+      onToast("সার্ভার সমস্যা। নিচে TrxID দিয়ে চেষ্টা করুন।");
+    }
+  };
 
   // Handle Manual Payment Submission
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -381,6 +416,33 @@ export default function CheckoutModal({
                   <p className="text-[10px] text-slate-500 mt-1 font-bangla">
                     এই জিমেইল এড্রেসেই অ্যাক্টিভেশন লিংক পাঠানো হবে
                   </p>
+                </div>
+
+                {/* Direct bKash Gateway Button */}
+                <button
+                  type="button"
+                  onClick={handleBKashGatewayPayment}
+                  disabled={isGatewayLoading || isSubmitting}
+                  className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#D12053] hover:bg-[#b81846] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition-all disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isGatewayLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="font-bangla">bKash গেটওয়ে লোড হচ্ছে...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-bangla">bKash দিয়ে সরাসরি পেমেন্ট করুন</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
+
+                {/* Subtle Divider */}
+                <div className="relative flex py-0.5 items-center">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink mx-2 text-[10px] text-slate-400 font-bangla font-medium">অথবা TrxID দিয়ে ভেরিফাই করুন</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
                 </div>
 
                 {/* TrxID Field */}
