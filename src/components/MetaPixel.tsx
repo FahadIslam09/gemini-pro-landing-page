@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
+import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const DEFAULT_PIXEL_ID = "37766606856318381";
@@ -9,24 +10,48 @@ export default function MetaPixel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || DEFAULT_PIXEL_ID;
-  const isFirstRender = useRef(true);
 
-  // Track PageView on route change (skip initial load since base script tracks it)
+  // Initialize and track PageView reliably on mount and route changes
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (typeof window !== "undefined") {
+      if (!window.fbq) {
+        const fbq: any = function (...args: any[]) {
+          if (fbq.callMethod) {
+            fbq.callMethod.apply(fbq, args);
+          } else {
+            fbq.queue.push(args);
+          }
+        };
+        if (!window._fbq) window._fbq = fbq;
+        fbq.push = fbq;
+        fbq.loaded = true;
+        fbq.version = "2.0";
+        fbq.queue = [];
+        window.fbq = fbq;
 
-    if (typeof window !== "undefined" && typeof window.fbq === "function") {
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://connect.facebook.net/en_US/fbevents.js";
+        const firstScript = document.getElementsByTagName("script")[0];
+        if (firstScript && firstScript.parentNode) {
+          firstScript.parentNode.insertBefore(script, firstScript);
+        } else {
+          document.head.appendChild(script);
+        }
+
+        window.fbq("init", pixelId);
+      }
+
+      // Fire PageView
       window.fbq("track", "PageView");
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, pixelId]);
 
   return (
     <>
-      <script
-        id="meta-pixel-script"
+      <Script
+        id="meta-pixel-init"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s)
