@@ -16,6 +16,7 @@ import FinalCta from "@/components/FinalCta";
 import CheckoutModal from "@/components/CheckoutModal";
 import StickyMobileBar from "@/components/StickyMobileBar";
 import Footer from "@/components/Footer";
+import LiveSalesNotification from "@/components/LiveSalesNotification";
 import { CheckCircle2 } from "lucide-react";
 
 export default function Home() {
@@ -113,6 +114,9 @@ export default function Home() {
           <span>{toastMessage}</span>
         </div>
       )}
+
+      {/* Dynamic Social Proof Live Sales Popup */}
+      <LiveSalesNotification price18m={price18m} />
     </main>
   );
 }
