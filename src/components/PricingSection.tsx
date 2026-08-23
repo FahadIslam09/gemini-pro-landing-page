@@ -15,6 +15,27 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
     "12m": 399,
   });
 
+  const [pricingViewers, setPricingViewers] = useState(42);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setPricingViewers((prev) => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
+        const next = prev + delta;
+        if (next < 32) return 35 + Math.floor(Math.random() * 4);
+        if (next > 58) return 52 - Math.floor(Math.random() * 4);
+        return next;
+      });
+    }, 4200);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const toBanglaNum = (num: number) => {
+    const bn = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return String(num).replace(/\d/g, (d) => bn[Number(d)]);
+  };
+
   React.useEffect(() => {
     fetch("/api/public/pricing")
       .then((res) => res.json())
@@ -117,7 +138,7 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>
-                বর্তমানে <strong className="text-emerald-600 font-bold">৪২</strong> জন প্ল্যান বাছাই করছেন
+                বর্তমানে <strong className="text-emerald-600 font-bold">{toBanglaNum(pricingViewers)}</strong> জন প্ল্যান বাছাই করছেন
               </span>
             </div>
           </div>

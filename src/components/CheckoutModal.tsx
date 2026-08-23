@@ -81,6 +81,28 @@ export default function CheckoutModal({
     "12m": 399,
   });
 
+  const [modalViewers, setModalViewers] = useState(23);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const interval = setInterval(() => {
+      setModalViewers((prev) => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
+        const next = prev + delta;
+        if (next < 16) return 18 + Math.floor(Math.random() * 3);
+        if (next > 34) return 30 - Math.floor(Math.random() * 3);
+        return next;
+      });
+    }, 3800);
+
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  const toBanglaNum = (num: number) => {
+    const bn = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return String(num).replace(/\d/g, (d) => bn[Number(d)]);
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetch("/api/public/pricing")
@@ -314,7 +336,7 @@ export default function CheckoutModal({
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
                   </span>
-                  <span>🔥 বর্তমানে ২৩ জন চেকআউট করছেন</span>
+                  <span>🔥 বর্তমানে <strong>{toBanglaNum(modalViewers)}</strong> জন চেকআউট করছেন</span>
                 </div>
               </div>
 
