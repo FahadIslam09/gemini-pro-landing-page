@@ -63,6 +63,21 @@ export async function getBKashToken(): Promise<string> {
 
   const { baseUrl, appKey, appSecret, username, password } = getBKashConfig();
 
+  // Diagnostic: Check server outbound IP
+  let serverIp = "unknown";
+  try {
+    const ipRes = await fetch("https://api.ipify.org?format=json", { cache: "no-store" });
+    const ipData = await ipRes.json();
+    serverIp = ipData.ip;
+  } catch {}
+
+  console.log(`[bKash Token Grant] Calling: ${baseUrl}`);
+  console.log(`[bKash Token Grant] Server Outbound IP: ${serverIp}`);
+  console.log(`[bKash Token Grant] Username: ${username}`);
+  console.log(`[bKash Token Grant] AppKey (len ${appKey.length}): ${appKey.substring(0, 4)}...${appKey.substring(appKey.length - 3)}`);
+  console.log(`[bKash Token Grant] AppSecret (len ${appSecret.length}): ${appSecret.substring(0, 4)}...${appSecret.substring(appSecret.length - 3)}`);
+  console.log(`[bKash Token Grant] Password (len ${password.length}): ${password.substring(0, 2)}***${password.substring(password.length - 2)}`);
+
   const response = await fetch(`${baseUrl}/tokenized/checkout/token/grant`, {
     method: "POST",
     headers: {
@@ -81,7 +96,7 @@ export async function getBKashToken(): Promise<string> {
   const data: BKashTokenResponse = await response.json();
 
   if (!response.ok || !data.id_token || data.statusCode !== "0000") {
-    console.error("bKash token grant error:", data);
+    console.error(`[bKash Token Grant Error] From Server IP (${serverIp}):`, data);
     throw new Error(data.statusMessage || "Failed to grant bKash token");
   }
 
