@@ -309,6 +309,13 @@ export default function CheckoutModal({
                 <h3 className="text-lg font-bold text-slate-900 font-bangla">
                   সাবস্ক্রিপশন সম্পন্ন করুন
                 </h3>
+                <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50/90 border border-amber-200/80 px-2.5 py-0.5 rounded-full mt-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                  </span>
+                  <span>🔥 বর্তমানে ২৩ জন চেকআউট করছেন</span>
+                </div>
               </div>
 
               {/* Plan Selector Pills */}

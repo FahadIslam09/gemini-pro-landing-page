@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowRight,
   ChevronDown,
@@ -22,9 +22,29 @@ interface HeroProps {
   price18m?: number;
 }
 
+const toBanglaNum = (num: number) => {
+  const bn = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+  return String(num).replace(/\d/g, (d) => bn[Number(d)]);
+};
+
 export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
   const [activePrompt, setActivePrompt] = useState("Generate Deep Research report on renewable energy...");
   const [promptResult, setPromptResult] = useState<string | null>(null);
+  const [viewers, setViewers] = useState(47);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setViewers((prev) => {
+        const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
+        const next = prev + delta;
+        if (next < 36) return 38 + Math.floor(Math.random() * 4);
+        if (next > 68) return 62 - Math.floor(Math.random() * 4);
+        return next;
+      });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleActionClick = (promptText: string, previewAnswer: string) => {
     setActivePrompt(promptText);
@@ -38,10 +58,23 @@ export default function Hero({ onOpenCheckout, price18m = 299 }: HeroProps) {
           
           {/* Left Column (Content & CTAs) */}
           <div className="lg:col-span-6 flex flex-col items-start text-left">
-            {/* Top Badge */}
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-[#C25E00] shadow-[0_2px_8px_rgba(245,158,11,0.08)] mb-5 sm:mb-6 animate-pulse-glow">
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-accent fill-brand-accent/20" />
-              <span>১৮ মাসের অফিসিয়াল মেগা অফার • ৮৫% ছাড়</span>
+            {/* Top Badges Row */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-5 sm:mb-6">
+              <div className="inline-flex items-center gap-1.5 bg-[#FFFDF8] border border-[#FEE7C8] rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold text-[#C25E00] shadow-xs animate-pulse-glow">
+                <Sparkles className="w-3.5 h-3.5 text-brand-accent fill-brand-accent/20" />
+                <span>১৮ মাসের মেগা অফার • ৮৫% ছাড়</span>
+              </div>
+
+              {/* Dynamic Live Viewers Pill */}
+              <div className="inline-flex items-center gap-1.5 bg-white/95 border border-emerald-200/90 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>
+                  <strong className="text-emerald-600 font-bold font-bangla">{toBanglaNum(viewers)}</strong> জন লাইভ দেখছেন
+                </span>
+              </div>
             </div>
 
             {/* Main Headline */}

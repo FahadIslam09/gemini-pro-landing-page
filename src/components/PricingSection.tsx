@@ -105,10 +105,23 @@ export default function PricingSection({ onOpenCheckout }: PricingSectionProps) 
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple mb-4 font-outfit">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Transparent Subscription Plans</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+            <div className="inline-flex items-center gap-2 bg-brand-purple/10 border border-brand-purple/20 rounded-full px-3.5 py-1 text-xs font-semibold text-brand-purple font-outfit">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Transparent Subscription Plans</span>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 bg-white border border-emerald-200/90 rounded-full px-3 py-1 text-xs font-semibold text-slate-700 shadow-2xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>
+                বর্তমানে <strong className="text-emerald-600 font-bold">৪২</strong> জন প্ল্যান বাছাই করছেন
+              </span>
+            </div>
           </div>
+
           <h2 className="text-3xl sm:text-4xl font-bold text-brand-dark tracking-tight mb-4">
             আপনার পছন্দের <span className="gradient-text">প্ল্যান বেছে নিন</span>
           </h2>
